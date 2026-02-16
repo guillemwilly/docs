@@ -82,6 +82,7 @@ Deploy to AWS when you're ready to go live.
 - [AWS account](https://aws.amazon.com/free/)
 - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) installed and configured
 - VPC subnets for ECS and RDS
+- Container registry ([Docker Hub](https://hub.docker.com) or [ECR](https://aws.amazon.com/ecr/))
 
 <Steps>
   <Step title="Verify AWS credentials">
@@ -92,14 +93,28 @@ aws sts get-caller-identity
 
   <Step title="Configure AWS settings">
 
-Update `infra/settings.py`:
+Update `infra/settings.py` with your subnets and image registry:
 
 ```python infra/settings.py
 infra_settings = InfraSettings(
     aws_region="us-east-1",
     aws_subnet_ids=["subnet-xxx", "subnet-yyy"],
+    image_repo="your-dockerhub-username",
+    push_images=True,
 )
 ```
+
+For ECR, use `image_repo="[ACCOUNT_ID].dkr.ecr.[REGION].amazonaws.com"`.
+  </Step>
+
+  <Step title="Set production secrets">
+
+```bash
+cp infra/secrets/prd_api_secrets.example.yml infra/secrets/prd_api_secrets.yml
+cp infra/secrets/prd_db_secrets.example.yml infra/secrets/prd_db_secrets.yml
+```
+
+Edit `prd_api_secrets.yml` and add your `OPENAI_API_KEY`. Edit `prd_db_secrets.yml` and set a secure database password.
   </Step>
 
   <Step title="Deploy">
