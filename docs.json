@@ -2999,7 +2999,8 @@
               {
                 "group": "Docker",
                 "pages": [
-                  "deploy/templates/docker/overview"
+                  "deploy/templates/docker/deploy",
+                  "deploy/templates/docker/reference"
                 ]
               },
               {
