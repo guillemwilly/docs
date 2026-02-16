@@ -3005,7 +3005,8 @@
               {
                 "group": "Railway",
                 "pages": [
-                  "deploy/templates/railway/overview"
+                  "deploy/templates/railway/deploy",
+                  "deploy/templates/railway/reference"
                 ]
               },
               {
