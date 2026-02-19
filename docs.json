@@ -502,7 +502,8 @@
                       "knowledge/concepts/chunking/overview",
                       "knowledge/concepts/embedder/overview",
                       "knowledge/concepts/filters/overview",
-                      "knowledge/concepts/isolate-vector-search"
+                      "knowledge/concepts/isolate-vector-search",
+                      "knowledge/concepts/cloud-storage"
                     ]
                   },
                   {

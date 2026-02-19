@@ -6,4 +6,5 @@
 | `contents_db` | `Optional[BaseDb]` | `None` | Database for storing content metadata |
 | `max_results` | `int` | `10` | Maximum number of results to return from searches |
 | `isolate_vector_search` | `bool` | `False` | When `True`, adds `linked_to` metadata during insert and filters by it during search. Enables isolation when multiple Knowledge instances share the same vector database. See [Isolate Vector Search](/knowledge/concepts/isolate-vector-search). |
+| `content_sources` | `Optional[List[BaseStorageConfig]]` | `None` | Cloud storage providers (S3, GCS, SharePoint, GitHub, Azure Blob) for loading remote content. See [Cloud Storage Sources](/knowledge/concepts/cloud-storage). |
 | `readers` | `Optional[Dict[str, Reader]]` | `None` | Dictionary of custom readers for processing content |
