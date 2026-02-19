@@ -1,8 +1,9 @@
 ---
-title: "Monitoring"
-sidebarTitle: "Monitoring"
+title: "Monitoring AgentOS on AWS"
+sidebarTitle: "Monitor"
 description: "View logs and monitor your AWS deployment"
-keywords: ["monitoring", "logs", "CloudWatch", "metrics", "alerts", "observability"]
+keywords:
+  ["monitoring", "logs", "CloudWatch", "metrics", "alerts", "observability"]
 ---
 
 CloudWatch Logs captures output from your ECS containers.
@@ -10,11 +11,13 @@ CloudWatch Logs captures output from your ECS containers.
 ## View Logs
 
 Tail logs in real-time:
+
 ```bash
 aws logs tail /ecs/{infra_name}-prd --follow
 ```
 
 Search recent logs:
+
 ```bash
 aws logs filter-log-events \
   --log-group-name /ecs/{infra_name}-prd \
@@ -23,12 +26,14 @@ aws logs filter-log-events \
 ```
 
 <Note>
-Replace `{infra_name}` with your `infra_name` from `settings.py` (e.g., `agentos-aws-template`).
+  Replace `{infra_name}` with your `infra_name` from `settings.py` (e.g.,
+  `agentos-aws-template`).
 </Note>
 
 ## ECS Service Status
 
 View service status and recent events:
+
 ```bash
 aws ecs describe-services \
   --cluster {infra_name}-prd \
@@ -37,6 +42,7 @@ aws ecs describe-services \
 ```
 
 List running tasks:
+
 ```bash
 aws ecs list-tasks --cluster {infra_name}-prd
 ```
@@ -53,31 +59,33 @@ INFO:     Uvicorn running on http://0.0.0.0:8000
 ```
 
 Health check passing:
+
 ```
 INFO:     192.168.x.x - "GET /health HTTP/1.1" 200 OK
 ```
 
 ## Warning Signs
 
-| Log Pattern | Meaning | Action |
-|-------------|---------|--------|
-| `database is locked` | DuckDB concurrency issue | Reduce workers to 1 |
-| `connection refused` | Can't reach RDS | Check security group |
-| `OOMKilled` | Out of memory | Increase task memory |
-| `CannotPullContainerError` | ECR auth expired | Re-run `auth_ecr.sh` |
-| `SIGTERM` then restart loop | Health check failing | Check app logs for errors |
+| Log Pattern                 | Meaning                  | Action                    |
+| --------------------------- | ------------------------ | ------------------------- |
+| `database is locked`        | DuckDB concurrency issue | Reduce workers to 1       |
+| `connection refused`        | Can't reach RDS          | Check security group      |
+| `OOMKilled`                 | Out of memory            | Increase task memory      |
+| `CannotPullContainerError`  | ECR auth expired         | Re-run `auth_ecr.sh`      |
+| `SIGTERM` then restart loop | Health check failing     | Check app logs for errors |
 
 ## Health Checks
 
 The load balancer checks `/health` every 30 seconds.
 
-| Target Status | Meaning |
-|---------------|---------|
-| healthy | Task passing health checks |
-| unhealthy | Health check failing |
-| draining | Task being replaced |
+| Target Status | Meaning                    |
+| ------------- | -------------------------- |
+| healthy       | Task passing health checks |
+| unhealthy     | Health check failing       |
+| draining      | Task being replaced        |
 
 If unhealthy, check:
+
 1. Container logs for startup errors
 2. Security group allows port 8000 from ALB
 3. Database connectivity (`DB_HOST`, `DB_PASS`)
@@ -93,10 +101,10 @@ aws logs put-retention-policy \
 ```
 
 | Retention | Monthly Cost (10GB/day) |
-|-----------|------------------------|
-| 7 days | ~$3 |
-| 30 days | ~$15 |
-| 90 days | ~$45 |
+| --------- | ----------------------- |
+| 7 days    | ~$3                     |
+| 30 days   | ~$15                    |
+| 90 days   | ~$45                    |
 
 ## Alerts (Optional)
 
@@ -117,4 +125,3 @@ aws cloudwatch put-metric-alarm \
 ```
 
 See [AWS SNS documentation](https://docs.aws.amazon.com/sns/latest/dg/sns-create-topic.html) to create a notification topic.
-

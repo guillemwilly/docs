@@ -3035,22 +3035,48 @@
                 "pages": [
                   "deploy/templates/aws/overview",
                   {
-                    "group": "Customize",
+                    "group": "Reference",
                     "pages": [
-                      "deploy/templates/aws/customize/overview",
-                      "deploy/templates/aws/customize/infra-settings",
-                      "deploy/templates/aws/customize/development-app",
-                      "deploy/templates/aws/customize/production-app",
-                      "deploy/templates/aws/customize/install",
-                      "deploy/templates/aws/customize/database-tables",
-                      "deploy/templates/aws/customize/secrets",
-                      "deploy/templates/aws/customize/env-vars",
-                      "deploy/templates/aws/customize/ci-cd",
-                      "deploy/templates/aws/customize/domain-https",
-                      "deploy/templates/aws/customize/ssh-access",
-                      "deploy/templates/aws/customize/git-repo",
-                      "deploy/templates/aws/customize/new-users",
-                      "deploy/templates/aws/customize/format-and-validate"
+                      "deploy/templates/aws/reference/getting-started",
+                      {
+                        "group": "Configure",
+                        "pages": [
+                          "deploy/templates/aws/reference/configure/overview",
+                          "deploy/templates/aws/reference/configure/infra-settings",
+                          "deploy/templates/aws/reference/configure/development-app",
+                          "deploy/templates/aws/reference/configure/local",
+                          "deploy/templates/aws/reference/configure/ci-cd",
+                          "deploy/templates/aws/reference/configure/production-app",
+                          "deploy/templates/aws/reference/configure/install",
+                          "deploy/templates/aws/reference/configure/database-tables",
+                          "deploy/templates/aws/reference/configure/secrets",
+                          "deploy/templates/aws/reference/configure/env-vars",
+                          "deploy/templates/aws/reference/configure/python-packages",
+                          "deploy/templates/aws/reference/configure/efs",
+                          "deploy/templates/aws/reference/configure/ssh-access",
+                          "deploy/templates/aws/reference/configure/git-repo",
+                          "deploy/templates/aws/reference/configure/new-users",
+                          "deploy/templates/aws/reference/configure/code-quality",
+                          "deploy/templates/aws/reference/configure/format-and-validate"
+                        ]
+                      },
+                      {
+                        "group": "Go Live",
+                        "pages": [
+                          "deploy/templates/aws/reference/go-live/connect",
+                          "deploy/templates/aws/reference/go-live/https",
+                          "deploy/templates/aws/reference/go-live/domain-https",
+                          "deploy/templates/aws/reference/go-live/updates",
+                          "deploy/templates/aws/reference/go-live/verify"
+                        ]
+                      },
+                      {
+                        "group": "Manage",
+                        "pages": [
+                          "deploy/templates/aws/reference/manage/monitoring",
+                          "deploy/templates/aws/reference/manage/troubleshooting"
+                        ]
+                      }
                     ]
                   }
                 ]
