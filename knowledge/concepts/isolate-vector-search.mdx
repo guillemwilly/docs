@@ -85,9 +85,9 @@ eng_agent = Agent(knowledge=engineering_knowledge, search_knowledge=True)
 
 Documents indexed before this flag existed do not have `linked_to` in their vector database metadata. When you enable `isolate_vector_search=True`, searches filter for `linked_to=<name>`. Documents without this metadata field will not match and will be invisible to the isolated search.
 
-<Warning>
-Enabling `isolate_vector_search=True` on a Knowledge instance with existing data will cause those documents to disappear from search results. You must re-index or manually update the metadata to restore them.
-</Warning>
+<Tip>
+Enabling `isolate_vector_search=True` with vector databases that don't have existing `linked_to` metadata will cause those documents to disappear from search results. You must re-index or manually update the metadata to restore them.
+</Tip>
 
 ## Combining with Manual Filters
 
