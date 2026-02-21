@@ -1,12 +1,15 @@
 ---
-title: "uv pip install elevenlabs"
-description: "Text-to-speech generation with ElevenLabs."
+title: "Elevenlabs"
+description: "Use Elevenlabs with Agno agents."
 ---
-```python
-"""
-uv pip install elevenlabs
-"""
 
+Enable Agno agents to generate text-to-speech with ElevenLabs.
+
+## Prerequisites
+
+`uv pip install elevenlabs`
+
+```python
 import base64
 from textwrap import dedent
 
@@ -18,7 +21,6 @@ from agno.utils.media import save_base64_data
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 audio_agent = Agent(
     model=Gemini(id="gemini-2.5-pro"),
@@ -74,3 +76,4 @@ source .venvs/demo/bin/activate
 
 python elevenlabs_tools.py
 ```
+For details, see [Elevenlabs cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/elevenlabs_tools.py).

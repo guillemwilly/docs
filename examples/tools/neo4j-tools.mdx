@@ -1,68 +1,68 @@
 ---
-title: "Example script demonstrating the use of Neo4jTools with an Agno agent."
-description: "This script sets up an agent that can interact with a Neo4j database using natural language queries,."
+title: "Neo4j"
+description: "Use Neo4j tools with Agno agents."
 ---
-This script sets up an agent that can interact with a Neo4j database using natural language queries,
 
-~~~python
-"""
-Example script demonstrating the use of Neo4jTools with an Agno agent.
-This script sets up an agent that can interact with a Neo4j database using natural language queries,
-such as listing node labels or executing Cypher queries.
+Enable Agno agents to use natural language queries to perform "Multi-hop Reasoning" by interacting with Neo4j database. Agents can find connections that are three or four levels deep, such as finding the supplier of a component used in a product bought by a customer who also complained about a specific shipping delay.
 
-## Setting up Neo4j Locally
+## Prerequisites
 
-### Option 1: Using Docker (Recommended)
+<AccordionGroup>
+*(Click to view details)*
+<Accordion title="1. Set up Neo4j Locally">
+    Choose one of the options to set up Neo4j locally:
+    <Tabs>
+        <Tab title="Docker (Recommended)">
+            1. **Install Docker** if you haven't already from https://www.docker.com/
 
-1. **Install Docker** if you haven't already from https://www.docker.com/
+            2. **Run Neo4j in Docker:**
+            ```bash
+            docker run \
+                --name neo4j \
+                -p 7474:7474 -p 7687:7687 \
+                -d \
+                -v $HOME/neo4j/data:/data \
+                -v $HOME/neo4j/logs:/logs \
+                -v $HOME/neo4j/import:/var/lib/neo4j/import \
+                -v $HOME/neo4j/plugins:/plugins \
+                --env NEO4J_AUTH=neo4j/password \
+                neo4j:latest
+            ```
 
-2. **Run Neo4j in Docker:**
-   ```bash
-   docker run \
-       --name neo4j \
-       -p 7474:7474 -p 7687:7687 \
-       -d \
-       -v $HOME/neo4j/data:/data \
-       -v $HOME/neo4j/logs:/logs \
-       -v $HOME/neo4j/import:/var/lib/neo4j/import \
-       -v $HOME/neo4j/plugins:/plugins \
-       --env NEO4J_AUTH=neo4j/password \
-       neo4j:latest
-   ```
+            3. **Access Neo4j Browser:** Open http://localhost:7474 in your browser
+            - Username: `neo4j`
+            - Password: `password`
+        </Tab>
+        <Tab title="Native Installation">
+            1. **Download Neo4j Desktop** from https://neo4j.com/download/
+            2. **Install and create a new database**
+            3. **Start the database** and note the connection details
+        </Tab>
+        <Tab title="Neo4j Community Edition">
+            1. **Download** from https://neo4j.com/download-center/#community
+            2. **Extract and run:**
+            ```bash
+            tar -xf neo4j-community-*-unix.tar.gz
+            cd neo4j-community-*
+            ./bin/neo4j start
+            ```
+        </Tab>
+    </Tabs>
+</Accordion>
+<Accordion title="2. Python Setup">
 
-3. **Access Neo4j Browser:** Open http://localhost:7474 in your browser
-   - Username: `neo4j`
-   - Password: `password`
-
-### Option 2: Native Installation
-
-1. **Download Neo4j Desktop** from https://neo4j.com/download/
-2. **Install and create a new database**
-3. **Start the database** and note the connection details
-
-### Option 3: Using Neo4j Community Edition
-
-1. **Download** from https://neo4j.com/download-center/#community
-2. **Extract and run:**
-   ```bash
-   tar -xf neo4j-community-*-unix.tar.gz
-   cd neo4j-community-*
-   ./bin/neo4j start
-   ```
-
-## Python Setup
-
-1. **Install required packages:**
-   ```bash
-   uv pip install neo4j python-dotenv
-   ```
-
-2. **Set environment variables** (create a `.env` file in your project root):
-   ```env
-   NEO4J_URI=bolt://localhost:7687
-   NEO4J_USERNAME=neo4j
-   NEO4J_PASSWORD=password
-   ```
+    1. **Install required packages:**
+        ```bash
+        uv pip install neo4j python-dotenv
+        ```
+    2. **Set environment variables** (create a `.env` file in your project root:
+        ```env
+        NEO4J_URI=bolt://localhost:7687
+        NEO4J_USERNAME=neo4j
+        NEO4J_PASSWORD=password
+        ```
+</Accordion>
+</AccordionGroup>
 
 ## Usage
 
@@ -70,13 +70,8 @@ such as listing node labels or executing Cypher queries.
 2. **Run this script** to create an agent that can interact with your Neo4j database
 3. **Test with queries** like "What are the node labels in my graph?" or "Show me the database schema"
 
-## Troubleshooting
 
-- **Connection refused:** Make sure Neo4j is running on the correct port (7687)
-- **Authentication failed:** Verify your username/password in the Neo4j browser first
-- **Import errors:** Install the neo4j driver with `uv pip install neo4j`
-"""
-
+```python
 import os
 
 from agno.agent import Agent
@@ -174,3 +169,10 @@ export NEO4J_USERNAME="***"
 
 python neo4j_tools.py
 ```
+## Troubleshooting
+
+- **Connection refused:** Make sure Neo4j is running on the correct port (7687)
+- **Authentication failed:** Verify your username/password in the Neo4j browser first
+- **Import errors:** Install the neo4j driver with `uv pip install neo4j`
+
+For details, see [Neo4j cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/neo4j_tools.py).

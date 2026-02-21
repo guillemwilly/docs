@@ -1,14 +1,11 @@
 ---
-title: "Retry Tool Call"
-description: "Demonstrates retry tool call."
+title: "Retry Tool"
+description: "Handle tool failures with `RetryAgentRun`."
 ---
-```python
-"""
-Retry Tool Call
-=============================
 
-Demonstrates retry tool call.
-"""
+Implement automatic retries for flaky or rate-limited tool executions with Agno agents.
+
+```python
 
 from agno.agent import Agent
 from agno.db.sqlite import SqliteDb
@@ -20,7 +17,6 @@ from agno.utils.log import logger
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 def add_item(run_context: RunContext, item: str) -> str:
     """Add an item to the shopping list."""
@@ -83,3 +79,4 @@ source .venvs/demo/bin/activate
 
 python retry_tool_call.py
 ```
+For details, see [Retry tool cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/exceptions/retry_tool_call.py).

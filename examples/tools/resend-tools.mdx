@@ -1,14 +1,11 @@
 ---
-title: "Resend Tools"
-description: "Demonstrates resend tools."
+title: "Resend"
+description: "Use Resend tools with Agno agents."
 ---
-```python
-"""
-Resend Tools
-=============================
 
-Demonstrates resend tools.
-"""
+Enable Agno agents to move beyond the chat interface and interact with users directly in their inbox for sending emails, batch delivery, scheduling and status tracking.
+
+```python
 
 from agno.agent import Agent
 from agno.tools.resend import ResendTools
@@ -16,7 +13,6 @@ from agno.tools.resend import ResendTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 from_email = "<enter_from_email>"
 to_email = "<enter_to_email>"
@@ -42,3 +38,4 @@ source .venvs/demo/bin/activate
 
 python resend_tools.py
 ```
+For details, see [Resend cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/resend_tools.py)

@@ -1,14 +1,14 @@
 ---
 title: "Spotify Tools"
-description: "Use SpotifyTools with an Agno agent."
+description: "Use SpotifyTools with Agno agents."
 ---
-This example demonstrates how to create an agent that can: 
+Create Spotify tool enabled agents that can: 
 
 - Search for songs by mood, artist, or genre 
 - Create playlists based on user requests 
 - Update existing playlists
 
-For details, see [SpotifyTools](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/toolkits/others/spotify_tools.py). 
+For details, see [SpotifyTools](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/spotify_tools.py). 
 
 ```python
 from os import getenv
@@ -56,7 +56,7 @@ agent = Agent(
 if __name__ == "__main__":
     # Example 1: Create a playlist with happy songs from specific artists
     response = agent.run(
-        "Create a Good Vibes playlist, add 5 upbeat songs by The Weekend and Coldplay in it."
+        "Create a Good Vibes playlist, add 5 upbeat songs by The Weeknd and Coldplay in it."
     )
     print(response.content)
     print("\n" + "=" * 50 + "\n")

@@ -1,22 +1,22 @@
 ---
-title: "EVM Tools Example"
-description: "This example demonstrates how to use Agno's EVM integration to send ETH transactions on any EVM-compatible blockchain."
+title: "EVM"
+description: "Use Ethereum Virtual Machine (EVM) with Agno agents."
 ---
-```python
-"""
-EVM Tools Example
+Enable Agno agents to integrate with EVM to send ETH transactions on any EVM-compatible blockchain.
 
-This example demonstrates how to use Agno's EVM integration to send ETH transactions
-on any EVM-compatible blockchain.
+## Prerequisites
 
 1. Set your environment variables:
-    export EVM_PRIVATE_KEY=0x<your-private-key>
-    export EVM_RPC_URL=https://your-rpc-endpoint
+   ```bash
+   export EVM_PRIVATE_KEY=0x<your-private-key>
+   export EVM_RPC_URL=https://your-rpc-endpoint
+   ```
 
 2. Or pass them directly to the EvmTools constructor
 3. Install dependencies:
-    uv pip install agno web3
-"""
+    `uv pip install agno web3`
+
+```python
 
 from agno.agent import Agent
 from agno.tools.evm import EvmTools
@@ -67,3 +67,4 @@ source .venvs/demo/bin/activate
 
 python evm_tools.py
 ```
+For details, see [EVM cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/evm_tools.py).

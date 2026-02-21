@@ -1,23 +1,16 @@
 ---
-title: "AWS Lambda Tools - Serverless Function Management"
-sidebarTitle: "AWS Lambda Tools"
-description: "This example demonstrates how to use AWSLambdaTools for AWS Lambda operations."
+title: "AWS Lambda"
+description: "Use AWS Lambda tools with Agno agents."
 ---
-This example demonstrates how to use AWSLambdaTools for AWS Lambda operations. Shows enable_ flag patterns for selective function access. AWSLambdaTools is a small tool (&lt;6 functions) so it uses enable_ flags.
 
-```python
-"""
-AWS Lambda Tools - Serverless Function Management
+Enable Agno agents to trigger serverless backend logic and AWS resources without a dedicated API server by using AWS Lambda tools. Use enable_ flag patterns to selectively grant the agent access to only the specific functions it needs.
 
-This example demonstrates how to use AWSLambdaTools for AWS Lambda operations.
-Shows enable_ flag patterns for selective function access.
-AWSLambdaTools is a small tool (&lt;6 functions) so it uses enable_ flags.
-
-Prerequisites:
+## Prerequisites:
 - Run: `uv pip install boto3` to install dependencies
 - Set up AWS credentials (AWS CLI, environment variables, or IAM roles)
 - Ensure proper IAM permissions for Lambda operations
-"""
+
+```python
 
 from agno.agent import Agent
 from agno.tools.aws_lambda import AWSLambdaTools
@@ -138,3 +131,4 @@ source .venvs/demo/bin/activate
 
 python aws_lambda_tools.py
 ```
+For details, see [AWS Lambda cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/aws_lambda_tools.py).

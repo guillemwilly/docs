@@ -1,30 +1,24 @@
 ---
-title: "You can use the Brandfetch API to retrieve the company's brand information."
-description: "Register an account at: https://developers.brandfetch.com/register."
+title: "Brandfetch"
+description: "Use Brandfetch Tools with Agno Agents"
 ---
-Register an account at: https://developers.brandfetch.com/register
+
+Build with Agno Agents and use Brandfetch API to retrieve a company's brand information.
+
+## Prerequisites
+
+- Register an account at: https://developers.brandfetch.com/register.
+- Brand API: 
+  - Export your API key as an environment variable: `export BRANDFETCH_API_KEY=your_api_key`
+- Brand Search API:
+  - Export your Client ID as an environment variable: `export BRANDFETCH_CLIENT_KEY=your_client_id`
 
 ```python
 """
-You can use the Brandfetch API to retrieve the company's brand information.
+* For the Brand API, set `brand` parameter to True. (default: True)
+* For the Brand Search API, set the `search` parameter to True. (default: False)
 
-Register an account at: https://developers.brandfetch.com/register
-
-For the Brand API, you can use the `brand` parameter to True. (default is True)
-For the Brand Search API, you can use the `search` parameter to True. (default is False)
-
--- Brand API
-
-Export your API key as an environment variable:
-export BRANDFETCH_API_KEY=your_api_key
-
--- Brand Search API
-
-Export your Client ID as an environment variable:
-export BRANDFETCH_CLIENT_KEY=your_client_id
-
-You can find it on https://developers.brandfetch.com/dashboard/brand-search-api in the provided URL after `c=...`
-
+Refer to https://developers.brandfetch.com/dashboard/brand-search-api in the provided URL after `c=...` for details.
 """
 
 import asyncio
@@ -74,3 +68,4 @@ source .venvs/demo/bin/activate
 
 python brandfetch_tools.py
 ```
+For details, see [Brandfetch cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/brandfetch_tools.py).

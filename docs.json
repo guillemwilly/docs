@@ -4852,6 +4852,27 @@
             "pages": [
               "examples/tools/overview",
               {
+                "group": "Tool Hooks",
+                "pages": [
+                  "examples/tools/tool-hooks/overview",
+                  "examples/tools/tool-hooks/pre-and-post-hooks",
+                  "examples/tools/tool-hooks/tool-hook",
+                  "examples/tools/tool-hooks/tool-hook-in-toolkit",
+                  "examples/tools/tool-hooks/tool-hook-in-toolkit-with-state",
+                  "examples/tools/tool-hooks/tool-hook-in-toolkit-with-state-nested",
+                  "examples/tools/tool-hooks/tool-hooks-in-toolkit-nested"
+                ]
+              },
+              {
+                "group": "Handling Tool Errors",
+                "pages": [
+                  "examples/tools/exceptions/overview",
+                  "examples/tools/exceptions/retry-tool-call",
+                  "examples/tools/exceptions/retry-tool-call-from-post-hook",
+                  "examples/tools/exceptions/stop-agent-exception"
+                ]
+              },
+              {
                 "group": "MCP",
                 "pages": [
                   "examples/tools/mcp/streamable-http-transport/overview",
@@ -4895,31 +4916,6 @@
                   "examples/tools/mcp/stripe",
                   "examples/tools/mcp/supabase",
                   "examples/tools/mcp/tool-name-prefix"
-                ]
-              },
-              {
-                "group": "Custom Tools",
-                "pages": [
-                  "examples/tools/tool-decorator/overview",
-                  "examples/tools/tool-decorator/async-tool-decorator",
-                  "examples/tools/tool-decorator/cache-tool-calls",
-                  "examples/tools/tool-decorator/stop-after-tool-call",
-                  "examples/tools/tool-decorator/tool-decorator",
-                  "examples/tools/tool-decorator/tool-decorator-on-class-method",
-                  "examples/tools/tool-decorator/tool-decorator-with-hook",
-                  "examples/tools/tool-decorator/tool-decorator-with-instructions"
-                ]
-              },
-              {
-                "group": "Tool Hooks",
-                "pages": [
-                  "examples/tools/tool-hooks/overview",
-                  "examples/tools/tool-hooks/pre-and-post-hooks",
-                  "examples/tools/tool-hooks/tool-hook",
-                  "examples/tools/tool-hooks/tool-hook-in-toolkit",
-                  "examples/tools/tool-hooks/tool-hook-in-toolkit-with-state",
-                  "examples/tools/tool-hooks/tool-hook-in-toolkit-with-state-nested",
-                  "examples/tools/tool-hooks/tool-hooks-in-toolkit-nested"
                 ]
               },
               {
@@ -5060,9 +5056,6 @@
               {
                 "group": "Other Tools",
                 "pages": [
-                  "examples/tools/exceptions/retry-tool-call",
-                  "examples/tools/exceptions/retry-tool-call-from-post-hook",
-                  "examples/tools/exceptions/stop-agent-exception",
                   "examples/tools/google-drive",
                   "examples/tools/google-maps-tools",
                   "examples/tools/models/azure-openai-tools",
@@ -5085,6 +5078,19 @@
                   "examples/tools/website-tools",
                   "examples/tools/website-tools-knowledge",
                   "examples/tools/zep-tools"
+                ]
+              },
+              {
+                "group": "Custom Tools",
+                "pages": [
+                  "examples/tools/tool-decorator/overview",
+                  "examples/tools/tool-decorator/async-tool-decorator",
+                  "examples/tools/tool-decorator/cache-tool-calls",
+                  "examples/tools/tool-decorator/stop-after-tool-call",
+                  "examples/tools/tool-decorator/tool-decorator",
+                  "examples/tools/tool-decorator/tool-decorator-on-class-method",
+                  "examples/tools/tool-decorator/tool-decorator-with-hook",
+                  "examples/tools/tool-decorator/tool-decorator-with-instructions"
                 ]
               }
             ]

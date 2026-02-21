@@ -1,29 +1,28 @@
 ---
-title: "Tools Google Drive"
-sidebarTitle: "Google Drive"
-description: "Google Drive Toolkit can be used to read, create, update and duplicate Google Drive files."
+title: "Google Drive"
+description: "Use Google Drive with Agno agents."
 ---
+
+Enable Agno agents to read, create, update and duplicate Google Drive files.
+* File Discovery, list files, upload/download files
+* Content Retrieval
+* Automated Management
+* Collaborative Context
+
+## Prerequisites
+
+- Set up Google Authentication:
+
+    - 1. Go to the Google Cloud Console.
+    - 2. Navigate to "APIs & Services" > "Credentials".
+    - 3. Select your OAuth 2.0 Client ID from the list.
+    - 4. In the "Authorized redirect URIs" section, click "Add URI".
+    - 5. Enter the complete redirect URI, with the port number included (e.g., http://localhost:5050).
+    - 6. Click "Save" to apply the changes.
+
+- Set up environment variables to specify the `GOOGLE_AUTH_PORT` and `GOOGLE_CLOUD_QUOTA_PROJECT_ID`.
+
 ```python
-"""
-This example demonstrates how to use the Google Drive Toolkit, allowing your Agents to interact with Google Drive.
-
-Google Drive Toolkit can be used to read, create, update and duplicate Google Drive files.
-
-Setup instructions for the Auth flow:
-1. Go to the Google Cloud Console.
-2. Navigate to "APIs & Services" > "Credentials".
-3. Select your OAuth 2.0 Client ID from the list.
-4. In the "Authorized redirect URIs" section, click "Add URI".
-5. Enter the complete redirect URI, with the port number included (e.g., http://localhost:5050).
-6. Click "Save" to apply the changes.
-
-After setup, remember to set the GOOGLE_AUTH_PORT and GOOGLE_CLOUD_QUOTA_PROJECT_ID environment variables.
-
-The Tool Kit Functions are:
-1. List Files
-2. Upload File
-3. Download File
-"""
 
 from agno.agent import Agent
 from agno.tools.google_drive import GoogleDriveTools
@@ -31,7 +30,6 @@ from agno.tools.google_drive import GoogleDriveTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 google_drive_tools = GoogleDriveTools(auth_port=5050)
 
@@ -75,3 +73,4 @@ source .venvs/demo/bin/activate
 
 python google_drive.py
 ```
+For details, see [Google Drive cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/google_drive_tools.py).

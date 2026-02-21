@@ -1,33 +1,23 @@
 ---
-title: "Google BigQuery Tools"
-description: "Example using Google BigQuery tools with Agno."
+title: "Google BigQuery"
+description: "Use BigQuery with Agno agents."
 ---
 
-Set the following environment variables before running this example:
+Enable Agno agents to perform petabyte-scale data analysis, execute complex SQL, and even run machine learning models directly within Google Cloud's data warehouse.
 
-```bash
-export GOOGLE_CLOUD_PROJECT="your-project-id"
-export GOOGLE_CLOUD_LOCATION="your-location"
-```
+## Prerequisites
+
+- Set the following environment variables for your Google Cloud project:
+
+    ```bash
+    export GOOGLE_CLOUD_PROJECT="your-project-id"
+    export GOOGLE_CLOUD_LOCATION="your-location"
+    ```
+- Instruct the agent to prepend the table name with the project name and dataset name.
+
+- Describe the table schemas in instructions and use thinking tools for better responses.
 
 ```python
-"""
-You can set the following environment variables for your Google Cloud project:
-
-export GOOGLE_CLOUD_PROJECT="your-project-id"
-export GOOGLE_CLOUD_LOCATION="your-location"
-
-Or you can set the following parameters in the BQTools class:
-
-BQTools(
-    project="<your-project-id>",
-    location="<your-location>",
-    dataset="<your-dataset>",
-)
-
-NOTE: Instruct the agent to prepend the table name with the project name and dataset name
-Describe the table schemas in instructions and use thinking tools for better responses.
-"""
 
 from agno.agent import Agent
 from agno.models.google import Gemini
@@ -69,3 +59,4 @@ source .venvs/demo/bin/activate
 
 python google_bigquery_tools.py
 ```
+For details, see [Google BigQuery cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/google_bigquery_tools.py).

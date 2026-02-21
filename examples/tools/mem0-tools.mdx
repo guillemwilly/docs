@@ -1,20 +1,27 @@
 ---
-title: "This example demonstrates how to use the Mem0 toolkit with Agno agents."
-sidebarTitle: "Mem0 Tools"
-description: "To get started, please export your Mem0 API key as an environment variable."
+title: "Mem0"
+description: "Use Mem0 tool with Agno agents."
 ---
-To get started, please export your Mem0 API key as an environment variable. You can get your Mem0 API key from https://app.mem0.ai/dashboard/api-keys
 
-```python
-"""
-This example demonstrates how to use the Mem0 toolkit with Agno agents.
+Enable Agno agents to remember user preferences, past interactions, and specific facts across different conversations and platforms with Mem0.
 
-To get started, please export your Mem0 API key as an environment variable. You can get your Mem0 API key from https://app.mem0.ai/dashboard/api-keys
+- Adaptive memory
+- User centric learning
+- Temporal context
+- Search and retrieval
 
+## Prerequisites
+
+- Get your Mem0 API key from https://app.mem0.ai/dashboard/api-keys
+- Use an environment variable to export your Mem0 API key. 
+
+```bash
 export MEM0_API_KEY=<your-mem0-api-key>
 export MEM0_ORG_ID=<your-mem0-org-id> (Optional)
 export MEM0_PROJECT_ID=<your-mem0-project-id> (Optional)
-"""
+```
+
+```python
 
 from textwrap import dedent
 
@@ -25,7 +32,6 @@ from agno.tools.mem0 import Mem0Tools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 USER_ID = "jane_doe"
 SESSION_ID = "agno_session"
@@ -141,3 +147,4 @@ source .venvs/demo/bin/activate
 
 python mem0_tools.py
 ```
+For details, see [Mem0 tools cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/mem0_tools.py).

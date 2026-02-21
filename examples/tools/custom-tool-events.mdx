@@ -1,10 +1,11 @@
 ---
-title: "This example demonstrate how to yield custom events from a custom tool."
-sidebarTitle: "Custom Tool Events"
-description: "Yield custom events from a tool for real-time agent feedback."
+title: "Custom Events"
+description: "Use custom events with Agno agents."
 ---
+
+For real-time agent feedback use case, Agno agents integrate with custom tools and asynchronously handle yielding of events from the custom tool.
+
 ```python
-"""This example demonstrate how to yield custom events from a custom tool."""
 
 import asyncio
 from dataclasses import dataclass
@@ -18,7 +19,6 @@ from agno.tools import tool
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 # Our custom event, extending the CustomEvent class
 @dataclass
@@ -79,3 +79,4 @@ source .venvs/demo/bin/activate
 
 python custom_tool_events.py
 ```
+For details, see [Custom Tool Events cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/custom_tool_events.py).

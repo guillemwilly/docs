@@ -1,18 +1,18 @@
 ---
-title: "Example showing how to use the NanoBananaTools toolkit with your Agno Agent."
-sidebarTitle: "Nano Banana Tools"
-description: "Usage."
+title: "Nano Banana"
+description: "Use Nano Banana tool with Agno agents."
 ---
-Usage: - Set your Google API key as environment variable: `export GOOGLE_API_KEY="your_api_key"` - Run `uv pip install agno google-genai Pillow` to install dependencies
+
+Enable Agno agents to use Google's Nano Banana (Gemini 2.5 Flash Image) and Nano Banana Pro (Gemini 3 Pro Image) models for generating and edit images via natural language.
+
+Supported in Agno v2.3 or higher.
+
+## Prerequisites
+
+- Set your Google API key as environment variable: `export GOOGLE_API_KEY="your_api_key"` 
+- Run `uv pip install agno google-genai Pillow` to install dependencies
 
 ```python
-"""
-Example showing how to use the NanoBananaTools toolkit with your Agno Agent.
-
-Usage:
-- Set your Google API key as environment variable: `export GOOGLE_API_KEY="your_api_key"`
-- Run `uv pip install agno google-genai Pillow` to install dependencies
-"""
 
 from pathlib import Path
 
@@ -22,7 +22,6 @@ from agno.tools.nano_banana import NanoBananaTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 # Example 1: Basic NanoBanana agent with default settings
 agent = Agent(tools=[NanoBananaTools()], name="NanoBanana Image Generator")
@@ -88,3 +87,4 @@ export GOOGLE_API_KEY="***"
 
 python nano_banana_tools.py
 ```
+For details, see [Nano Banana cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/nano_banana_tools.py).

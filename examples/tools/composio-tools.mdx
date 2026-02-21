@@ -1,14 +1,10 @@
 ---
-title: "Composio Tools"
-description: "Demonstrates composio tools."
+title: "Composio"
+description: "Use Composio with Agno agents."
 ---
-```python
-"""
-Composio Tools
-=============================
+Agno agents can interact with over 1,000+ software tools like GitHub, Slack, Gmail, Salesforce, and more with Composio.
 
-Demonstrates composio tools.
-"""
+```python
 
 from agno.agent import Agent
 from composio_agno import Action, ComposioToolSet
@@ -16,7 +12,6 @@ from composio_agno import Action, ComposioToolSet
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 toolset = ComposioToolSet()
 composio_tools = toolset.get_tools(
@@ -43,3 +38,4 @@ source .venvs/demo/bin/activate
 
 python composio_tools.py
 ```
+For details, see [Composio cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/composio_tools.py).

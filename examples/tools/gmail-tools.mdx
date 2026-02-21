@@ -1,11 +1,10 @@
 ---
-title: "Gmail Agent that can read, draft and send emails using the Gmail."
-description: "Read, draft, and send emails using the Gmail API."
+title: "Gmail"
+description: "Use Gmail with Agno agents."
 ---
+Enable Agno agents to read, draft, and send emails using the Gmail API.
+
 ```python
-"""
-Gmail Agent that can read, draft and send emails using the Gmail.
-"""
 
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
@@ -15,7 +14,6 @@ from pydantic import BaseModel, Field
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 class FindEmailOutput(BaseModel):
     message_id: str = Field(..., description="The message id of the email")
@@ -182,3 +180,4 @@ source .venvs/demo/bin/activate
 
 python gmail_tools.py
 ```
+For details, see [Gmail cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/gmail_tools.py).

@@ -1,17 +1,15 @@
 ---
-title: "Financial Datasets API Toolkit Example"
-description: "This example demonstrates various Financial Datasets API functionalities including financial statements, stock prices, news, insider trades, and more."
+title: "Financial Datasets"
+description: "Use financial datasets with Agno agents"
 ---
-```python
-"""
-Financial Datasets API Toolkit Example
-This example demonstrates various Financial Datasets API functionalities including
-financial statements, stock prices, news, insider trades, and more.
 
-Prerequisites:
+Enable Agno agents with various Financial Datasets API functionalities including analyzing financial statements, stock prices, news, insider trades, and more.
+
+## Prerequisites:
 - Set the environment variable `FINANCIAL_DATASETS_API_KEY` with your Financial Datasets API key.
   You can obtain the API key by creating an account at https://financialdatasets.ai
-"""
+
+```python
 
 from agno.agent import Agent
 from agno.tools.financial_datasets import FinancialDatasetsTools
@@ -218,3 +216,4 @@ source .venvs/demo/bin/activate
 
 python financial_datasets_tools.py
 ```
+For details, see [Financial Dataset Tools cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/financial_datasets_tools.py).

@@ -1,52 +1,74 @@
 ---
-title: "AWS SES (Simple Email Service) Setup Instructions:"
-description: "AWS SES (Simple Email Service) Setup Instructions."
+title: "AWS SES"
+description: "Use AWS Simple Email Service (SES) with Agno Agents."
 ---
-```python
-"""
-AWS SES (Simple Email Service) Setup Instructions:
 
-1. Go to AWS SES Console and verify your domain or email address:
-   - For production:
-     a. Go to AWS SES Console > Verified Identities > Create Identity
-     b. Choose "Domain" and follow DNS verification steps
-     c. Add DKIM and SPF records to your domain's DNS
-   - For testing:
-     a. Choose "Email Address" verification
-     b. Click verification link sent to your email
+Enable Agno agents programmatically send and manage emails with AWS SES.
 
-2. Configure AWS Credentials:
+## Prerequisites
+
+<AccordionGroup>
+*(Click for details)*
+  <Accordion title="1. Set up AWS SES. Go to AWS SES Console and verify your domain or email:">
+  <Tabs>
+   <Tab title="Production">
+        
+        - Go to **AWS SES Console** > **Verified Identities** > **Create Identity**
+        - Choose "Domain" and follow DNS verification steps
+        - Add DKIM and SPF records to your domain's DNS
+
+   </Tab>
+   <Tab title="Test & Dev">
+
+        - Choose "Email Address" verification
+        - Click verification link sent to your email
+
+   </Tab>
+   </Tabs>
+  </Accordion>
+  <Accordion title="2. Configure AWS Credentials:">
+
    a. Create an IAM user:
-      - Go to IAM Console > Users > Add User
+      - Go to **IAM Console** > **Users** > **Add User**
       - Enable "Programmatic access"
       - Attach 'AmazonSESFullAccess' policy
 
    b. Set up credentials (choose one method):
-      Method 1 - Using AWS CLI:
-      ```
-      aws configure
-      # Enter your AWS Access Key ID
-      # Enter your AWS Secret Access Key
-      # Enter your default region
-      ```
 
-      Method 2 - Set environment variables:
-      ```
-      export AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY
-      export AWS_SECRET_ACCESS_KEY=YOUR_SECRET_KEY
-      ```
+      <Tabs>
+        <Tab title="Method 1">
 
-3. Install required Python packages:
+         Use AWS CLI:
+            ```bash
+            aws configure
+
+            # Enter your AWS Access Key ID
+            # Enter your AWS Secret Access Key
+            # Enter your default region
+            ```
+        </Tab>
+        <Tab title="Method 2">
+            Set environment variables:
+            ```
+            export AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY
+            export AWS_SECRET_ACCESS_KEY=YOUR_SECRET_KEY
+            ```
+        </Tab>
+     </Tabs>
+  </Accordion>
+  <Accordion title="3. Install required Python packages: (Click for details)">
    ```
    uv pip install boto3 agno
    ```
+  </Accordion>
+  <Accordion title="4. Configure the user settings for email:">
+   - `sender_email`: Your verified sender email address
+   - `sender_name`: Display name that appears in email clients
+   - `region_name`: AWS region where SES is set up (e.g., 'us-east-1', 'ap-south-1')
+  </Accordion>
+</AccordionGroup>
 
-4. Update the variables below with your configuration:
-   - sender_email: Your verified sender email address
-   - sender_name: Display name that appears in email clients
-   - region_name: AWS region where SES is set up (e.g., 'us-east-1', 'ap-south-1')
-
-"""
+```python
 
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
@@ -123,3 +145,4 @@ source .venvs/demo/bin/activate
 
 python aws_ses_tools.py
 ```
+For details, see [AWS SES cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/aws_ses_tools.py).

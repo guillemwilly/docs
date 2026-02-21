@@ -1,14 +1,10 @@
 ---
-title: "Oxylabs Tools"
-description: "Demonstrates oxylabs tools."
+title: "Oxylabs"
+description: "Use Oxylabs with Agno agents."
 ---
-```python
-"""
-Oxylabs Tools
-=============================
+Enables Agno agents to scrape data using Oxylabs enterprise-grade infrastructure that allows accessing web globally without being blocked by CAPTCHAs or IP bans.
 
-Demonstrates oxylabs tools.
-"""
+```python
 
 from agno.agent import Agent
 from agno.tools.oxylabs import OxylabsTools
@@ -16,7 +12,6 @@ from agno.tools.oxylabs import OxylabsTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 agent = Agent(
     tools=[OxylabsTools()],
@@ -59,3 +54,4 @@ source .venvs/demo/bin/activate
 
 python oxylabs_tools.py
 ```
+For details, see [Oxylabs cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/oxylabs_tools.py).

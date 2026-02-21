@@ -1,20 +1,11 @@
 ---
-title: "ArXiv Tools - Academic Paper Search and Research"
-sidebarTitle: "ArXiv Tools"
-description: "This example demonstrates how to use ArxivTools for searching academic papers."
+title: "ArXiv"
+description: "Use Arxiv tools with Agno Agents."
 ---
-This example demonstrates how to use ArxivTools for searching academic papers. Shows enable_ flag patterns for selective function access. ArxivTools is a small tool (&lt;6 functions) so it uses enable_ flags.
+
+ArxivTools enables Agno agents to intelligently research academic papers. Use`enable_*` flags patterns for selective function access.
 
 ```python
-"""
-ArXiv Tools - Academic Paper Search and Research
-
-This example demonstrates how to use ArxivTools for searching academic papers.
-Shows enable_ flag patterns for selective function access.
-ArxivTools is a small tool (&lt;6 functions) so it uses enable_ flags.
-
-Run: `uv pip install arxiv` to install the dependencies
-"""
 
 from agno.agent import Agent
 from agno.tools.arxiv import ArxivTools
@@ -117,3 +108,4 @@ source .venvs/demo/bin/activate
 
 python arxiv_tools.py
 ```
+For details, see [Arxiv cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/arxiv_tools.py).

@@ -1,14 +1,11 @@
 ---
-title: "Brightdata Tools"
-description: "Demonstrates brightdata tools."
+title: "Brightdata"
+description: "Use Brightdata tools with Agno Agents."
 ---
-```python
-"""
-Brightdata Tools
-=============================
 
-Demonstrates brightdata tools.
-"""
+Use Agno Agents and Brightdata to collect, process, and scale access to public web data for building, running, and scaling web data operations.
+
+```python
 
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
@@ -17,7 +14,6 @@ from agno.tools.brightdata import BrightDataTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 # Example 1: Include specific BrightData functions for web scraping
 scraping_agent = Agent(
@@ -90,3 +86,4 @@ source .venvs/demo/bin/activate
 
 python brightdata_tools.py
 ```
+For details, see [Brightdata cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/brightdata_tools.py).

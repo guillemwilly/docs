@@ -1,19 +1,11 @@
 ---
-title: "Google Maps Tools - Location and Business Information Agent"
-sidebarTitle: "Google Maps Tools"
-description: "This example demonstrates various Google Maps API functionalities including business search, directions, geocoding, address validation, and more."
+title: "Google Maps"
+description: "Use Google Maps with Agno agents."
 ---
-This example demonstrates various Google Maps API functionalities including business search, directions, geocoding, address validation, and more. Shows how to use include_tools and exclude_tools parameters for selective function access.
 
-```python
-"""
-Google Maps Tools - Location and Business Information Agent
+Enable Agno agents with location intelligence with various Google Maps API functionalities including business search, directions, geocoding, address validation, and more. Specify `include_tools` and `exclude_tools` parameters for selective function access.
 
-This example demonstrates various Google Maps API functionalities including business search,
-directions, geocoding, address validation, and more. Shows how to use include_tools and
-exclude_tools parameters for selective function access.
-
-Prerequisites:
+## Prerequisites:
 - Set the environment variable `GOOGLE_MAPS_API_KEY` with your Google Maps API key.
   You can obtain the API key from the Google Cloud Console:
   https://console.cloud.google.com/projectselector2/google/maps-apis/credentials
@@ -21,7 +13,7 @@ Prerequisites:
 - You also need to activate the Address Validation API for your project:
   https://console.developers.google.com/apis/api/addressvalidation.googleapis.com
 
-"""
+```python
 
 from agno.agent import Agent
 from agno.tools.crawl4ai import Crawl4aiTools
@@ -30,7 +22,6 @@ from agno.tools.google_maps import GoogleMapTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 # Example 1: All functions available (default behavior)
 agent_full = Agent(
@@ -208,3 +199,4 @@ source .venvs/demo/bin/activate
 
 python google_maps_tools.py
 ```
+For details, see [Google Maps cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/google_maps_tools.py).

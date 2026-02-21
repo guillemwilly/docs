@@ -1,14 +1,16 @@
 ---
-title: "Discord Tools"
-description: "Demonstrates discord tools."
+title: "Discord"
+description: "Use Discord with Agno agents."
 ---
-```python
-"""
-Discord Tools
-=============================
 
-Demonstrates discord tools.
-"""
+Agno agents integrate with Discordd to autonomously manage communities, bridge external tools, and facilitate complex human-in-the-loop (HITL) workflows.
+
+
+## Prerequisites
+
+* Set DISCORD_BOT_TOKEN environment variable
+
+```python
 
 import os
 
@@ -18,7 +20,6 @@ from agno.tools.discord import DiscordTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 # Get Discord token from environment
 discord_token = os.getenv("DISCORD_BOT_TOKEN")
@@ -144,3 +145,4 @@ export DISCORD_BOT_TOKEN="***"
 
 python discord_tools.py
 ```
+For details, see [Discord cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/discord_tools.py).

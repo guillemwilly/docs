@@ -1,14 +1,45 @@
 ---
-title: "Notion Tools"
-description: "Demonstrates notion tools."
+title: "Notion"
+description: "Use Notion tools with Agno agents."
 ---
-```python
-"""
-Notion Tools
-=============================
 
-Demonstrates notion tools.
-"""
+Enable Agno agents to organize and manage content in Notion.
+
+## Prerequisites
+
+
+<Expandable title="How to set up and configure Notion client?">
+   1. Install required dependencies:
+      uv pip install agno notion-client
+
+   2. Create a Notion Integration:
+      - Go to https://www.notion.so/my-integrations
+      - Click "+ New integration"
+      - Name it (e.g., "Agno Agent")
+      - Copy the "Internal Integration Token"
+
+   3. Create a Notion Database:
+      - Create a new page in Notion
+      - Add a database (type /database)
+      - Add these properties:
+      * Name (Title) - already exists
+      * Tag (Select) - add options: travel, tech, general-blogs, fashion, documents
+
+   4. Share the database with your integration:
+      - Open the database page
+      - Click "..." → "Add connections"
+      - Select your integration
+
+   5. Get the database ID from the URL:
+      https://www.notion.so/../DATABASE_ID?v=...
+
+   6. Set environment variables in .env:
+      NOTION_API_KEY=secret_your_integration_token
+      NOTION_DATABASE_ID=your_database_id_here
+</Expandable>
+
+```python
+
 
 from agno.agent import Agent
 from agno.tools.notion import NotionTools
@@ -17,51 +48,7 @@ from agno.tools.notion import NotionTools
 # Create Agent
 # ---------------------------------------------------------------------------
 
-
 # Notion Tools Demonstration Script
-"""
-This script showcases the power of organizing and managing content in Notion using AI.
-Automatically categorize, store, and retrieve information from your Notion workspace!
-
----
-Configuration Instructions:
-1. Install required dependencies:
-   uv pip install agno notion-client
-
-2. Create a Notion Integration:
-   - Go to https://www.notion.so/my-integrations
-   - Click "+ New integration"
-   - Name it (e.g., "Agno Agent")
-   - Copy the "Internal Integration Token"
-
-3. Create a Notion Database:
-   - Create a new page in Notion
-   - Add a database (type /database)
-   - Add these properties:
-     * Name (Title) - already exists
-     * Tag (Select) - add options: travel, tech, general-blogs, fashion, documents
-
-4. Share the database with your integration:
-   - Open the database page
-   - Click "..." → "Add connections"
-   - Select your integration
-
-5. Get the database ID from the URL:
-   https://www.notion.so/../DATABASE_ID?v=...
-
-6. Set environment variables in .env:
-   NOTION_API_KEY=secret_your_integration_token
-   NOTION_DATABASE_ID=your_database_id_here
----
-
-Use Cases:
-- Personal knowledge management
-- Content organization
-- Research notes
-- Travel planning
-- Reading lists
-- And much more!
-"""
 
 # Create an agent with Notion Tools
 notion_agent = Agent(
@@ -76,7 +63,6 @@ notion_agent = Agent(
     tools=[NotionTools()],
     markdown=True,
 )
-
 
 def demonstrate_tools():
     print("  Notion Tools Demonstration\n")
@@ -168,3 +154,4 @@ source .venvs/demo/bin/activate
 
 python notion_tools.py
 ```
+For details, see [Notion cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/notion_tools.py).

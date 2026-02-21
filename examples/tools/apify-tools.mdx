@@ -1,39 +1,21 @@
 ---
-title: "Apify Tools"
-description: "Demonstrates apify tools."
+title: "Apify"
+description: "Use Apify tools with Agno Agents for data extraction."
 ---
-```python
-"""
-Apify Tools
-=============================
 
-Demonstrates apify tools.
-"""
+## Prerequisites
+
+1. Install required dependencies:
+   `uv pip install agno langchain-apify apify-client`
+
+2. Set the `APIFY_API_TOKEN` environment variable:
+   Add a `.env` file with `APIFY_API_TOKEN=your_apify_api_token`
+
+```python
 
 from agno.agent import Agent
 from agno.tools.apify import ApifyTools
-
-# ---------------------------------------------------------------------------
-# Create Agent
-# ---------------------------------------------------------------------------
-
-
 # Apify Tools Demonstration Script
-"""
-This script showcases the power of web scraping and data extraction using Apify's Actors (serverless tools). 
-The Apify ecosystem has 4000+ pre-built Actors for almost any web data extraction need!
-
----
-Configuration Instructions:
-1. Install required dependencies:
-   uv pip install agno langchain-apify apify-client
-
-2. Set the APIFY_API_TOKEN environment variable:
-   Add a .env file with APIFY_API_TOKEN=your_apify_api_token
----
-
-Tip: Check out the Apify Store (https://apify.com/store) to find tools for almost any web scraping or data extraction task.
-"""
 
 # Create an Apify Tools agent with versatile capabilities
 agent = Agent(
@@ -85,21 +67,6 @@ def demonstrate_tools():
 if __name__ == "__main__":
     demonstrate_tools()
 
-"""
-Want to add a new tool? It's easy!
-- Browse Apify Store
-- Find an Actor that matches your needs
-- Add a new method to ApifyTools following the existing pattern
-- Register the method in the __init__
-
-Examples of potential tools:
-- YouTube video info scraper
-- Twitter/X profile analyzer
-- Product price trackers
-- Job board crawlers
-- News article extractors
-- And SO MUCH MORE!
-"""
 ```
 
 ## Run the Example
@@ -114,3 +81,4 @@ source .venvs/demo/bin/activate
 
 python apify_tools.py
 ```
+For details, see [Apify cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/apify_tools.py).

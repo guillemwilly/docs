@@ -1,9 +1,15 @@
 ---
-title: "Dalle Tools"
-description: "Tool integration example."
+title: "Dalle"
+description: "Use Dalle with Agno agents."
 ---
+
+DALL-E Tools enable text to image generation capability in Agno agents and give let them "see" and "draw."
+
+## Prerequisites
+
+* Run `uv pip install openai` to install dependencies.
+
 ```python
-"""Run `uv pip install openai` to install dependencies."""
 
 from pathlib import Path
 
@@ -76,3 +82,5 @@ source .venvs/demo/bin/activate
 
 python dalle_tools.py
 ```
+
+For details, see [Dalle cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/dalle_tools.py).
