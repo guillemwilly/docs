@@ -1,9 +1,11 @@
 ---
-title: "Tool Hooks In Toolkit Nested"
-description: "Remove name from result to sanitize the output."
+title: "Nested Tool Hooks in Toolkit"
+description: "Use of multiple hooks for complex validation and result sanitization."
 ---
+
+Execute multiple hooks in a specific order to implement sequential validation, logging, and result sanitization for both synchronous and asynchronous AI tools.
+
 ```python
-"""Show how to use multiple tool execution hooks, to run logic before and after a tool is called."""
 
 import asyncio
 import json
@@ -204,3 +206,4 @@ source .venvs/demo/bin/activate
 
 python tool_hooks_in_toolkit_nested.py
 ```
+For details, see [Chained Toolkit Hooks cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/tool_hooks/tool_hooks_in_toolkit_nested.py).

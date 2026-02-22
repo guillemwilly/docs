@@ -1,10 +1,12 @@
 ---
-title: "Tool Hooks Tool Hook In Toolkit"
-sidebarTitle: "Tool Hook In Toolkit"
-description: "Tool Hooks Tool Hook In Toolkit."
+title: "Tool Hooks in Toolkit"
+description: "Apply custom validation logic to tools within a toolkit."
 ---
+
+Apply validation logic to custom class-based collection of tools (CustomerDBTools in this example). Intercept specific method calls (like database deletions) to enforce security rules or data constraints across a group of function collections.
+
 ```python
-"""Show how to use a tool execution hook, to run logic before and after a tool is called."""
+
 
 import json
 from typing import Any, Callable, Dict
@@ -183,3 +185,4 @@ source .venvs/demo/bin/activate
 
 python tool_hook_in_toolkit.py
 ```
+For details, see [Toolkit Validation Hooks cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/tool_hooks/tool_hook_in_toolkit.py).

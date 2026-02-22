@@ -1,10 +1,11 @@
 ---
-title: "Tool Hooks Tool Hook In Toolkit With State"
-sidebarTitle: "Tool Hook In Toolkit With State"
-description: "When used as a tool hook, this function will receive the contextual Agent, function_name, etc as parameters."
+title: "Tool Hooks in Toolkit with State"
+description: "Manage tool arguments dynamically using shared agent session state."
 ---
+
+Dynamically adjust tool behavior using the Agno agent’s internal session state. Build context-aware tools that adapt their execution based on the ongoing user conversation.
+
 ```python
-"""Show how to use a tool execution hook, to run logic before and after a tool is called."""
 
 import json
 from typing import Any, Callable, Dict
@@ -91,3 +92,4 @@ source .venvs/demo/bin/activate
 
 python tool_hook_in_toolkit_with_state.py
 ```
+For details, see [State-aware Toolkit Hooks cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/tool_hooks/tool_hook_in_toolkit_with_state.py).

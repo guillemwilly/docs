@@ -4873,15 +4873,68 @@
                 ]
               },
               {
+                "group": "Tool Decorator",
+                "pages": [
+                  "examples/tools/tool-decorator/overview",
+                  "examples/tools/tool-decorator/tool-decorator",
+                  "examples/tools/tool-decorator/async-tool-decorator",
+                  "examples/tools/tool-decorator/tool-decorator-on-class-method",
+                  "examples/tools/tool-decorator/tool-decorator-with-hook",
+                  "examples/tools/tool-decorator/tool-decorator-with-instructions",
+                  "examples/tools/tool-decorator/cache-tool-calls",
+                  "examples/tools/tool-decorator/stop-after-tool-call"
+                ]
+              },
+              {
                 "group": "MCP",
                 "pages": [
-                  "examples/tools/mcp/streamable-http-transport/overview",
+                  "examples/tools/mcp/overview",
+                  {
+                    "group": "MCP Toolbox",
+                    "pages": [
+                      "examples/tools/mcp/mcp-toolbox-demo/overview",
+                      "examples/tools/mcp/mcp-toolbox-demo/agent",
+                      "examples/tools/mcp/mcp-toolbox-demo/agent-os",
+                      "examples/tools/mcp/mcp-toolbox-demo/hotel-management-typesafe",
+                      "examples/tools/mcp/mcp-toolbox-demo/hotel-management-workflows"
+                    ]
+                  },
+                  {
+                    "group": "Dynamic Headers",
+                    "pages": [
+                      "examples/tools/mcp/dynamic-headers/overview",
+                      "examples/tools/mcp/dynamic-headers/client",
+                      "examples/tools/mcp/dynamic-headers/server"
+                    ]
+                  },
+                  {
+                    "group": "Local Server",
+                    "pages": [
+                    "examples/tools/mcp/local-server/overview",
+                    "examples/tools/mcp/local-server/client",
+                    "examples/tools/mcp/local-server/server"
+                    ]
+                  },
+                  {
+                    "group": "SSE Transport",
+                    "pages": [
+                      "examples/tools/mcp/sse-transport/overview",
+                      "examples/tools/mcp/sse-transport/client",
+                      "examples/tools/mcp/sse-transport/server"
+                    ]
+                  },
+                  {
+                    "group": "Streamable HTTP",
+                    "pages": [
+                      "examples/tools/mcp/streamable-http-transport/overview",
+                      "examples/tools/mcp/streamable-http-transport/client",
+                      "examples/tools/mcp/streamable-http-transport/server"
+                    ]
+                  },
                   "examples/tools/mcp/agno-mcp",
                   "examples/tools/mcp/airbnb",
                   "examples/tools/mcp/brave",
                   "examples/tools/mcp/cli",
-                  "examples/tools/mcp/dynamic-headers/client",
-                  "examples/tools/mcp/dynamic-headers/server",
                   "examples/tools/mcp/filesystem",
                   "examples/tools/mcp/gibsonai",
                   "examples/tools/mcp/github",
@@ -4889,12 +4942,6 @@
                   "examples/tools/mcp/groq-mcp",
                   "examples/tools/mcp/include-exclude-tools",
                   "examples/tools/mcp/include-tools",
-                  "examples/tools/mcp/local-server/client",
-                  "examples/tools/mcp/local-server/server",
-                  "examples/tools/mcp/mcp-toolbox-demo/agent",
-                  "examples/tools/mcp/mcp-toolbox-demo/agent-os",
-                  "examples/tools/mcp/mcp-toolbox-demo/hotel-management-typesafe",
-                  "examples/tools/mcp/mcp-toolbox-demo/hotel-management-workflows",
                   "examples/tools/mcp/mcp-toolbox-for-db",
                   "examples/tools/mcp/mem0",
                   "examples/tools/mcp/multiple-servers",
@@ -4908,11 +4955,7 @@
                   "examples/tools/mcp/pipedream-slack",
                   "examples/tools/mcp/qdrant",
                   "examples/tools/mcp/sequential-thinking",
-                  "examples/tools/mcp/sse-transport/client",
-                  "examples/tools/mcp/sse-transport/server",
                   "examples/tools/mcp/stagehand",
-                  "examples/tools/mcp/streamable-http-transport/client",
-                  "examples/tools/mcp/streamable-http-transport/server",
                   "examples/tools/mcp/stripe",
                   "examples/tools/mcp/supabase",
                   "examples/tools/mcp/tool-name-prefix"
@@ -5077,19 +5120,6 @@
                   "examples/tools/website-tools",
                   "examples/tools/website-tools-knowledge",
                   "examples/tools/zep-tools"
-                ]
-              },
-              {
-                "group": "Custom Tools",
-                "pages": [
-                  "examples/tools/tool-decorator/overview",
-                  "examples/tools/tool-decorator/async-tool-decorator",
-                  "examples/tools/tool-decorator/cache-tool-calls",
-                  "examples/tools/tool-decorator/stop-after-tool-call",
-                  "examples/tools/tool-decorator/tool-decorator",
-                  "examples/tools/tool-decorator/tool-decorator-on-class-method",
-                  "examples/tools/tool-decorator/tool-decorator-with-hook",
-                  "examples/tools/tool-decorator/tool-decorator-with-instructions"
                 ]
               }
             ]
