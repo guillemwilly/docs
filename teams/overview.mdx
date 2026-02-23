@@ -63,11 +63,7 @@ The tradeoff: coordination overhead. Agents need to communicate and share state.
 - Minimizing token costs matters
 - You're not sure yet (start simple, add agents when you hit limits)
 
-## What's New?
-
-With Team 2.0 the SDK offered new features such as approvals for human-in-the-loop workflows, cron-based scheduling for teams, improved HITL requirements, and LearningMachine support for persistent learning. 
-
-The latest release supports:
+## Team Capabilities
 
 ### Modular Team Execution
 
@@ -75,14 +71,12 @@ Team execution is now modular. Message building, session handling, storage, and 
 
 ### Callable Factories
 
-With callable factory pattern support, you can now create Teams and place callables in team fields like tools, knowledge, or members. At run time, Agno resolves them and injects team, run_context, and session_state, then uses their return values for that run. They support sync and async, with optional caching keyed by user or session. Callable factories allow SDK users to build per-run, per-user, or per-session configurations, defer expensive setup, and adapt teams dynamically without rebuilding objects. 
-
-You can define members, tools, or knowledge as callables that are resolved at runtime with access to the run context.
+Callable factories let you supply callables for members, tools, or knowledge. Agno resolves them at run time with access to the run context and uses their return values for that run. This enables per-run or per-session configuration, deferred setup, and dynamic team composition.
 
 | Behavior | Details |
 |----------|---------|
 | Injected parameters | `team`, `run_context`, `session_state` when present in the factory signature |
-| Caching | `cache_callables=True` caches by custom key, then `user_id`, then `session_id` |
+| Caching | `cache_callables=True` caches by custom key, then `user_id`, then `session_id`, see [caching settings](./building-teams#callable-factories)|
 | Return types | Tools and members return list or tuple. Knowledge returns a KnowledgeProtocol instance |
 | Async factories | Async factories require `arun()` or `aprint_response()` |
 
