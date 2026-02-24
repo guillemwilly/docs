@@ -1,19 +1,14 @@
 ---
-title: "Model fallback example using OpenRouter with the Responses API."
-description: "This demonstrates using fallback models with OpenRouter's dynamic model routing."
+title: "Fallback Routing"
+description: "Use fallback models with OpenRouter's dynamic model routing."
 ---
-This demonstrates using fallback models with OpenRouter's dynamic model routing. If the primary model fails due to rate limits, timeouts, or unavailability, OpenRouter will automatically try the fallback models in order.
+
+OpenRouter's dynamic routing supports fallback models. If the primary model fails due to rate limits, timeouts, or unavailability, OpenRouter tries fallback models in order.
+
+## Prerequisites
+Set OPENROUTER_API_KEY environment variable.
 
 ```python
-"""Model fallback example using OpenRouter with the Responses API.
-
-This demonstrates using fallback models with OpenRouter's dynamic model routing.
-If the primary model fails due to rate limits, timeouts, or unavailability,
-OpenRouter will automatically try the fallback models in order.
-
-Requirements:
-- Set OPENROUTER_API_KEY environment variable
-"""
 
 from agno.agent import Agent
 from agno.models.openrouter import OpenRouterResponses

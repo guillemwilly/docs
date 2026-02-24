@@ -1,14 +1,11 @@
 ---
-title: "Sleep Tools"
-description: "Demonstrates sleep tools."
+title: "Sleep"
+description: "Use Sleep tools with Agno agents."
 ---
-```python
-"""
-Sleep Tools
-=============================
 
-Demonstrates sleep tools.
-"""
+Enable Agno agents to intentionally pause their own execution. While most tools are designed for action (fetching data, writing files), SleepTools is designed for timing and coordination.
+
+```python
 
 from agno.agent import Agent
 from agno.tools.sleep import SleepTools
@@ -46,3 +43,4 @@ source .venvs/demo/bin/activate
 
 python sleep_tools.py
 ```
+For details, see [Sleep tools cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/sleep_tools.py).

@@ -1,29 +1,10 @@
 ---
-title: "ScrapeGraphTools"
-description: "This script demonstrates the various capabilities of ScrapeGraphTools toolkit."
+title: "ScrapeGraph"
+description: "Use ScrapeGraph tools with Agno agents."
 ---
-This script demonstrates the various capabilities of ScrapeGraphTools toolkit:
+Enable Agno agents to use ScrapeGraph tools that use Graph Logic and LLMs to understand the semantics of a page, making it resilient to layout changes.
 
 ```python
-"""
-ScrapeGraphTools
-
-This script demonstrates the various capabilities of ScrapeGraphTools toolkit:
-
-1. smartscraper: Extract structured data using natural language prompts
-2. markdownify: Convert web pages to markdown format
-3. searchscraper: Search the web and extract information
-4. crawl: Crawl websites with structured data extraction
-5. scrape: Get raw HTML content from websites (NEW!)
-
-The scrape method is particularly useful when you need:
-- Complete HTML source code
-- Raw content for further processing
-- HTML structure analysis
-- Content that needs to be parsed differently
-
-All methods support heavy JavaScript rendering when needed.
-"""
 
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
@@ -32,7 +13,6 @@ from agno.tools.scrapegraph import ScrapeGraphTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 agent_model = OpenAIChat(id="gpt-4.1")
 scrapegraph_smartscraper = ScrapeGraphTools(enable_smartscraper=True)
@@ -118,3 +98,5 @@ source .venvs/demo/bin/activate
 
 python scrapegraph_tools.py
 ```
+
+For details, see [ScrapeGraph cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/scrapegraph_tools.py).

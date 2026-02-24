@@ -1,10 +1,11 @@
 ---
-title: "Tool Hooks Tool Hook"
-sidebarTitle: "Tool Hook"
-description: "Pre-hook logic: this runs before the tool is called."
+title: " Tool Hook"
+description: "Define custom logic to intercept and log tool executions."
 ---
+
+Use tool execution hook with async functions to run logic before and after a tool is called by Agno agents.
+
 ```python
-"""Show how to use a tool execution hook, to run logic before and after a tool is called."""
 
 from typing import Any, Callable, Dict
 
@@ -87,3 +88,4 @@ source .venvs/demo/bin/activate
 
 python tool_hook.py
 ```
+For details, see [Custom Tool Interceptors cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/tool_hooks/tool_hook.py).

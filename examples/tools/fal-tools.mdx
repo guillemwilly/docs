@@ -1,14 +1,11 @@
 ---
-title: "Fal Tools"
-description: "Demonstrates fal tools."
+title: "Fal"
+description: "Use Fal with Agno agents."
 ---
-```python
-"""
-Fal Tools
-=============================
 
-Demonstrates fal tools.
-"""
+Enable Agno agents to generate and manipulate images, videos, and audio at speed with Fal.
+
+```python
 
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
@@ -17,7 +14,6 @@ from agno.tools.fal import FalTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 fal_agent = Agent(
     name="Fal Video Generator Agent",
@@ -56,3 +52,4 @@ source .venvs/demo/bin/activate
 
 python fal_tools.py
 ```
+For details, see [Fal cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/fal_tools.py).

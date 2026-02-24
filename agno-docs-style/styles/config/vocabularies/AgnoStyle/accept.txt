@@ -1,3 +1,4 @@
+structured_output
 access_token
 activeTab
 add_datetime_to_context

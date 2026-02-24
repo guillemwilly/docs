@@ -1,26 +1,25 @@
 ---
-title: "Webex Tools"
-description: "To get the Webex Teams Access token refer to - https://developer.webex.com/docs/bots."
+title: "Webex"
+description: "Use Webex with Agno agents."
 ---
-To get the Webex Teams Access token refer to - https://developer.webex.com/docs/bots
 
-```python
-"""
-Run `uv pip install openai webexpythonsdk` to install dependencies.
-To get the Webex Teams Access token refer to - https://developer.webex.com/docs/bots
+Enable Agno agents to autonomously manage Webex spaces and messaging to streamline enterprise communication and workflow automation.
 
-Steps:
+## Prerequisites
 
 1. Sign up for Webex Teams and go to the Webex [Developer Portal](https://developer.webex.com/)
-2. Create the Bot
-    2.1 Click in the top-right on your profile → My Webex Apps → Create a Bot.
-    2.2 Enter Bot Name, Username, Icon, and Description, then click Add Bot.
-3. Get the Access Token
-    3.1 Copy the Access Token shown on the confirmation page (displayed once).
-    3.2 If lost, regenerate it via My Webex Apps → Edit Bot → Regenerate Access Token.
-4. Set the WEBEX_ACCESS_TOKEN environment variable
-5. Launch Webex itself and add your bot to a space like the Welcome space. Use the bot's email address (e.g. test@webex.bot)
-"""
+- Create the Bot
+  - Click in the top-right on your profile → My Webex Apps → Create a Bot.
+  - Enter Bot Name, Username, Icon, and Description, then click Add Bot.
+- Get the Access Token
+  - Copy the Access Token shown on the confirmation page (displayed once).
+  - If lost, regenerate it via My Webex Apps → Edit Bot → Regenerate Access Token.
+2. Install dependencies: `uv pip install openai webexpythonsdk`
+3. Set the WEBEX_ACCESS_TOKEN environment variable
+4. Launch Webex and add your bot to a space like the Welcome space. Use the bot's email address (e.g. test@webex.bot)
+
+
+```python
 
 from agno.agent import Agent
 from agno.tools.webex import WebexTools
@@ -58,3 +57,4 @@ source .venvs/demo/bin/activate
 
 python webex_tools.py
 ```
+For details, see [Webex cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/webex_tools.py).

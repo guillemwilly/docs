@@ -1,19 +1,16 @@
 ---
-title: "AgentQL Tools for scraping websites."
-description: "Prerequisites: - Set the environment variable `AGENTQL_API_KEY` with your AgentQL API key."
+title: "AgentQL"
+description: "Use AgentQL tools with Agno agents."
 ---
-Prerequisites: - Set the environment variable `AGENTQL_API_KEY` with your AgentQL API key. You can obtain the API key from the AgentQL website: https://agentql.com/ - Run `playwright install` to install a browser extension for playwright.
+
+Enable Agno agents to scrape website content using AgentQL Tools,
+
+## Prerequisites
+- Set the environment variable `AGENTQL_API_KEY` with your AgentQL API key. You can obtain the API key from the AgentQL website: https://agentql.com/ 
+- Run `playwright install` to install a browser extension for playwright.
 
 ```python
 """
-AgentQL Tools for scraping websites.
-
-Prerequisites:
-- Set the environment variable `AGENTQL_API_KEY` with your AgentQL API key.
-  You can obtain the API key from the AgentQL website:
-  https://agentql.com/
-- Run `playwright install` to install a browser extension for playwright.
-
 AgentQL will open up a browser instance (don't close it) and do scraping on the site.
 """
 
@@ -24,7 +21,6 @@ from agno.tools.agentql import AgentQLTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 # Example 1: Enable specific AgentQL functions
 agent = Agent(
@@ -90,3 +86,4 @@ source .venvs/demo/bin/activate
 
 python agentql_tools.py
 ```
+For details, see [AgentQL cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/agentql.py).

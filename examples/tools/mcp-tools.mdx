@@ -1,14 +1,11 @@
 ---
-title: "Mcp Tools"
-description: "Demonstrates mcp tools."
+title: "MCP"
+description: "Use MCP tools with Agno agents."
 ---
-```python
-"""
-Mcp Tools
-=============================
 
-Demonstrates mcp tools.
-"""
+Use MCP tools to connect Agno agents to any Model Context Protocol (MCP) server, giving them instant access to external data, tools, and prompts. It supports local connections (stdio) and remote endpoints (SSE/HTTP), making it easy to integrate anything from a local database to a cloud-based API.
+
+```python
 
 import asyncio
 import sys
@@ -71,3 +68,5 @@ source .venvs/demo/bin/activate
 
 python mcp_tools.py
 ```
+
+For details, see [MCP tools cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/mcp_tools.py).

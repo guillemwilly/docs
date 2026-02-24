@@ -1,12 +1,17 @@
 ---
 title: "Chat"
 sidebarTitle: "Overview"
-description: "Cookbook examples for `cookbook/90_models/openrouter/chat`."
+description: "Send messages to multiple models in parallel."
 ---
+
+Use [OpenRouter's Chat API](https://openrouter.ai/docs/sdks/python/api-reference/chat) to send messages to multiple models in parallel. This allows you to use the best model for the task at hand, and to handle errors and timeouts gracefully.
+
+For details, see examples in `cookbook/90_models/openrouter/chat`.
+
 | Example | Description |
 |---------|-------------|
-| [Openrouter Basic](/examples/models/openrouter/chat/basic) | Cookbook example for `openrouter/chat/basic.py`. |
-| [Dynamic Model Router](/examples/models/openrouter/chat/dynamic-model-router) | Dynamic models provide automatic failover when the primary model encounters: - Rate limits - Timeouts - Unavailability - Model overload. |
+| [Basic](/examples/models/openrouter/chat/basic) | Cookbook example for `openrouter/chat/basic.py`. |
+| [Dynamic Model Router](/examples/models/openrouter/chat/dynamic-model-router) | Dynamic models provide automatic failover when the primary model encounters rate limits, timeouts, unavailability or model overload. |
 | [Retry](/examples/models/openrouter/chat/retry) | Example demonstrating how to set up retries with OpenRouter. |
-| [Openrouter Structured Output](/examples/models/openrouter/chat/structured-output) | Cookbook example for `openrouter/chat/structured_output.py`. |
-| [Tool Use](/examples/models/openrouter/chat/tool-use) | Openrouter model example. |
+| [Structured Output](/examples/models/openrouter/chat/structured-output) | Cookbook example for `openrouter/chat/structured_output.py`. |
+| [Tool Use](/examples/models/openrouter/chat/tool-use) | OpenRouter model example. |

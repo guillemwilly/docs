@@ -1,24 +1,19 @@
 ---
-title: "Example showing how to use the Todoist Tools with Agno"
-sidebarTitle: "Todoist Tools"
-description: "Requirements."
+title: "Todoist"
+description: "Use Todoist tools with Agno agents."
 ---
-Requirements: - Sign up/login to Todoist and get a Todoist API Token (get from https://app.todoist.com/app/settings/integrations/developer) - uv pip install todoist-api-python
 
-```python
-"""
-Example showing how to use the Todoist Tools with Agno
+Enable Agno agents  to autonomously create, organize, and complete tasks within the Todoist ecosystem.
 
-Requirements:
-- Sign up/login to Todoist and get a Todoist API Token (get from https://app.todoist.com/app/settings/integrations/developer)
-- uv pip install todoist-api-python
-
-Usage:
+## Prerequisites
+- Sign up/login to Todoist and get a Todoist API Token  from https://app.todoist.com/app/settings/integrations/developer
+- Install Todoist: `uv pip install todoist-api-python`
 - Set the following environment variables:
     export TODOIST_API_TOKEN="your_api_token"
+- Alternatively, provide the token when creating the TodoistTools instance
 
-- Or provide them when creating the TodoistTools instance
-"""
+```python
+
 
 from agno.agent import Agent
 from agno.models.google.gemini import Gemini
@@ -89,3 +84,4 @@ source .venvs/demo/bin/activate
 
 python todoist_tools.py
 ```
+For details, see [Todoist tool cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/todoist_tools.py).

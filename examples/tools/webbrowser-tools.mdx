@@ -1,14 +1,11 @@
 ---
-title: "Webbrowser Tools"
-description: "Demonstrates webbrowser tools."
+title: "Webbrowser "
+description: "Use Webbrowser tool with Agno agents."
 ---
-```python
-"""
-Webbrowser Tools
-=============================
 
-Demonstrates webbrowser tools.
-"""
+Enable Agno agents to interact with a physical web browser on the host machine. Unlike "headless" search tools (like Tavily) or scraping tools (like Firecrawl), this toolkit is primarily used to open and visualize content for the user.
+
+```python
 
 from agno.agent import Agent
 from agno.models.google import Gemini
@@ -63,3 +60,4 @@ source .venvs/demo/bin/activate
 
 python webbrowser_tools.py
 ```
+For details, see [Web browser tool cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/webbrowser_tools.py).

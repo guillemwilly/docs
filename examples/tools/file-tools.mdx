@@ -1,18 +1,11 @@
 ---
-title: "File Tools - File System Operations and Management"
-sidebarTitle: "File Tools"
-description: "This example demonstrates how to use FileTools for file operations."
+title: "File Management"
+description: "Use file management with Agno agents."
 ---
-This example demonstrates how to use FileTools for file operations. Shows enable_ flag patterns for selective function access. FileTools is a small tool (&lt;6 functions) so it uses enable_ flags.
+
+Enable Agno agents to perform file system operations and management with File Tools. The `enable_` flag pattern is used for selective function access.
 
 ```python
-"""
-File Tools - File System Operations and Management
-
-This example demonstrates how to use FileTools for file operations.
-Shows enable_ flag patterns for selective function access.
-FileTools is a small tool (&lt;6 functions) so it uses enable_ flags.
-"""
 
 from pathlib import Path
 
@@ -22,7 +15,6 @@ from agno.tools.file import FileTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 # Example 1: All functions enabled (default behavior)
 agent_full = Agent(
@@ -136,3 +128,4 @@ source .venvs/demo/bin/activate
 
 python file_tools.py
 ```
+For details, see [File Management Tools cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/file_tools.py).

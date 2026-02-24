@@ -1,20 +1,14 @@
 ---
-title: "YFinance Tools - Stock Market Analysis and Financial Data"
-sidebarTitle: "YFinance Tools"
-description: "This example demonstrates how to use YFinanceTools for financial analysis, showing include_tools/exclude_tools patterns for selective function access."
+title: "YFinance"
+description: "Use YFinance tools with Agno agents."
 ---
-This example demonstrates how to use YFinanceTools for financial analysis, showing include_tools/exclude_tools patterns for selective function access. YFinanceTools is a large tool (≥6 functions) so it uses include_tools/exclude_tools.
+Enable Agno agents to plug in YFinanceTools for financial analysis. For selective function access, use `include_tools/exclude_tools` patterns.
+
+## Prerequisites
+
+Install dependencies: `uv pip install yfinance` 
 
 ```python
-"""
-YFinance Tools - Stock Market Analysis and Financial Data
-
-This example demonstrates how to use YFinanceTools for financial analysis,
-showing include_tools/exclude_tools patterns for selective function access.
-YFinanceTools is a large tool (≥6 functions) so it uses include_tools/exclude_tools.
-
-Run: `uv pip install yfinance` to install the dependencies
-"""
 
 from agno.agent import Agent
 from agno.tools.yfinance import YFinanceTools
@@ -164,3 +158,4 @@ source .venvs/demo/bin/activate
 
 python yfinance_tools.py
 ```
+For details, see [YFinance tools cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/yfinance_tools.py).

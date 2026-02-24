@@ -1,19 +1,14 @@
 ---
-title: "Data Visualization Tools - Create Charts and Graphs with AI Agents"
-sidebarTitle: "Data Visualization Tools"
-description: "This example shows how to use the VisualizationTools to create various types of charts and graphs for data visualization."
+title: "Visualization Tools"
+description: "Use visualization with Agno agents."
 ---
-This example shows how to use the VisualizationTools to create various types of charts and graphs for data visualization. Demonstrates include_tools/exclude_tools patterns for selective visualization function access.
+Enable Agno agents to create various types of charts and graphs for data visualization. Use `include_tools/exclude_tools` patterns for selective visualization function access.
+
+## Prerequisites
+
+- Install `matplotlib`: `uv pip install matplotlib`
 
 ```python
-"""Data Visualization Tools - Create Charts and Graphs with AI Agents
-
-This example shows how to use the VisualizationTools to create various types of charts
-and graphs for data visualization. Demonstrates include_tools/exclude_tools patterns
-for selective visualization function access.
-
-Run: `uv pip install matplotlib` to install the dependencies
-"""
 
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
@@ -292,3 +287,4 @@ source .venvs/demo/bin/activate
 
 python visualization_tools.py
 ```
+For details, see [Visualization tools cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/visualization_tools.py).

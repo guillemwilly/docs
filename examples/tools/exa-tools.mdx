@@ -1,14 +1,11 @@
 ---
-title: "Exa Tools"
-description: "Demonstrates exa tools."
+title: "Exa"
+description: "Use Exa with Agno agents."
 ---
-```python
-"""
-Exa Tools
-=============================
 
-Demonstrates exa tools.
-"""
+Enable Agno agents to find web content based on its actual meaning and context instead of keyword match with Exa link-prediction transformers and embeddings.
+
+```python
 
 from agno.agent import Agent
 from agno.tools.exa import ExaTools
@@ -16,7 +13,6 @@ from agno.tools.exa import ExaTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 # Example 1: Enable all tools
 agent_all = Agent(
@@ -102,3 +98,4 @@ source .venvs/demo/bin/activate
 
 python exa_tools.py
 ```
+For details, see [Exa cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/exa_tools.py).

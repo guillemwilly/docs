@@ -1,38 +1,26 @@
 ---
-title: "X Tools"
-description: "Demonstrates x tools."
+title: "X"
+description: "Use X with Agno agents."
 ---
-```python
-"""
-X Tools
-=============================
 
-Demonstrates x tools.
-"""
+## Prerequisites
 
-from agno.agent import Agent
-from agno.tools.x import XTools
+Set up an X developer account and obtain the necessary keys. Follow the steps:
 
-# ---------------------------------------------------------------------------
-# Create Agent
-# ---------------------------------------------------------------------------
-
-
-"""
-To set up an X developer account and obtain the necessary keys, follow these steps:
-
-1. **Create an X Developer Account:**
+<AccordionGroup>
+  *(Click for step details)*
+  <Accordion title="Create an X Developer Account:">
    - Go to the X Developer website: https://developer.x.com/
    - Sign in with your X account or create a new one if you don't have an account.
    - Apply for a developer account by providing the required information about your intended use of the X API.
-
-2. **Create a Project and App:**
+  </Accordion>
+  <Accordion title="Create a Project and App:">
    - Once your developer account is approved, log in to the X Developer portal.
    - Navigate to the "Projects & Apps" section and create a new project.
    - Within the project, create a new app. This app will be used to generate the necessary API keys and tokens.
    - You'll get a client id and client secret, but you can ignore them.
-
-3. **Generate API Keys, Tokens, and Client Credentials:**
+  </Accordion>
+  <Accordion title="Generate API Keys, Tokens, and Client Credentials:">
    - After creating the app, navigate to the "Keys and tokens" tab.
    - Generate the following keys, tokens, and client credentials:
      - **API Key (Consumer Key)**
@@ -40,15 +28,24 @@ To set up an X developer account and obtain the necessary keys, follow these ste
      - **Bearer Token**
      - **Access Token**
      - **Access Token Secret**
+  </Accordion>
+  <Accordion title="Set Environment Variables:">
+    Export the generated keys, tokens, and client credentials as environment variables in your system or provide them as arguments to the `XTools` constructor.
+    - `X_CONSUMER_KEY`
+    - `X_CONSUMER_SECRET`
+    - `X_ACCESS_TOKEN`
+    - `X_ACCESS_TOKEN_SECRET`
+    - `X_BEARER_TOKEN`
+  </Accordion>
+</AccordionGroup>
+```python
 
-4. **Set Environment Variables:**
-   - Export the generated keys, tokens, and client credentials as environment variables in your system or provide them as arguments to the `XTools` constructor.
-     - `X_CONSUMER_KEY`
-     - `X_CONSUMER_SECRET`
-     - `X_ACCESS_TOKEN`
-     - `X_ACCESS_TOKEN_SECRET`
-     - `X_BEARER_TOKEN`
-"""
+from agno.agent import Agent
+from agno.tools.x import XTools
+
+# ---------------------------------------------------------------------------
+# Create Agent
+# ---------------------------------------------------------------------------
 
 
 # Initialize the x toolkit
@@ -110,3 +107,4 @@ source .venvs/demo/bin/activate
 
 python x_tools.py
 ```
+For details, see [X tools cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/x_tools.py).

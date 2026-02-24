@@ -1,15 +1,23 @@
 ---
-title: "Calcom Tools"
-description: "Demonstrates calcom tools."
+title: "Cal.com"
+description: "Use Calcom scheduling with Agno Agents."
 ---
+
+Enable Agno agents to use [Calcom](https://github.com/calcom/cal.com) tool for calendaring and scheduling functions.
+
+## Prerequisites
+1. Get [Cal.com API key](https://cal.com/settings/developer/api-keys)
+2. Get the event Type ID from Cal.com
+3. Set up the following:
+   - `uv pip install requests pytz`
+   - Export these environment variables:
+      ```bash
+      export CALCOM_API_KEY="your_api_key"
+      export CALCOM_EVENT_TYPE_ID="your_event_type_id"
+      ```
+   - Alternatively, provide these environment variables when creating the CalComTools instance
+
 ```python
-"""
-Calcom Tools
-=============================
-
-Demonstrates calcom tools.
-"""
-
 from datetime import datetime
 
 from agno.agent import Agent
@@ -20,24 +28,7 @@ from agno.tools.calcom import CalComTools
 # Create Agent
 # ---------------------------------------------------------------------------
 
-
-"""
-Example showing how to use the Cal.com Tools with Agno.
-
-Requirements:
-- Cal.com API key (get from cal.com/settings/developer/api-keys)
-- Event Type ID from Cal.com
-- uv pip install requests pytz
-
-Usage:
-- Set the following environment variables:
-    export CALCOM_API_KEY="your_api_key"
-    export CALCOM_EVENT_TYPE_ID="your_event_type_id"
-
-- Or provide them when creating the CalComTools instance
-"""
-
-INSTRUCTONS = f"""You're scheduing assistant. Today is {datetime.now()}.
+INSTRUCTIONS = f"""You're scheduling assistant. Today is {datetime.now()}.
 You can help users by:
     - Finding available time slots
     - Creating new bookings
@@ -51,7 +42,7 @@ You can help users by:
 # Example 1: Include specific Cal.com functions for booking management
 booking_agent = Agent(
     name="Booking Assistant",
-    instructions=[INSTRUCTONS],
+    instructions=[INSTRUCTIONS],
     model=OpenAIChat(id="gpt-4"),
     tools=[
         CalComTools(
@@ -64,7 +55,7 @@ booking_agent = Agent(
 # Example 2: Exclude cancellation functions for safety
 safe_calendar_agent = Agent(
     name="Safe Calendar Assistant",
-    instructions=[INSTRUCTONS],
+    instructions=[INSTRUCTIONS],
     model=OpenAIChat(id="gpt-4"),
     tools=[
         CalComTools(
@@ -77,7 +68,7 @@ safe_calendar_agent = Agent(
 # Example 3: Full Cal.com functionality (default)
 agent = Agent(
     name="Full Calendar Assistant",
-    instructions=[INSTRUCTONS],
+    instructions=[INSTRUCTIONS],
     model=OpenAIChat(id="gpt-4"),
     tools=[CalComTools(user_timezone="America/New_York")],
     markdown=True,
@@ -104,3 +95,4 @@ source .venvs/demo/bin/activate
 
 python calcom_tools.py
 ```
+For details, see [Cal.com cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/calcom_tools.py).

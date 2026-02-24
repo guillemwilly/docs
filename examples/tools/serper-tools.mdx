@@ -1,18 +1,18 @@
 ---
-title: "This is a example of an agent using the Serper Toolkit."
-description: "You can obtain an API key from https://serper.dev/."
+title: "Serper"
+description: "Use Serper tools with Agno agents."
 ---
-You can obtain an API key from https://serper.dev/
+
+Enable Agno agents with Serper tools for fast, cost-effective gateway to the entire Google Search ecosystem. Unlike traditional search tools, Serper is designed specifically for developers, returning structured JSON that agents can parse instantly.
+
+## Prerequisites
+
+- Get an API key from https://serper.dev/
+- Set your API key as an environment variable: 
+  `export SERPER_API_KEY="your_api_key_here"`
+ - Alternatively, pass API_KEY to the SerperTools class
 
 ```python
-"""
-This is a example of an agent using the Serper Toolkit.
-
-You can obtain an API key from https://serper.dev/
-
- - Set your API key as an environment variable: export SERPER_API_KEY="your_api_key_here"
- - or pass api_key to the SerperTools class
-"""
 
 from agno.agent import Agent
 from agno.tools.serper import SerperTools
@@ -20,7 +20,6 @@ from agno.tools.serper import SerperTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 agent = Agent(
     tools=[SerperTools()],
@@ -60,3 +59,4 @@ source .venvs/demo/bin/activate
 
 python serper_tools.py
 ```
+For details, see [Serper cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/serper_tools.py).

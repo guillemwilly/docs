@@ -1,29 +1,15 @@
 ---
-title: "Unsplash Tools Example"
-description: "This example demonstrates how to use the UnsplashTools toolkit with an AI agent."
+title: "Unsplash"
+description: "Use Unsplash tools with Agno agents."
 ---
-This example demonstrates how to use the UnsplashTools toolkit with an AI agent to search for and retrieve high-quality, royalty-free images from Unsplash.
+Enable Agno agents to search for and retrieve high-quality, royalty-free images from Unsplash.
 
-```python
-"""Unsplash Tools Example
-
-This example demonstrates how to use the UnsplashTools toolkit with an AI agent
-to search for and retrieve high-quality, royalty-free images from Unsplash.
-
-UnsplashTools provides:
-- search_photos: Search photos by keyword with filters (orientation, color)
-- get_photo: Get detailed info about a specific photo
-- get_random_photo: Get random photo(s) with optional query
-- download_photo: Track downloads for Unsplash API compliance
-
-Setup:
+## Prerequisites
 1. Get a free API key from https://unsplash.com/developers
 2. Set the environment variable: export UNSPLASH_ACCESS_KEY="your_access_key"
-3. Install dependencies: pip install openai agno
+3. Install dependencies: `pip install openai agno`
 
-Usage:
-    python unsplash_tools.py
-"""
+```python
 
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
@@ -135,3 +121,4 @@ source .venvs/demo/bin/activate
 
 python unsplash_tools.py
 ```
+For details, see [Unsplash tool cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/unsplash_tools.py).

@@ -1,15 +1,11 @@
 ---
-title: "Web Tools"
-description: "Demonstrates web tools."
+title: "Web"
+description: "Use Web tools with Agno agents."
 ---
+
+Enable Agno agents to search the web through ability provider-agnostic engine for internet exploration. While specific toolkits like DuckDuckGoTools or TavilyTools target a single provider, WebTools is designed to handle multiple backends (Google, Bing, Brave, etc.) through a unified interface.
+
 ```python
-"""
-Web Tools
-=============================
-
-Demonstrates web tools.
-"""
-
 from agno.agent import Agent
 from agno.tools.webtools import WebTools
 
@@ -39,3 +35,4 @@ source .venvs/demo/bin/activate
 
 python web_tools.py
 ```
+For details, see [Web tools cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/web_tools.py).

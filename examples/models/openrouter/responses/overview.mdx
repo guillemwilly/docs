@@ -1,12 +1,17 @@
 ---
 title: "Responses"
 sidebarTitle: "Overview"
-description: "Cookbook examples for `cookbook/90_models/openrouter/responses`."
+description: "Access multiple AI models through a unified, stateless API."
 ---
+
+[OpenRouter's Responses API (Beta)](https://openrouter.ai/docs/api/reference/responses/overview) provides an OpenAI-compatible interface for accessing multiple AI models through a unified, stateless API. It is designed as a drop-in replacement for OpenAI's Responses API with enhanced capabilities including reasoning, tool calling, and web search integration.
+
+For details, see examples in `cookbook/90_models/openrouter/responses`.
+
 | Example | Description |
 |---------|-------------|
-| [Basic](/examples/models/openrouter/responses/basic) | OpenRouter's Responses API (beta) provides OpenAI-compatible access to multiple. |
-| [Fallback](/examples/models/openrouter/responses/fallback) | This demonstrates using fallback models with OpenRouter's dynamic model routing. |
-| [Stream](/examples/models/openrouter/responses/stream) | Requirements: - Set OPENROUTER_API_KEY environment variable. |
-| [Structured Output](/examples/models/openrouter/responses/structured-output) | This demonstrates using Pydantic models for structured output with OpenRouter's. |
-| [Tool Use](/examples/models/openrouter/responses/tool-use) | This demonstrates using tools with OpenRouter's Responses API endpoint. |
+| [Basic](/examples/models/openrouter/responses/basic) | Use OpenRouter's Responses API (beta) with OpenAI-compatible requests across multiple models. |
+| [Fallback](/examples/models/openrouter/responses/fallback) | Route requests with fallback models using OpenRouter's dynamic model routing. |
+| [Streaming](/examples/models/openrouter/responses/stream) | Stream OpenRouter's Responses API output. Requires `OPENROUTER_API_KEY`. |
+| [Structured Output](/examples/models/openrouter/responses/structured-output) | Return Pydantic-validated structured output with OpenRouter's Responses API. |
+| [Tool Use](/examples/models/openrouter/responses/tool-use) | Call tools through OpenRouter's Responses API endpoint. |

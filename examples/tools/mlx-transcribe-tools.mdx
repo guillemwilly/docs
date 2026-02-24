@@ -1,23 +1,23 @@
 ---
-title: "MLX Transcribe: A tool for transcribing audio files using MLX Whisper"
-description: "Requirements: 1."
+title: "MLX Transcribe"
+description: "Use MLX Trascribe tool with Agno agents."
 ---
-Requirements: 1. ffmpeg - Install using: - macOS: `brew install ffmpeg` - Ubuntu: `sudo apt-get install ffmpeg` - Windows: Download from https://ffmpeg.org/download.html
 
-```python
-"""
-MLX Transcribe: A tool for transcribing audio files using MLX Whisper
+MLX Transcribe tool enables Agno agents to generate audio files using MLX Whisper.
 
-Requirements:
-1. ffmpeg - Install using:
-   - macOS: `brew install ffmpeg`
-   - Ubuntu: `sudo apt-get install ffmpeg`
+## Prerequisites
+
+1. Install `ffmpeg`  
+   - MacOS: `brew install ffmpeg` 
+   - Ubuntu: `sudo apt-get install ffmpeg` 
    - Windows: Download from https://ffmpeg.org/download.html
 
 2. mlx-whisper library:
    uv pip install mlx-whisper
 
-Example Usage:
+```python
+"""
+Usage:
 - Place your audio files in the 'storage/audio' directory
     Eg: download https://www.ted.com/talks/reid_hoffman_and_kevin_scott_the_evolution_of_ai_and_how_it_will_impact_human_creativity
 - Run this script to transcribe audio files
@@ -74,3 +74,4 @@ source .venvs/demo/bin/activate
 
 python mlx_transcribe_tools.py
 ```
+For details, see [MLX Transcribe tools cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/mlx_transcribe_tools.py).

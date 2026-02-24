@@ -1,10 +1,13 @@
 ---
-title: "Exceptions"
+title: "Resilience and Error Handling"
 sidebarTitle: "Overview"
-description: "Cookbook examples for this tools subsection."
+description: "Build reliable agents using retries, post-hook error management, and explicit stop conditions."
 ---
+
+Use automated retries for transient API issues and stop conditions for unrecoverable errors to prevent execution loops.
+
 | Example | Description |
 |---------|-------------|
-| [Retry Tool Call](/examples/tools/exceptions/retry-tool-call) | Demonstrates retry tool call. |
-| [Retry Tool Call From Post Hook](/examples/tools/exceptions/retry-tool-call-from-post-hook) | Demonstrates retry tool call from post hook. |
-| [Stop Agent Exception](/examples/tools/exceptions/stop-agent-exception) | Demonstrates stop agent exception. |
+| [Retry Tool Call](/examples/tools/exceptions/retry-tool-call) | Implement automatic retries for flaky or rate-limited tool executions. |
+| [Retry Tool Call From Post Hook](/examples/tools/exceptions/retry-tool-call-from-post-hook) | Intercept errors and trigger retries using post-execution hooks to maintain workflow continuity. |
+| [Stop Agent Exception](/examples/tools/exceptions/stop-agent-exception) | Gracefully terminate execution when specific error conditions are met to prevent "hallucination loops."|

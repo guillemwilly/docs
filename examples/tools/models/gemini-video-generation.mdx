@@ -1,20 +1,20 @@
 ---
-title: "Example: Using the GeminiTools Toolkit for Video Generation"
-description: "An Agent using the Gemini video generation tool."
+title: "Gemini Video Generation"
+description: "Use Gemini for video generation in Agno agents."
 ---
+
+## Prerequisites
+
+- Install dependencies: `uv pip install google-genai agno`
+- Make sure you have set the GOOGLE_CLOUD_PROJECT and GOOGLE_CLOUD_LOCATION environment variables.
+
 ```python
 """Example: Using the GeminiTools Toolkit for Video Generation
-
-An Agent using the Gemini video generation tool.
-
-Video generation only works with Vertex AI.
-Make sure you have set the GOOGLE_CLOUD_PROJECT and GOOGLE_CLOUD_LOCATION environment variables.
 
 Example prompts to try:
 - "Generate a 5-second video of a kitten playing a piano"
 - "Create a short looping animation of a neon city skyline at dusk"
 
-Run `uv pip install google-genai agno` to install the necessary dependencies.
 """
 
 from agno.agent import Agent
@@ -62,3 +62,4 @@ source .venvs/demo/bin/activate
 
 python gemini_video_generation.py
 ```
+For details, see [Gemini Video tools cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/models/gemini_video_generation.py).

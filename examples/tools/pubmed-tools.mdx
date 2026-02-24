@@ -1,14 +1,12 @@
 ---
-title: "Pubmed Tools"
-description: "Demonstrates pubmed tools."
+title: "PubMed"
+description: "Use PubMed tools with Agno agents."
 ---
-```python
-"""
-Pubmed Tools
-=============================
 
-Demonstrates pubmed tools.
-"""
+Enable Agno agents real-time access to the National Library of Medicine’s database, allowing them to base their responses on peer-reviewed clinical studies, systematic reviews, and experimental research through Pubmed tools.
+
+```python
+
 
 from agno.agent import Agent
 from agno.tools.pubmed import PubmedTools
@@ -16,7 +14,6 @@ from agno.tools.pubmed import PubmedTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 # Example 1: Enable all PubMed functions
 agent_all = Agent(
@@ -82,3 +79,4 @@ source .venvs/demo/bin/activate
 
 python pubmed_tools.py
 ```
+For details, see [PubMed cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/pubmed_tools.py).

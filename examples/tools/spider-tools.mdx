@@ -1,14 +1,16 @@
 ---
-title: "Spider Tools"
-description: "Demonstrates spider tools."
+title: "Spider"
+description: "Use Spider tools with Agno agents."
 ---
-```python
-"""
-Spider Tools
-=============================
 
-Demonstrates spider tools.
-"""
+Enable Agno agents to go beyond page-scraping by crawling entire websites and returning structured, "LLM-ready" Markdown data with Spider tools.
+
+
+## Prerequisites
+
+To use Spider, you need an API key from the Spider dashboard.
+
+```python
 
 from agno.agent import Agent
 from agno.tools.spider import SpiderTools
@@ -59,3 +61,5 @@ source .venvs/demo/bin/activate
 
 python spider_tools.py
 ```
+
+For details, see [Spider cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/spider_tools.py).

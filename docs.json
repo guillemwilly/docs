@@ -4760,17 +4760,28 @@
                   {
                     "group": "OpenRouter",
                     "pages": [
-                      "examples/models/openrouter/responses/overview",
-                      "examples/models/openrouter/chat/basic",
-                      "examples/models/openrouter/chat/dynamic-model-router",
-                      "examples/models/openrouter/chat/retry",
-                      "examples/models/openrouter/chat/structured-output",
-                      "examples/models/openrouter/chat/tool-use",
-                      "examples/models/openrouter/responses/basic",
-                      "examples/models/openrouter/responses/fallback",
-                      "examples/models/openrouter/responses/stream",
-                      "examples/models/openrouter/responses/structured-output",
-                      "examples/models/openrouter/responses/tool-use"
+                      {
+                        "group": "Responses API",
+                        "pages": [
+                          "examples/models/openrouter/responses/overview",
+                          "examples/models/openrouter/responses/basic",
+                          "examples/models/openrouter/responses/fallback",
+                          "examples/models/openrouter/responses/stream",
+                          "examples/models/openrouter/responses/structured-output",
+                          "examples/models/openrouter/responses/tool-use"
+                        ]
+                      },
+                      {
+                        "group": "Chat API",
+                        "pages": [
+                          "examples/models/openrouter/chat/overview",
+                          "examples/models/openrouter/chat/basic",
+                          "examples/models/openrouter/chat/dynamic-model-router",
+                          "examples/models/openrouter/chat/retry",
+                          "examples/models/openrouter/chat/structured-output",
+                          "examples/models/openrouter/chat/tool-use"
+                        ]
+                      }
                     ]
                   },
                   {
@@ -4843,15 +4854,89 @@
             "pages": [
               "examples/tools/overview",
               {
+                "group": "Tool Hooks",
+                "pages": [
+                  "examples/tools/tool-hooks/overview",
+                  "examples/tools/tool-hooks/pre-and-post-hooks",
+                  "examples/tools/tool-hooks/tool-hook",
+                  "examples/tools/tool-hooks/tool-hook-in-toolkit",
+                  "examples/tools/tool-hooks/tool-hook-in-toolkit-with-state",
+                  "examples/tools/tool-hooks/tool-hook-in-toolkit-with-state-nested",
+                  "examples/tools/tool-hooks/tool-hooks-in-toolkit-nested"
+                ]
+              },
+              {
+                "group": "Handling Tool Errors",
+                "pages": [
+                  "examples/tools/exceptions/overview",
+                  "examples/tools/exceptions/retry-tool-call",
+                  "examples/tools/exceptions/retry-tool-call-from-post-hook",
+                  "examples/tools/exceptions/stop-agent-exception"
+                ]
+              },
+              {
+                "group": "Tool Decorator",
+                "pages": [
+                  "examples/tools/tool-decorator/overview",
+                  "examples/tools/tool-decorator/tool-decorator",
+                  "examples/tools/tool-decorator/async-tool-decorator",
+                  "examples/tools/tool-decorator/tool-decorator-on-class-method",
+                  "examples/tools/tool-decorator/tool-decorator-with-hook",
+                  "examples/tools/tool-decorator/tool-decorator-with-instructions",
+                  "examples/tools/tool-decorator/cache-tool-calls",
+                  "examples/tools/tool-decorator/stop-after-tool-call"
+                ]
+              },
+              {
                 "group": "MCP",
                 "pages": [
-                  "examples/tools/mcp/streamable-http-transport/overview",
+                  "examples/tools/mcp/overview",
+                  {
+                    "group": "MCP Toolbox",
+                    "pages": [
+                      "examples/tools/mcp/mcp-toolbox-demo/overview",
+                      "examples/tools/mcp/mcp-toolbox-demo/agent",
+                      "examples/tools/mcp/mcp-toolbox-demo/agent-os",
+                      "examples/tools/mcp/mcp-toolbox-demo/hotel-management-typesafe",
+                      "examples/tools/mcp/mcp-toolbox-demo/hotel-management-workflows"
+                    ]
+                  },
+                  {
+                    "group": "Dynamic Headers",
+                    "pages": [
+                      "examples/tools/mcp/dynamic-headers/overview",
+                      "examples/tools/mcp/dynamic-headers/client",
+                      "examples/tools/mcp/dynamic-headers/server"
+                    ]
+                  },
+                  {
+                    "group": "Local Server",
+                    "pages": [
+                    "examples/tools/mcp/local-server/overview",
+                    "examples/tools/mcp/local-server/client",
+                    "examples/tools/mcp/local-server/server"
+                    ]
+                  },
+                  {
+                    "group": "SSE Transport",
+                    "pages": [
+                      "examples/tools/mcp/sse-transport/overview",
+                      "examples/tools/mcp/sse-transport/client",
+                      "examples/tools/mcp/sse-transport/server"
+                    ]
+                  },
+                  {
+                    "group": "Streamable HTTP",
+                    "pages": [
+                      "examples/tools/mcp/streamable-http-transport/overview",
+                      "examples/tools/mcp/streamable-http-transport/client",
+                      "examples/tools/mcp/streamable-http-transport/server"
+                    ]
+                  },
                   "examples/tools/mcp/agno-mcp",
                   "examples/tools/mcp/airbnb",
                   "examples/tools/mcp/brave",
                   "examples/tools/mcp/cli",
-                  "examples/tools/mcp/dynamic-headers/client",
-                  "examples/tools/mcp/dynamic-headers/server",
                   "examples/tools/mcp/filesystem",
                   "examples/tools/mcp/gibsonai",
                   "examples/tools/mcp/github",
@@ -4859,12 +4944,6 @@
                   "examples/tools/mcp/groq-mcp",
                   "examples/tools/mcp/include-exclude-tools",
                   "examples/tools/mcp/include-tools",
-                  "examples/tools/mcp/local-server/client",
-                  "examples/tools/mcp/local-server/server",
-                  "examples/tools/mcp/mcp-toolbox-demo/agent",
-                  "examples/tools/mcp/mcp-toolbox-demo/agent-os",
-                  "examples/tools/mcp/mcp-toolbox-demo/hotel-management-typesafe",
-                  "examples/tools/mcp/mcp-toolbox-demo/hotel-management-workflows",
                   "examples/tools/mcp/mcp-toolbox-for-db",
                   "examples/tools/mcp/mem0",
                   "examples/tools/mcp/multiple-servers",
@@ -4878,39 +4957,10 @@
                   "examples/tools/mcp/pipedream-slack",
                   "examples/tools/mcp/qdrant",
                   "examples/tools/mcp/sequential-thinking",
-                  "examples/tools/mcp/sse-transport/client",
-                  "examples/tools/mcp/sse-transport/server",
                   "examples/tools/mcp/stagehand",
-                  "examples/tools/mcp/streamable-http-transport/client",
-                  "examples/tools/mcp/streamable-http-transport/server",
                   "examples/tools/mcp/stripe",
                   "examples/tools/mcp/supabase",
                   "examples/tools/mcp/tool-name-prefix"
-                ]
-              },
-              {
-                "group": "Custom Tools",
-                "pages": [
-                  "examples/tools/tool-decorator/overview",
-                  "examples/tools/tool-decorator/async-tool-decorator",
-                  "examples/tools/tool-decorator/cache-tool-calls",
-                  "examples/tools/tool-decorator/stop-after-tool-call",
-                  "examples/tools/tool-decorator/tool-decorator",
-                  "examples/tools/tool-decorator/tool-decorator-on-class-method",
-                  "examples/tools/tool-decorator/tool-decorator-with-hook",
-                  "examples/tools/tool-decorator/tool-decorator-with-instructions"
-                ]
-              },
-              {
-                "group": "Tool Hooks",
-                "pages": [
-                  "examples/tools/tool-hooks/overview",
-                  "examples/tools/tool-hooks/pre-and-post-hooks",
-                  "examples/tools/tool-hooks/tool-hook",
-                  "examples/tools/tool-hooks/tool-hook-in-toolkit",
-                  "examples/tools/tool-hooks/tool-hook-in-toolkit-with-state",
-                  "examples/tools/tool-hooks/tool-hook-in-toolkit-with-state-nested",
-                  "examples/tools/tool-hooks/tool-hooks-in-toolkit-nested"
                 ]
               },
               {
@@ -5043,7 +5093,6 @@
                   "examples/tools/shell-tools",
                   "examples/tools/shopify-tools",
                   "examples/tools/sleep-tools",
-                  "examples/tools/tool-calls-accesing-agent",
                   "examples/tools/valyu-tools",
                   "examples/tools/x-tools"
                 ]
@@ -5051,9 +5100,6 @@
               {
                 "group": "Other Tools",
                 "pages": [
-                  "examples/tools/exceptions/retry-tool-call",
-                  "examples/tools/exceptions/retry-tool-call-from-post-hook",
-                  "examples/tools/exceptions/stop-agent-exception",
                   "examples/tools/google-drive",
                   "examples/tools/google-maps-tools",
                   "examples/tools/models/azure-openai-tools",

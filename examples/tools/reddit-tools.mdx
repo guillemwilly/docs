@@ -1,12 +1,9 @@
 ---
-title: "Steps to get Reddit credentials:"
-description: "Steps to get Reddit credentials."
+title: "Reddit"
+description: "Use Reddit tools with Agno agents."
 ---
-1. Create/Login to Reddit account - Go to https://www.reddit.com
 
-```python
-"""
-Steps to get Reddit credentials:
+## Prerequisites
 
 1. Create/Login to Reddit account
    - Go to https://www.reddit.com
@@ -29,7 +26,8 @@ Steps to get Reddit credentials:
    - username: Your Reddit username
    - password: Your Reddit account password
 
-"""
+
+```python
 
 from agno.agent import Agent
 from agno.tools.reddit import RedditTools
@@ -37,7 +35,6 @@ from agno.tools.reddit import RedditTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 agent = Agent(
     instructions=[
@@ -67,3 +64,5 @@ source .venvs/demo/bin/activate
 
 python reddit_tools.py
 ```
+
+For details, see [Reddit cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/reddit_tools.py).

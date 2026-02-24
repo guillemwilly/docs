@@ -1,15 +1,10 @@
 ---
-title: "File Generation Tool Example"
-description: "This cookbook shows how to use the FileGenerationTool to generate various file types (JSON, CSV, PDF, TXT)."
+title: "File Generation"
+description: "Use File Generation Tools with Agno agents."
 ---
-This cookbook shows how to use the FileGenerationTool to generate various file types (JSON, CSV, PDF, TXT). The tool can generate files from agent responses and make them available for download or further processing.
+Enable Agno agents to programmatically create and export data in JSON, CSV, PDF, and TXT formats, transforming natural language responses into downloadable, production-ready documents by integrating with File Generation Tools.
 
 ```python
-"""
-File Generation Tool Example
-This cookbook shows how to use the FileGenerationTool to generate various file types (JSON, CSV, PDF, TXT).
-The tool can generate files from agent responses and make them available for download or further processing.
-"""
 
 from agno.agent import Agent
 from agno.db.sqlite import SqliteDb
@@ -19,7 +14,6 @@ from agno.tools.file_generation import FileGenerationTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 agent = Agent(
     model=OpenAIChat(id="gpt-4o"),
@@ -118,3 +112,4 @@ source .venvs/demo/bin/activate
 
 python file_generation_tools.py
 ```
+For details, see [File Generation Tools cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/file_tools.py).

@@ -1,17 +1,16 @@
 ---
-title: "Zep Tools"
-description: "To get started, please export your Zep API key as an environment variable."
+title: "Zep"
+description: "Use Zep with Agno agents."
 ---
-To get started, please export your Zep API key as an environment variable. You can get your Zep API key from https://app.getzep.com/
+
+Zep tools serves as the Agno agent's "Long-Term Memory and Knowledge Graph Engine." While standard memory tools store raw chat history, Zep goes further by continuously learning from user interactions, extracting facts, and organizing them into a temporal knowledge graph. This allows Agno agents to remember nuances from conversations that happened weeks or months ago without bloating the prompt with old text.
+
+## Prerequisites
+
+- Get your Zep API key from https://app.getzep.com/
+- Set Zep API key as an environment variable: `export ZEP_API_KEY=<your-zep-api-key>`. 
 
 ```python
-"""
-This example demonstrates how to use the ZepTools class to interact with memories stored in Zep.
-
-To get started, please export your Zep API key as an environment variable. You can get your Zep API key from https://app.getzep.com/
-
-export ZEP_API_KEY=<your-zep-api-key>
-"""
 
 import asyncio
 import time
@@ -60,14 +59,6 @@ def run_sync() -> None:
 # ---------------------------------------------------------------------------
 # Async Variant
 # ---------------------------------------------------------------------------
-
-"""
-This example demonstrates how to use the ZepAsyncTools class to interact with memories stored in Zep.
-
-To get started, please export your Zep API key as an environment variable. You can get your Zep API key from https://app.getzep.com/
-
-export ZEP_API_KEY=<your-zep-api-key>
-"""
 
 
 async def run_async() -> None:
@@ -124,3 +115,4 @@ source .venvs/demo/bin/activate
 
 python zep_tools.py
 ```
+For details, see [Zep tools cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/zep_tools.py).

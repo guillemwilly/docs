@@ -1,20 +1,22 @@
 ---
-title: "Agent with Daytona tools"
-description: "This example shows how to use Agno's Daytona integration to run Agent-generated code in a remote, secure sandbox."
+title: "Daytona"
+description: "Use Dayton with Agno agents."
 ---
-```python
-"""
-‍ Agent with Daytona tools
 
-This example shows how to use Agno's Daytona integration to run Agent-generated code in a remote, secure sandbox.
+Daytona enables Agno agents to run Agent-generated code in a remote, secure sandbox.
+
+## Prerequisites
 
 1. Get your Daytona API key and API URL: https://app.daytona.io/dashboard/keys
 2. Set the API key and API URL as environment variables:
+    ```bash
     export DAYTONA_API_KEY=<your_api_key>
-    export DAYTONA_API_URL=<your_api_url> (optional)
+    export DAYTONA_API_URL=<your_api_url> #(optional)
+    ```
 3. Install the dependencies:
-    uv pip install agno anthropic daytona
-"""
+    `uv pip install agno anthropic daytona`
+
+```python
 
 from agno.agent import Agent
 from agno.tools.daytona import DaytonaTools
@@ -67,3 +69,5 @@ source .venvs/demo/bin/activate
 
 python daytona_tools.py
 ```
+
+For details, see [Daytona cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/daytona_tools.py).

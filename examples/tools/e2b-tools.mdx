@@ -1,40 +1,25 @@
 ---
-title: "E2b Tools"
-sidebarTitle: "E2B Tools Example"
-description: "This example shows how to: 1."
+title: "E2B"
+description: "Use E2B tools with Agno agents."
 ---
-This example shows how to: 1. Set up authentication with E2B API 2. Initialize the E2BTools with proper configuration 3. Create an agent that can run Python code in a secure sandbox 4. Use the sandbox for data analysis, visualization, and more
 
-```python
-"""
-E2B Tools Example - Demonstrates how to use the E2B toolkit for sandboxed code execution.
+Enable Agno agents with E2B tools to provide secure, long-running cloud sandboxes for executing untrusted code and processing complex data analysis and visualization workflows.
 
-This example shows how to:
-1. Set up authentication with E2B API
-2. Initialize the E2BTools with proper configuration
-3. Create an agent that can run Python code in a secure sandbox
-4. Use the sandbox for data analysis, visualization, and more
+## Prerequisites
 
-Prerequisites:
 1. Create an account and get your API key from E2B:
    - Visit https://e2b.dev/
    - Sign up for an account
    - Navigate to the Dashboard to get your API key
 
 2. Install required packages:
-   uv pip install e2b_code_interpreter pandas matplotlib
+   `uv pip install e2b_code_interpreter pandas matplotlib`
 
 3. Set environment variable:
-   export E2B_API_KEY=your_api_key
+   `export E2B_API_KEY=your_api_key`
 
-Features:
-- Run Python code in a secure sandbox environment
-- Upload and download files to/from the sandbox
-- Create and download data visualizations
-- Run servers within the sandbox with public URLs
-- Manage sandbox lifecycle (timeout, shutdown)
-- Access the internet from within the sandbox
-
+```python
+"""
 Usage:
 Run this script with the E2B_API_KEY environment variable set to interact
 with the E2B sandbox through natural language commands.
@@ -152,3 +137,4 @@ source .venvs/demo/bin/activate
 
 python e2b_tools.py
 ```
+For details, see [E2B cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/e2b_tools.py).

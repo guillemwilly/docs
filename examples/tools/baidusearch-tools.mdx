@@ -1,14 +1,11 @@
 ---
-title: "Baidusearch Tools"
-description: "Demonstrates baidusearch tools."
+title: "Baidu Search"
+description: "Use Baidu Search with Agno Agents."
 ---
-```python
-"""
-Baidusearch Tools
-=============================
 
-Demonstrates baidusearch tools.
-"""
+Retrieve search results from Baidu with Agno Agents. Baidu Search provides access to Baidu's search index for finding relevant information.
+
+```python
 
 from agno.agent import Agent
 from agno.tools.baidusearch import BaiduSearchTools
@@ -16,7 +13,6 @@ from agno.tools.baidusearch import BaiduSearchTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 agent = Agent(
     tools=[BaiduSearchTools()],
@@ -47,3 +43,4 @@ source .venvs/demo/bin/activate
 
 python baidusearch_tools.py
 ```
+For details, see [Baidu Search cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/baidusearch_tools.py).

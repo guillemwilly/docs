@@ -1,20 +1,11 @@
 ---
-title: "Crawl4AI Tools - Web Scraping and Content Extraction"
-sidebarTitle: "Crawl4AI Tools"
-description: "This example demonstrates how to use Crawl4aiTools for web crawling and content extraction."
+title: "Crawl4AI"
+description: "Use Crawl4AI with Agno agents."
 ---
-This example demonstrates how to use Crawl4aiTools for web crawling and content extraction. Shows enable_ flag patterns for selective function access. Crawl4aiTools is a small tool (&lt;6 functions) so it uses enable_ flags.
+
+Agno agents can use for web scraping and content extraction. For selective function access, it uses `enable_` flag patterns.
 
 ```python
-"""
-Crawl4AI Tools - Web Scraping and Content Extraction
-
-This example demonstrates how to use Crawl4aiTools for web crawling and content extraction.
-Shows enable_ flag patterns for selective function access.
-Crawl4aiTools is a small tool (&lt;6 functions) so it uses enable_ flags.
-
-Run: `uv pip install crawl4ai` to install the dependencies
-"""
 
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
@@ -23,7 +14,6 @@ from agno.tools.crawl4ai import Crawl4aiTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 # Example 1: All functions enabled with pruning (default behavior)
 agent_full = Agent(
@@ -156,3 +146,4 @@ source .venvs/demo/bin/activate
 
 python crawl4ai_tools.py
 ```
+For details, see [Crawl4ai cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/crawl4ai_tools.py).

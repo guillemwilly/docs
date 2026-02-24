@@ -1,18 +1,13 @@
 ---
-title: "Example: Using the GeminiTools Toolkit for Image Generation"
-description: "An Agent using the Gemini image generation tool."
+title: "Gemini Image Generation"
+description: "Use Gemini for generating images in Agno agents."
 ---
+
+## Prerequisites
+
+Install dependencies: `uv pip install google-genai agno`
 ```python
-"""Example: Using the GeminiTools Toolkit for Image Generation
 
-An Agent using the Gemini image generation tool.
-
-Example prompts to try:
-- "Generate an image of a dog and tell me the color of the dog"
-- "Create an image of a cat driving a car"
-
-Run `uv pip install google-genai agno` to install the necessary dependencies.
-"""
 
 import base64
 
@@ -63,3 +58,4 @@ source .venvs/demo/bin/activate
 
 python gemini_image_generation.py
 ```
+For details, see [Gemini Image tools cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/models/gemini_image_generation.py).

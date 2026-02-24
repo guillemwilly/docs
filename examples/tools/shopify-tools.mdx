@@ -1,33 +1,15 @@
 ---
-title: "Example: Using ShopifyTools with an Agno Agent"
-description: "This example shows how to create an agent that can."
+title: "Shopify"
+description: "Use Shopify tools with an Agno Agent."
 ---
-This example shows how to create an agent that can: - Analyze sales data and identify top-selling products - Find products that are frequently bought together - Track inventory levels and identify low-stock items - Generate sales reports and trends
+Enable Agno agents with Shopify tools to:
 
-```python
-"""
-Example: Using ShopifyTools with an Agno Agent
-
-This example shows how to create an agent that can:
-- Analyze sales data and identify top-selling products
-- Find products that are frequently bought together
-- Track inventory levels and identify low-stock items
+- Analyze sales data and identify top-selling products 
+- Find products that are frequently bought together 
+- Track inventory levels and identify low-stock items 
 - Generate sales reports and trends
 
-Prerequisites:
-Set the following environment variables:
-- SHOPIFY_SHOP_NAME -> Your Shopify shop name, e.g. "my-store" from my-store.myshopify.com
-- SHOPIFY_ACCESS_TOKEN -> Your Shopify access token
-
-You can get your Shopify access token from your Shopify Admin > Settings > Apps and sales channels > Develop apps
-
-Required scopes:
-- read_orders (for order and sales data)
-- read_products (for product information)
-- read_customers (for customer insights)
-- read_analytics (for analytics data)
-"""
-
+```python
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
 from agno.tools.shopify import ShopifyTools
@@ -93,3 +75,4 @@ source .venvs/demo/bin/activate
 
 python shopify_tools.py
 ```
+For details, see [Shopify tools cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/shopify_tools.py).

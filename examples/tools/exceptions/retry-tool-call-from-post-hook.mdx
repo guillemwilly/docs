@@ -1,7 +1,16 @@
 ---
-title: "Retry Tool Call From Post Hook"
-description: "Demonstrates retry tool call from post hook."
+title: "Post-Hook Retry"
+description: "Automatically retry a tool call using a post-hook with `RetryAgentRun`."
 ---
+
+In agentic workflows, tools can fail due to rate limits, network glitches, or temporary API downtime. Instead of the agent giving up or asking the user for help, a post-hook allows the system to:
+
+- Intercept the failed tool response.
+
+- Analyze the error (e.g., checking for a 429 or 500 status code).
+
+- Trigger a retry autonomously, ensuring a seamless user experience.
+
 ```python
 """
 Retry Tool Call From Post Hook
@@ -90,3 +99,4 @@ source .venvs/demo/bin/activate
 
 python retry_tool_call_from_post_hook.py
 ```
+For details, see [Post hook tool retries cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/exceptions/retry_tool_call_from_post_hook.py).

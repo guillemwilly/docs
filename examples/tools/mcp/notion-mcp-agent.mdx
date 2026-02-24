@@ -1,20 +1,17 @@
 ---
-title: "Notion MCP Agent - Manages your documents"
-sidebarTitle: "Notion MCP Agent"
-description: "This example shows how to use the Agno MCP tools to interact with your Notion workspace."
+title: "Notion MCP Agent"
+description: "Use the Agno MCP tools to interact with Notion workspace."
 ---
-```python
-"""
-Notion MCP Agent - Manages your documents
 
-This example shows how to use the Agno MCP tools to interact with your Notion workspace.
+## Prerequisites
 
 1. Start by setting up a new internal integration in Notion: https://www.notion.so/profile/integrations
 2. Export your new Notion key: `export NOTION_API_KEY=ntn_****`
 3. Connect your relevant Notion pages to the integration. To do this, you'll need to visit that page, and click on the 3 dots, and select "Connect to integration".
+4. Install dependencies: `uv pip install agno mcp openai`
 
-Dependencies: uv pip install agno mcp openai
-
+```python
+"""
 Usage:
   python cookbook/90_tools/mcp/notion_mcp_agent.py
 """

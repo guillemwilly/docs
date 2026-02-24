@@ -1,14 +1,11 @@
 ---
-title: "Email Tools"
-description: "Demonstrates email tools."
+title: "Email"
+description: "Use Email tools with Agno agents"
 ---
-```python
-"""
-Email Tools
-=============================
 
-Demonstrates email tools.
-"""
+Agno agents can send and process emails with Email tools.
+
+```python
 
 from agno.agent import Agent
 from agno.tools.email import EmailTools
@@ -16,7 +13,6 @@ from agno.tools.email import EmailTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 receiver_email = "<receiver_email>"
 sender_email = "<sender_email>"
@@ -73,3 +69,4 @@ source .venvs/demo/bin/activate
 
 python email_tools.py
 ```
+For details, see [Email cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/email_tools.py).

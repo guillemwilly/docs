@@ -1,24 +1,18 @@
 ---
-title: "Telegram Tools - Bot Communication and Messaging"
-sidebarTitle: "Telegram Tools"
-description: "This example demonstrates how to use TelegramTools for Telegram bot operations."
+title: "Telegram"
+description: "Use Telegram tools with Agno agents."
 ---
-This example demonstrates how to use TelegramTools for Telegram bot operations. Shows enable_ flag patterns for selective function access. TelegramTools is a small tool (&lt;6 functions) so it uses enable_ flags.
+Enable Agno agents to perform Telegram bot operations. 
 
-```python
-"""
-Telegram Tools - Bot Communication and Messaging
+For selective functions access use `enable_` flag patterns. 
 
-This example demonstrates how to use TelegramTools for Telegram bot operations.
-Shows enable_ flag patterns for selective function access.
-TelegramTools is a small tool (&lt;6 functions) so it uses enable_ flags.
-
-Prerequisites:
+## Prerequisites:
 - Create a new bot with BotFather on Telegram: https://core.telegram.org/bots/features#creating-a-new-bot
 - Get the token from BotFather
 - Send a message to the bot
-- Get the chat_id by going to: https://api.telegram.org/bot<your-bot-token>/getUpdates
-"""
+- Get the chat_id from the url: `https://api.telegram.org/bot<your-bot-token>/getUpdates`
+
+```python
 
 from agno.agent import Agent
 from agno.tools.telegram import TelegramTools
@@ -26,7 +20,6 @@ from agno.tools.telegram import TelegramTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 telegram_token = "<enter-your-bot-token>"
 chat_id = "<enter-your-chat-id>"
@@ -66,3 +59,4 @@ source .venvs/demo/bin/activate
 
 python telegram_tools.py
 ```
+For details, see [Telegram tool cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/telegram_tools.py).

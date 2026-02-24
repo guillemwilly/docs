@@ -1,15 +1,15 @@
 ---
-title: "Streaming example using OpenRouter with the Responses API."
-description: "Requirements: - Set OPENROUTER_API_KEY environment variable."
+title: "Streaming"
+description: "Use streaming responses from OpenRouter's Responses API."
 ---
-Requirements: - Set OPENROUTER_API_KEY environment variable
+
+Leverage the OpenRouter API for real-time response streaming across any model. This is used for low-latency chat user interface and dynamic agentic workflows.
+
+## Prerequisites
+
+- Set OPENROUTER_API_KEY environment variable
 
 ```python
-"""Streaming example using OpenRouter with the Responses API.
-
-Requirements:
-- Set OPENROUTER_API_KEY environment variable
-"""
 
 from agno.agent import Agent
 from agno.models.openrouter import OpenRouterResponses

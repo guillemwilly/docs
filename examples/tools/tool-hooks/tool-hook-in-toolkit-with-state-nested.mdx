@@ -1,10 +1,11 @@
 ---
-title: "Tool Hooks Tool Hook In Toolkit With State Nested"
-sidebarTitle: "Tool Hook In Toolkit With State Nested"
-description: "When used as a tool hook, this function will receive the contextual Agent, function_name, etc as parameters."
+title: "Nested Tool Hooks in Toolkit with State"
+description: "Manage nested tool execution logic using agent session state."
 ---
+
+Enable complex state management with Agno agents within nested tool structures to maintain data consistency. Build multi-layered agent workflows that require precise, context-driven tool coordination.
+
 ```python
-"""Show how to use a tool execution hook, to run logic before and after a tool is called."""
 
 import json
 from typing import Any, Callable, Dict
@@ -104,3 +105,4 @@ source .venvs/demo/bin/activate
 
 python tool_hook_in_toolkit_with_state_nested.py
 ```
+For details, see [Nested State Hooks cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/tool_hooks/tool_hook_in_toolkit_with_state_nested.py).

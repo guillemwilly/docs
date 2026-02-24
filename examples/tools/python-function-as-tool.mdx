@@ -1,14 +1,11 @@
 ---
-title: "Python Function As Tool"
-description: "Demonstrates python function as tool."
+title: "Python Function"
+description: "Use Python Function as a tool with Agno agents."
 ---
-```python
-"""
-Python Function As Tool
-=============================
 
-Demonstrates python function as tool.
-"""
+Build custom intelligence by specifying Python functions as a tool in Agno agents. For Agno agents Python functions are first-class citizens that can be passed directly into an agent's `tools` list. They don't need complex wrappers or classes to give an agent new capabilities.
+
+```python
 
 import json
 
@@ -68,3 +65,4 @@ source .venvs/demo/bin/activate
 
 python python_function_as_tool.py
 ```
+For details, see [Python Functions as Tools cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/python_function_as_tools.py).

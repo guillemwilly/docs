@@ -1,18 +1,16 @@
 ---
-title: "Valyu Tools"
-description: "Prerequisites."
+title: "Valyu"
+description: "Use Valyu with Agno agents."
 ---
-Prerequisites: - Install: uv pip install valyu - Get API key: https://platform.valyu.network - Set environment variable: export VALYU_API_KEY with your api key or pass the api key while initializing the toolkit
 
-```python
-"""
-This cookbook demonstrates how to use the Valyu Toolkit for academic and web search.
+Enables Agno agents to get specialized access to academic, institutional, and high-fidelity web content for technical and scientific research.
 
-Prerequisites:
-- Install: uv pip install valyu
+## Prerequisites:
+- Install Valyu: `uv pip install valyu`
 - Get API key: https://platform.valyu.network
 - Set environment variable: export VALYU_API_KEY with your api key or pass the api key while initializing the toolkit
-"""
+
+```python
 
 from agno.agent import Agent
 from agno.tools.valyu import ValyuTools
@@ -69,3 +67,4 @@ source .venvs/demo/bin/activate
 
 python valyu_tools.py
 ```
+For details, see [Valyu tool cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/valyu_tools.py).

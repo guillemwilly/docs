@@ -2,6 +2,11 @@
 title: "Models Lab Tools"
 description: "Tool integration example."
 ---
+
+ModelsLab tools enable Agno agents with a unified API to access various AI models for generating images, videos, music, and even 3D objects.
+
+It is particularly useful when building multi-agent Agno Teams. For example, you can have a "Screenwriter Agent" write a script, a "Director Agent" use ModelsLabTools to generate the scenes, and a "Narrator Agent" use the ModelsLab Voice API to add the voiceover—all working in a coordinated pipeline.
+
 ```python
 """Run `uv pip install requests` to install dependencies."""
 
@@ -52,3 +57,4 @@ source .venvs/demo/bin/activate
 
 python models_lab_tools.py
 ```
+For details, see [Modelslab tools cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/models_lab_tools.py).

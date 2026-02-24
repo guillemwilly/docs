@@ -1,16 +1,14 @@
 ---
-title: "Tool use example using OpenRouter with the Responses API."
-description: "This demonstrates using tools with OpenRouter's Responses API endpoint."
+title: "Tools"
+description: "Use of tools with OpenRouter's Responses API."
 ---
+
+OpenRouter Response API standardizes the tool calling interface across models and providers, making it easy to integrate external tools with any supported model.
+
+## Prerequisites
+Set OPENROUTER_API_KEY environment variable.
+
 ```python
-"""Tool use example using OpenRouter with the Responses API.
-
-This demonstrates using tools with OpenRouter's Responses API endpoint.
-
-Requirements:
-- Set OPENROUTER_API_KEY environment variable
-"""
-
 from agno.agent import Agent
 from agno.models.openrouter import OpenRouterResponses
 from agno.tools.duckduckgo import DuckDuckGoTools

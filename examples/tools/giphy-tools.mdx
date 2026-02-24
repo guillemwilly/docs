@@ -1,14 +1,11 @@
 ---
-title: "Giphy Tools"
-description: "Demonstrates giphy tools."
+title: "Giphy"
+description: "Use Giphy tools with Agno agents."
 ---
-```python
-"""
-Giphy Tools
-=============================
 
-Demonstrates giphy tools.
-"""
+Enable Agno agents to integrate with Giphy tools for moving beyond text-only responses. Agents can search for and embed GIFs, stickers that match the tone or content of a conversation.
+
+```python
 
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
@@ -17,7 +14,6 @@ from agno.tools.giphy import GiphyTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 """Create an agent specialized in creating gifs using Giphy """
 
@@ -63,3 +59,4 @@ source .venvs/demo/bin/activate
 
 python giphy_tools.py
 ```
+For details, see [Giphy cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/giphy_tools.py).

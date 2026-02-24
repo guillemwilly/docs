@@ -1,37 +1,33 @@
 ---
-title: "OpenCV Tools - Computer Vision and Image Processing"
-sidebarTitle: "OpenCV Tools"
-description: "This example demonstrates how to use OpenCVTools for computer vision tasks."
+Title: "OpenCV"
+description: "Use OpenCV with Agno agents."
 ---
-This example demonstrates how to use OpenCVTools for computer vision tasks. Shows enable_ flag patterns for selective function access. OpenCVTools is a small tool (&lt;6 functions) so it uses enable_ flags.
+Enable Agno agents to perform real-time computer vision operations using OpenCV tools. 
+
+For selective function acces, use `enable_` flag pattern.
+
+## Prerequisites
+
+- Install and configure OpenCV: `uv pip install opencv-python`
+
+- Enable Camera Permissions:
+  - Make sure your webcam is connected and not being used by other applications.
+  <Tabs>
+    <Tab title="Mac OS">
+        - Go to System Settings > Privacy & Security > Camera
+        - Enable camera access for Terminal or your IDE
+    </Tab>
+    <Tab title="Linux">
+        - Ensure your user is in the video group: sudo usermod -a -G video $USER
+        - Restart your session after adding to the group
+    </Tab>
+     <Tab title="Windows">
+        - Go to Settings > Privacy > Camera
+        - Enable "Allow apps to access your camera"
+    </Tab>
+  </Tabs>
 
 ```python
-"""
-OpenCV Tools - Computer Vision and Image Processing
-
-This example demonstrates how to use OpenCVTools for computer vision tasks.
-Shows enable_ flag patterns for selective function access.
-OpenCVTools is a small tool (&lt;6 functions) so it uses enable_ flags.
-
-Steps to use OpenCV Tools:
-
-1. Install OpenCV
-   - Run: uv pip install opencv-python
-
-2. Camera Permissions (macOS)
-   - Go to System Settings > Privacy & Security > Camera
-   - Enable camera access for Terminal or your IDE
-
-3. Camera Permissions (Linux)
-   - Ensure your user is in the video group: sudo usermod -a -G video $USER
-   - Restart your session after adding to the group
-
-4. Camera Permissions (Windows)
-   - Go to Settings > Privacy > Camera
-   - Enable "Allow apps to access your camera"
-
-Note: Make sure your webcam is connected and not being used by other applications.
-"""
 
 import base64
 
@@ -155,3 +151,4 @@ source .venvs/demo/bin/activate
 
 python opencv_tools.py
 ```
+For details, see [OpenCV cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/opencv_tools.py).

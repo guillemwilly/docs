@@ -1,14 +1,11 @@
 ---
-title: "Parallel Tools"
-description: "Demonstrates parallel tools."
+title: "Parallel"
+description: "Use Parallel tools with Agno agents."
 ---
-```python
-"""
-Parallel Tools
-=============================
 
-Demonstrates parallel tools.
-"""
+Enable Agno agents with web search and extraction infrastructure from Parallel that prioritizes token efficiency and multi-hop reasoning.
+
+```python
 
 from agno.agent import Agent
 from agno.models.openai import OpenAIResponses
@@ -17,7 +14,6 @@ from agno.tools.parallel import ParallelTools
 # ---------------------------------------------------------------------------
 # Create Agent
 # ---------------------------------------------------------------------------
-
 
 agent = Agent(
     model=OpenAIResponses(id="gpt-5.1"),
@@ -49,3 +45,4 @@ source .venvs/demo/bin/activate
 
 python parallel_tools.py
 ```
+For details, see [Parallel cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/parallel_tools.py).

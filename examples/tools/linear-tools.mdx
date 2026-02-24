@@ -1,14 +1,16 @@
 ---
-title: "Linear Tools"
-description: "Demonstrates linear tools."
+title: "Linear"
+description: "Use Linear with Agno agents."
 ---
-```python
-"""
-Linear Tools
-=============================
 
-Demonstrates linear tools.
-"""
+Enable Agno agents with Linear capabilities:
+
+* Issue management
+* Triage
+* Workflow automation
+* Project insights
+
+```python
 
 from agno.agent import Agent
 from agno.tools.linear import LinearTools
@@ -17,13 +19,11 @@ from agno.tools.linear import LinearTools
 # Create Agent
 # ---------------------------------------------------------------------------
 
-
 agent = Agent(
     name="Linear Tool Agent",
     tools=[LinearTools()],
     markdown=True,
 )
-
 
 user_id = "69069"
 issue_id = "6969"
@@ -60,3 +60,4 @@ source .venvs/demo/bin/activate
 
 python linear_tools.py
 ```
+For details, see [Linear cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/linear_tools.py).

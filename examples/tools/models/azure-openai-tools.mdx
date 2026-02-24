@@ -1,25 +1,19 @@
 ---
-title: "Example showing how to use Azure OpenAI Tools with Agno."
-sidebarTitle: "Azure Openai Tools"
-description: "Requirements: 1."
+title: "Azure OpenaAI"
+description: "Use Azure OpenAI tools in Agno agents."
 ---
-Requirements: 1. Azure OpenAI service setup with DALL-E deployment and chat model deployment 2. Environment variables: - AZURE_OPENAI_API_KEY - Your Azure OpenAI API key - AZURE_OPENAI_ENDPOINT - The Azure OpenAI endpoint URL - AZURE_OPENAI_DEPLOYMENT - The deployment name for the language model - AZURE_OPENAI_IMAGE_DEPLOYMENT - The deployment name for an image generation model - OPENAI_API_KEY (for standard OpenAI example)
 
-```python
-"""Example showing how to use Azure OpenAI Tools with Agno.
+## Prerequisites
 
-Requirements:
-1. Azure OpenAI service setup with DALL-E deployment and chat model deployment
-2. Environment variables:
-   - AZURE_OPENAI_API_KEY - Your Azure OpenAI API key
-   - AZURE_OPENAI_ENDPOINT - The Azure OpenAI endpoint URL
-   - AZURE_OPENAI_DEPLOYMENT - The deployment name for the language model
-   - AZURE_OPENAI_IMAGE_DEPLOYMENT - The deployment name for an image generation model
+1. Azure OpenAI service setup with DALL-E deployment and chat model deployment 2. Set these environment variables: 
+   - AZURE_OPENAI_API_KEY: Your Azure OpenAI API key 
+   - AZURE_OPENAI_ENDPOINT: The Azure OpenAI endpoint URL 
+   - AZURE_OPENAI_DEPLOYMENT: The deployment name for the language model 
+   - AZURE_OPENAI_IMAGE_DEPLOYMENT: The deployment name for an image generation model 
    - OPENAI_API_KEY (for standard OpenAI example)
 
-The script will automatically run only the examples for which you have the necessary
-environment variables set.
-"""
+```python
+
 
 import sys
 from os import getenv
@@ -130,3 +124,4 @@ export AZURE_OPENAI_API_KEY="***"
 
 python azure_openai_tools.py
 ```
+For details, see [Azure OpenAI cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/models/azure_openai_tools.py).
