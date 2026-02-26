@@ -45,7 +45,7 @@ When the user asks for something that uses this tool, the run pauses and a **pen
 `@approval` defaults to required and sets `requires_confirmation=True` if no other HITL flag is set; `@approval(type="audit")` needs one HITL flag. The SDK creates records; you don't call `create_approval`. No admin or DB? See [User Confirmation](/hitl/user-confirmation).
 </Note>
 
-### Flow
+## Execution Flow
 
 1. User asks the agent to do something that uses an `@approval` tool.
 2. Agent pauses; the SDK creates a pending approval in your DB.
