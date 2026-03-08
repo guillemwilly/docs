@@ -9,6 +9,7 @@ sidebarTitle: Loop Steps
 | `name` | `Optional[str]` | `None` | Name of the loop step |
 | `description` | `Optional[str]` | `None` | Description of the loop step |
 | `max_iterations` | `int` | `3` | Maximum number of iterations for the loop |
+| `forward_iteration_output` | `bool` | `True` | If True, each iteration receives the previous iteration's output as input. If False, all iterations receive the original loop input |
 | `end_condition` | `Optional[Union[Callable[[List[StepOutput]], bool], Callable[[List[StepOutput]], Awaitable[bool]]]]` | `None` | Function to evaluate if the loop should end |
 | `requires_confirmation` | `bool` | `False` | Pause for user confirmation before starting the loop |
 | `confirmation_message` | `Optional[str]` | `None` | Message shown to user when requesting confirmation |

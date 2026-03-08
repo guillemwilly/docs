@@ -43,9 +43,14 @@ workflow = Workflow(
 workflow.print_response("Research the impact of renewable energy on global markets", markdown=True)
 ```
 
+## Iteration Output Forwarding
+
+By default, each iteration receives the previous iteration's output as its input (`forward_iteration_output=True`). This enables iterative accumulation patterns where each pass builds on the previous result. Set `forward_iteration_output=False` if all iterations should receive the original loop input instead.
+
 ## Developer Resources
 
 - [Loop Steps Workflow](/workflows/usage/loop-steps-workflow)
+- [Loop Iterative Accumulation](/workflows/usage/loop-iterative-accumulation)
 
 ## Reference
 

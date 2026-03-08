@@ -186,6 +186,7 @@
                           "workflows/usage/parallel-steps-workflow",
                           "workflows/usage/condition-steps-workflow-stream",
                           "workflows/usage/loop-steps-workflow",
+                          "workflows/usage/loop-iterative-accumulation",
                           "workflows/usage/router-steps-workflow"
                         ]
                       },
