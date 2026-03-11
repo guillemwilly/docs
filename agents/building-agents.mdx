@@ -47,11 +47,37 @@ for chunk in stream:
         print(chunk.content)
 ```
 
-## Dynamic Agent Configuration
+## Callable Factories
 
-In Agno, callable factories are a first-class pattern for dynamic runtime configuration. For agents, callables are used to build tools and knowledge from live run context instead of fixed configuration.
+Pass a function instead of a static list for `tools` or `knowledge`. The function is called at the start of each run, so the toolset or knowledge base can vary per user or session.
 
-Teams can dynamically compose members, tools, and knowledge per user or task with [callable factories](/teams/building-teams#callable-factories). Tools expose only what is relevant at that moment to keep execution focused. In case of knowledge, callables route retrieval to the best source per request for more precise, up-to-date responses.
+```python callable_tools.py
+from agno.agent import Agent
+from agno.models.openai import OpenAIResponses
+from agno.run import RunContext
+from agno.tools.duckduckgo import DuckDuckGoTools
+from agno.tools.yfinance import YFinanceTools
+
+
+def get_tools(run_context: RunContext):
+    role = (run_context.session_state or {}).get("role", "general")
+    if role == "finance":
+        return [YFinanceTools()]
+    return [DuckDuckGoTools()]
+
+
+agent = Agent(
+    model=OpenAIResponses(id="gpt-5-mini"),
+    tools=get_tools,
+)
+
+agent.print_response("AAPL stock price?", session_state={"role": "finance"}, stream=True)
+agent.print_response("Latest AI news?", session_state={"role": "general"}, stream=True)
+```
+
+### Callable Caching Settings
+
+<Snippet file="concept-callable-factories-caching.mdx" />
 
 ## Next Steps
 

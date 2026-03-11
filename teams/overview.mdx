@@ -73,8 +73,7 @@ Agno agents and teams are modular. Message building, session handling, storage, 
 
 <Snippet file="concept-callable-factories.mdx" />
 
-`Team.members` can be a callable factory returning a list of members (agents/teams). `Team.tools` and `Team.knowledge` also support callable factories.
-Team also supports [caching settings for callables](/teams/building-teams#caching-settings) such as `callable_members_cache_key`, tools/knowledge cache keys.
+`knowledge`, `tools`, and `members` all accept callable factories. Agents also support callable factories for `knowledge` and `tools`. See [callable factories](/teams/building-teams#callable-factories) for examples and [caching settings](/teams/building-teams#callable-caching-settings) for cache key configuration.
 
 ## Team Modes
 
