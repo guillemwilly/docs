@@ -1,0 +1,79 @@
+---
+title: "Basic Telegram Agent"
+description: "Create a basic AI agent that integrates with Telegram for conversations"
+---
+
+## Code
+
+```python cookbook/os/interfaces/telegram/basic.py
+from agno.agent import Agent
+from agno.db.sqlite import SqliteDb
+from agno.models.google import Gemini
+from agno.os import AgentOS
+from agno.os.interfaces.telegram import Telegram
+
+agent_db = SqliteDb(session_table="telegram_sessions", db_file="tmp/telegram_basic.db")
+
+telegram_agent = Agent(
+    name="Telegram Bot",
+    model=Gemini(id="gemini-2.5-pro"),
+    db=agent_db,
+    instructions=[
+        "You are a helpful assistant on Telegram.",
+        "Keep responses concise and friendly.",
+        "When in a group, you respond only when mentioned with @.",
+    ],
+    add_history_to_context=True,
+    num_history_runs=3,
+    add_datetime_to_context=True,
+    markdown=True,
+)
+
+agent_os = AgentOS(
+    agents=[telegram_agent],
+    interfaces=[
+        Telegram(
+            agent=telegram_agent,
+            reply_to_mentions_only=True,
+        )
+    ],
+)
+app = agent_os.get_app()
+
+if __name__ == "__main__":
+    agent_os.serve(app="basic:app", reload=True)
+```
+
+## Usage
+
+<Steps>
+  <Snippet file="create-venv-step.mdx" />
+
+  <Step title="Set Environment Variables">
+    ```bash
+    export TELEGRAM_TOKEN=your-bot-token-from-botfather
+    export GOOGLE_API_KEY=your-google-api-key
+    export APP_ENV=development
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    uv pip install -U "agno[telegram]"
+    ```
+  </Step>
+
+  <Step title="Run Example">
+    ```bash
+    python cookbook/os/interfaces/telegram/basic.py
+    ```
+  </Step>
+</Steps>
+
+## Key Features
+
+- **Telegram Integration**: Responds to direct messages and group @mentions
+- **Conversation History**: Maintains context with last 3 interactions
+- **Persistent Memory**: SQLite database for session storage
+- **Group Chat Support**: Only responds when mentioned in groups
+- **DateTime Context**: Time-aware responses

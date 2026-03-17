@@ -1,0 +1,97 @@
+---
+title: "Multi-Agent Telegram Team"
+description: "Deploy a multi-agent team on Telegram with specialized researcher and writer agents"
+---
+
+## Code
+
+```python cookbook/os/interfaces/telegram/team.py
+from agno.agent import Agent
+from agno.db.sqlite import SqliteDb
+from agno.models.openai import OpenAIChat
+from agno.os import AgentOS
+from agno.os.interfaces.telegram import Telegram
+from agno.team import Team
+
+agent_db = SqliteDb(
+    session_table="telegram_team_sessions", db_file="tmp/telegram_team.db"
+)
+
+researcher = Agent(
+    name="Researcher",
+    model=OpenAIChat(id="gpt-4o-mini"),
+    role="Researches topics and provides detailed factual information.",
+    instructions=["Provide well-researched, factual information on the given topic."],
+)
+
+writer = Agent(
+    name="Writer",
+    model=OpenAIChat(id="gpt-4o-mini"),
+    role="Takes research and writes clear, engaging summaries.",
+    instructions=["Write concise, engaging summaries based on the research provided."],
+)
+
+telegram_team = Team(
+    name="Telegram Research Team",
+    model=OpenAIChat(id="gpt-4o-mini"),
+    members=[researcher, writer],
+    db=agent_db,
+    instructions=[
+        "You coordinate a research team on Telegram.",
+        "Use the Researcher to gather facts, then the Writer to create a response.",
+        "Keep responses concise for Telegram.",
+    ],
+    add_history_to_context=True,
+    num_history_runs=3,
+    add_datetime_to_context=True,
+    markdown=True,
+)
+
+agent_os = AgentOS(
+    teams=[telegram_team],
+    interfaces=[
+        Telegram(
+            team=telegram_team,
+            reply_to_mentions_only=True,
+        )
+    ],
+)
+app = agent_os.get_app()
+
+if __name__ == "__main__":
+    agent_os.serve(app="team:app", reload=True)
+```
+
+## Usage
+
+<Steps>
+  <Snippet file="create-venv-step.mdx" />
+
+  <Step title="Set Environment Variables">
+    ```bash
+    export TELEGRAM_TOKEN=your-bot-token-from-botfather
+    export OPENAI_API_KEY=your-openai-api-key
+    export APP_ENV=development
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    uv pip install -U "agno[telegram]"
+    ```
+  </Step>
+
+  <Step title="Run Example">
+    ```bash
+    python cookbook/os/interfaces/telegram/team.py
+    ```
+  </Step>
+</Steps>
+
+## Key Features
+
+- **Multi-Agent Coordination**: Team leader delegates to Researcher and Writer agents
+- **Specialized Roles**: Each agent has a focused responsibility
+- **Team on Telegram**: The `Team` is passed directly to the Telegram interface
+- **Persistent Memory**: SQLite database for session storage
+- **Group Chat Support**: Only responds when mentioned in groups

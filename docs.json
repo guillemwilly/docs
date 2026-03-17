@@ -4263,7 +4263,8 @@
                   "agent-os/interfaces/whatsapp/introduction",
                   "agent-os/interfaces/a2a/introduction",
                   "agent-os/interfaces/ag-ui/introduction",
-                  "agent-os/interfaces/slack/introduction"
+                  "agent-os/interfaces/slack/introduction",
+                  "agent-os/interfaces/telegram/introduction"
                 ]
               },
               {
@@ -4383,6 +4384,17 @@
                       "agent-os/usage/interfaces/slack/agent-with-user-memory",
                       "agent-os/usage/interfaces/slack/reasoning-agent",
                       "agent-os/usage/interfaces/slack/research-workflow"
+                    ]
+                  },
+                  {
+                    "group": "Telegram",
+                    "pages": [
+                      "agent-os/usage/interfaces/telegram/basic",
+                      "agent-os/usage/interfaces/telegram/streaming",
+                      "agent-os/usage/interfaces/telegram/team",
+                      "agent-os/usage/interfaces/telegram/agent-with-media",
+                      "agent-os/usage/interfaces/telegram/agent-with-user-memory",
+                      "agent-os/usage/interfaces/telegram/reasoning-agent"
                     ]
                   }
                 ]

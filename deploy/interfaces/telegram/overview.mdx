@@ -1,7 +1,107 @@
 ---
-title: "Overview"
+title: "Telegram Bot"
+description: "Deploy agents on Telegram for direct and group chat interactions."
 ---
 
-<Info>
-  This page is coming soon. If you have any questions or need help, see [getting help](/get-help).
-</Info>
+Agno and AgentOS make it easy to deploy your agents on Telegram with just 2 extra lines of code.
+
+This example creates a simple agent for answering questions:
+
+```python
+from agno.agent import Agent
+from agno.models.google import Gemini
+from agno.os import AgentOS
+from agno.os.interfaces.telegram import Telegram
+
+telegram_agent = Agent(
+    name="Telegram Bot",
+    model=Gemini(id="gemini-2.5-pro"), # Ensure GOOGLE_API_KEY is set
+    add_history_to_context=True,
+    num_history_runs=3,
+    add_datetime_to_context=True,
+    markdown=True,
+)
+
+agent_os = AgentOS(
+    agents=[telegram_agent],
+    interfaces=[Telegram(agent=telegram_agent)],
+)
+app = agent_os.get_app()
+
+if __name__ == "__main__":
+    agent_os.serve(app="telegram_bot:app", port=7777, reload=True)
+```
+
+<Note>
+Install pyTelegramBotAPI: `pip install pyTelegramBotAPI` or `pip install 'agno[telegram]'`
+</Note>
+
+<Note>
+The chat ID is automatically used as the session scope, so each Telegram chat maintains its own conversation context.
+</Note>
+
+## Setup and Configuration
+
+<Steps>
+
+<Step title="Prerequisites">
+Ensure you have the following:
+- A Telegram account
+- ngrok (for development)
+- Python 3.7+
+</Step>
+
+<Step title="Create a Telegram Bot">
+1. Open Telegram and message [@BotFather](https://t.me/BotFather)
+2. Send `/newbot` and follow the prompts to choose a display name and username (username must end in `bot`, e.g. `my_agno_bot`)
+3. Copy the bot token (looks like `123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11`)
+</Step>
+
+<Step title="Set Environment Variables">
+```bash
+export TELEGRAM_TOKEN="your-bot-token-from-botfather"
+export APP_ENV="development"  # Bypasses webhook secret validation for local testing
+```
+</Step>
+
+<Step title="Start a Tunnel with ngrok">
+Telegram needs a public HTTPS URL to deliver webhook events:
+```bash
+ngrok http 7777
+# Or, if you have a paid ngrok plan with a static domain:
+# ngrok http --domain=your-custom-domain.ngrok-free.app 7777
+```
+Copy the `https://` URL provided by ngrok.
+</Step>
+
+<Step title="Run the App">
+```bash
+python telegram_bot.py
+```
+The server starts on `http://localhost:7777`.
+</Step>
+
+<Step title="Register the Webhook">
+Tell Telegram to send updates to your tunnel URL:
+```bash
+curl "https://api.telegram.org/bot${TELEGRAM_TOKEN}/setWebhook?url=https://YOUR-NGROK-URL/telegram/webhook"
+```
+You should see `{"ok":true,"result":true,"description":"Webhook was set"}`.
+
+Verify anytime with:
+```bash
+curl "https://api.telegram.org/bot${TELEGRAM_TOKEN}/getWebhookInfo"
+```
+</Step>
+
+</Steps>
+
+<Note>
+ngrok is used only for local development and testing. For production deployments, see the [deployment tutorials](/production/templates/overview).
+</Note>
+
+## Developer Resources
+
+- [Telegram Interface](/agent-os/interfaces/telegram/introduction)
+- [Deployment Templates](/production/templates/overview)
+- [Discord](https://agno.link/discord)
