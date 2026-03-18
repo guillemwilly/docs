@@ -1,0 +1,87 @@
+---
+title: Docling Reader
+---
+
+The **Docling Reader** processes multiple document formats using IBM's [Docling library](https://github.com/docling-project/docling). It handles PDFs, documents, presentations, spreadsheets, images, audio, video and markup files.
+
+## Code
+
+```python 
+from agno.agent import Agent
+from agno.knowledge.knowledge import Knowledge
+from agno.knowledge.reader.docling_reader import DoclingReader
+from agno.vectordb.pgvector import PgVector
+
+db_url = "postgresql+psycopg://ai:ai@localhost:5532/ai"
+
+# Create a knowledge base with docling reader
+knowledge = Knowledge(
+    vector_db=PgVector(
+        table_name="docling_documents",
+        db_url=db_url,
+    )
+)
+
+# Add documents using DoclingReader
+knowledge.insert(
+    path="documents/report.pdf",
+    reader=DoclingReader(),
+)
+
+# Create an agent with the knowledge base
+agent = Agent(
+    knowledge=knowledge,
+    search_knowledge=True,
+)
+
+# Query the knowledge base
+agent.print_response(
+    "Summarize the key findings from the report",
+    markdown=True,
+)
+```
+
+## Usage
+
+<Steps>
+  <Snippet file="create-venv-step.mdx" />
+
+  <Step title="Install dependencies">
+    ```bash
+    # Base dependencies
+    uv pip install -U docling sqlalchemy psycopg pgvector agno openai
+
+    # For audio/video processing
+    uv pip install -U openai-whisper
+    ```
+
+    **Install ffmpeg** (required for audio/video processing):
+    - **macOS**: `brew install ffmpeg`
+    - **Ubuntu**: `sudo apt-get install ffmpeg`
+    - **Windows**: Download from https://ffmpeg.org/download.html
+  </Step>
+
+  <Step title="Set environment variables">
+    ```bash
+    export OPENAI_API_KEY=xxx
+    ```
+  </Step>
+
+  <Snippet file="run-pgvector-step.mdx" />
+
+  <Step title="Run Agent">
+    <CodeGroup>
+    ```bash Mac
+    python examples/basics/knowledge/concepts/readers/overview/docling_reader_sync.py
+    ```
+
+    ```bash Windows
+    python examples/basics/knowledge/concepts/readers/overview/docling_reader_sync.py
+    ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+## Params
+
+<Snippet file="docling-reader-reference.mdx" />

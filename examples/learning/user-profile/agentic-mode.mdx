@@ -31,7 +31,7 @@ agent = Agent(
     db=db,
     instructions=(
         "You are a helpful assistant. "
-        "When users share their name or preferences, use update_user_profile to save it."
+        "When users share their name or preferences, use update_profile to save it."
     ),
     learning=LearningMachine(
         user_profile=UserProfileConfig(

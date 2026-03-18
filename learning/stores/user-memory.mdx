@@ -81,7 +81,7 @@ agent.print_response(
 )
 ```
 
-Available tools: `save_user_memory`, `delete_user_memory`
+Available tool: `update_user_memory` (supports add, update, delete, and clear operations)
 
 Tradeoff: agent may miss implicit observations.
 
@@ -98,10 +98,10 @@ Tradeoff: agent may miss implicit observations.
 
 | Field | Description |
 |-------|-------------|
-| `memory_id` | Unique identifier |
-| `memory` | The observation text |
-| `topics` | Extracted topics for categorization |
 | `user_id` | User this memory belongs to |
+| `memories` | List of memory entries (`id`, `content`, optional metadata) |
+| `agent_id` | Agent context for audit trail |
+| `team_id` | Team context for audit trail |
 | `created_at` | When created |
 | `updated_at` | Last update |
 
@@ -110,9 +110,10 @@ Tradeoff: agent may miss implicit observations.
 lm = agent.get_learning_machine()
 
 # Get all memories
-memories = lm.user_memory_store.get_memories(user_id="alice@example.com")
-for memory in memories:
-    print(f"- {memory.memory}")
+memories = lm.user_memory_store.get(user_id="alice@example.com")
+if memories:
+    for memory in memories.memories:
+        print(f"- {memory.get('content')}")
 
 # Debug output
 lm.user_memory_store.print(user_id="alice@example.com")
@@ -122,12 +123,12 @@ lm.user_memory_store.print(user_id="alice@example.com")
 
 Relevant memories are injected into the system prompt:
 ```
-<user_memories>
+<user_memory>
 - Prefers code examples over explanations
 - Working on a machine learning project
 - Uses Python 3.11
 - Prefers concise responses
-</user_memories>
+</user_memory>
 ```
 
 ## Curation

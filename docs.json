@@ -627,6 +627,7 @@
                         "group": "Readers",
                         "pages": [
                           "knowledge/concepts/readers/pdf-reader",
+                          "knowledge/concepts/readers/docling-reader",
                           "knowledge/concepts/readers/csv-reader",
                           "knowledge/concepts/readers/json-reader",
                           "knowledge/concepts/readers/markdown-reader",
@@ -2288,83 +2289,6 @@
                 ]
               },
               {
-                "group": "Guardrails",
-                "pages": [
-                  "guardrails/overview",
-                  {
-                    "group": "Included Guardrails",
-                    "pages": [
-                      "guardrails/included/prompt-injection",
-                      "guardrails/included/pii",
-                      "guardrails/included/openai-moderation"
-                    ]
-                  },
-                  {
-                    "group": "Agent",
-                    "pages": [
-                      "guardrails/usage/agent/pii-detection",
-                      "guardrails/usage/agent/prompt-injection",
-                      "guardrails/usage/agent/openai-moderation"
-                    ]
-                  },
-                  {
-                    "group": "Team",
-                    "pages": [
-                      "guardrails/usage/team/pii-detection",
-                      "guardrails/usage/team/prompt-injection",
-                      "guardrails/usage/team/openai-moderation"
-                    ]
-                  }
-                ]
-              },
-              {
-                "group": "Human-in-the-Loop",
-                "pages": [
-                  "hitl/overview",
-                  "hitl/user-confirmation",
-                  "hitl/user-input",
-                  "hitl/dynamic-user-input",
-                  "hitl/external-execution",
-                  {
-                    "group": "Usage",
-                    "pages": [
-                      "hitl/usage/agentic-user-input",
-                      {
-                        "group": "Confirmation Required",
-                        "pages": [
-                          "hitl/usage/confirmation-required",
-                          "hitl/usage/confirmation-required-async",
-                          "hitl/usage/confirmation-required-mixed-tools",
-                          "hitl/usage/confirmation-required-multiple-tools",
-                          "hitl/usage/confirmation-required-stream-async",
-                          "hitl/usage/confirmation-required-toolkit",
-                          "hitl/usage/confirmation-required-with-history",
-                          "hitl/usage/confirmation-required-with-run-id"
-                        ]
-                      },
-                      {
-                        "group": "User Input Required",
-                        "pages": [
-                          "hitl/usage/user-input-required",
-                          "hitl/usage/user-input-required-all-fields",
-                          "hitl/usage/user-input-required-async",
-                          "hitl/usage/user-input-required-stream-async"
-                        ]
-                      },
-                      {
-                        "group": "External Tool Execution",
-                        "pages": [
-                          "hitl/usage/external-tool-execution",
-                          "hitl/usage/external-tool-execution-async",
-                          "hitl/usage/external-tool-execution-stream-async",
-                          "hitl/usage/external-tool-execution-toolkit"
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
                 "group": "Run Cancellation",
                 "pages": [
                   "run-cancellation/overview",
@@ -2576,150 +2500,6 @@
                     ]
                   }
                 ]
-              },
-              {
-                "group": "Tracing",
-                "pages": [
-                  "state/overview",
-                  {
-                    "group": "For Agents",
-                    "pages": [
-                      "state/agent/overview",
-                      "state/agent/session-state-basic",
-                      "state/agent/session-state-in-instructions",
-                      "state/agent/session-state-in-context",
-                      "state/agent/session-state-advanced",
-                      "state/agent/session-state-multiple-users",
-                      "state/agent/agentic-session-state",
-                      "state/agent/dynamic-session-state",
-                      "state/agent/change-state-on-run",
-                      "state/agent/last-n-session-messages"
-                    ]
-                  },
-                  {
-                    "group": "For Teams",
-                    "pages": [
-                      "state/team/overview",
-                      "state/team/agentic-session-state",
-                      "state/team/change-state-on-run",
-                      "state/team/session-state-in-instructions",
-                      "state/team/share-member-interactions"
-                    ]
-                  },
-                  {
-                    "group": "For Workflows",
-                    "pages": [
-                      "state/workflows/overview",
-                      "state/workflows/access-session-state-in-custom-python-function-step",
-                      "state/workflows/access-session-state-in-condition-evaluator-function",
-                      "state/workflows/access-session-state-in-router-selector-function"
-                    ]
-                  }
-                ]
-              },
-              {
-                "group": "Context Management",
-                "pages": [
-                  "context/overview",
-                  {
-                    "group": "For Agents",
-                    "pages": [
-                      "context/agent/overview",
-                      "context/agent/instructions",
-                      "context/agent/dynamic-instructions",
-                      "context/agent/instructions-via-function",
-                      "context/agent/few-shot-learning",
-                      "context/agent/datetime-instructions",
-                      "context/agent/location-instructions",
-                      "context/agent/filter-tool-calls-from-history"
-                    ]
-                  },
-                  {
-                    "group": "For Teams",
-                    "pages": [
-                      "context/team/overview",
-                      "context/team/filter-tool-calls-from-history"
-                    ]
-                  }
-                ]
-              },
-              {
-                "group": "Chat History",
-                "pages": [
-                  "history/overview",
-                  {
-                    "group": "For Agents",
-                    "pages": [
-                      "history/agent/overview",
-                      "history/agent/chat-history"
-                    ]
-                  },
-                  {
-                    "group": "For Teams",
-                    "pages": [
-                      "history/team/overview",
-                      "history/team/respond-directly-with-history",
-                      "history/team/team-history",
-                      "history/team/history-of-members",
-                      "history/team/share-member-interactions"
-                    ]
-                  },
-                  {
-                    "group": "For Workflows",
-                    "pages": [
-                      "history/workflow/overview",
-                      "history/workflow/single-step-continuous-execution-workflow",
-                      "history/workflow/workflow-with-history-enabled-for-steps",
-                      "history/workflow/enable-history-for-step",
-                      "history/workflow/get-history-in-function",
-                      "history/workflow/multi-purpose-cli",
-                      "history/workflow/intent-routing-with-history"
-                    ]
-                  }
-                ]
-              },
-              {
-                "group": "Context Compression",
-                "tag": "BETA",
-                "pages": [
-                  "compression/overview",
-                  "compression/token-counting"
-                ]
-              },
-              {
-                "group": "Dependency Injection",
-                "pages": [
-                  "dependencies/overview",
-                  {
-                    "group": "For Agents",
-                    "pages": [
-                      "dependencies/agent/overview",
-                      {
-                        "group": "Usage",
-                        "pages": [
-                          "dependencies/agent/add-dependencies-run",
-                          "dependencies/agent/add-dependencies-to-context",
-                          "dependencies/agent/access-dependencies-in-tool"
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "group": "For Teams",
-                    "pages": [
-                      "dependencies/team/overview",
-                      {
-                        "group": "Usage",
-                        "pages": [
-                          "dependencies/team/add-dependencies-run",
-                          "dependencies/team/add-dependencies-to-context",
-                          "dependencies/team/reference-dependencies",
-                          "dependencies/team/access-dependencies-in-tool"
-                        ]
-                      }
-                    ]
-                  }
-                ]
               }
             ]
           },
@@ -2768,9 +2548,38 @@
                   {
                     "group": "Usage",
                     "pages": [
-                      "tracing/usage/basic-agent-tracing",
-                      "tracing/usage/basic-team-tracing",
-                      "tracing/usage/basic-workflow-tracing"
+                      "hitl/usage/agentic-user-input",
+                      {
+                        "group": "Confirmation Required",
+                        "pages": [
+                          "hitl/usage/confirmation-required",
+                          "hitl/usage/confirmation-required-async",
+                          "hitl/usage/confirmation-required-mixed-tools",
+                          "hitl/usage/confirmation-required-multiple-tools",
+                          "hitl/usage/confirmation-required-stream-async",
+                          "hitl/usage/confirmation-required-toolkit",
+                          "hitl/usage/confirmation-required-with-history",
+                          "hitl/usage/confirmation-required-with-run-id"
+                        ]
+                      },
+                      {
+                        "group": "User Input Required",
+                        "pages": [
+                          "hitl/usage/user-input-required",
+                          "hitl/usage/user-input-required-all-fields",
+                          "hitl/usage/user-input-required-async",
+                          "hitl/usage/user-input-required-stream-async"
+                        ]
+                      },
+                      {
+                        "group": "External Tool Execution",
+                        "pages": [
+                          "hitl/usage/external-tool-execution",
+                          "hitl/usage/external-tool-execution-async",
+                          "hitl/usage/external-tool-execution-stream-async",
+                          "hitl/usage/external-tool-execution-toolkit"
+                        ]
+                      }
                     ]
                   }
                 ]
@@ -2858,30 +2667,6 @@
                 ]
               },
               {
-                "group": "Hooks",
-                "pages": [
-                  "hooks/overview",
-                  {
-                    "group": "Agent",
-                    "pages": [
-                      "hooks/usage/agent/input-validation-pre-hook",
-                      "hooks/usage/agent/input-transformation-pre-hook",
-                      "hooks/usage/agent/output-validation-post-hook",
-                      "hooks/usage/agent/output-transformation-post-hook"
-                    ]
-                  },
-                  {
-                    "group": "Team",
-                    "pages": [
-                      "hooks/usage/team/input-validation-pre-hook",
-                      "hooks/usage/team/input-transformation-pre-hook",
-                      "hooks/usage/team/output-validation-post-hook",
-                      "hooks/usage/team/output-transformation-post-hook"
-                    ]
-                  }
-                ]
-              },
-              {
                 "group": "Tracing",
                 "pages": [
                   "tracing/overview",
@@ -2895,15 +2680,6 @@
                       "tracing/usage/basic-workflow-tracing"
                     ]
                   }
-                ]
-              },
-              {
-                "group": "Run Cancellation",
-                "pages": [
-                  "run-cancellation/overview",
-                  "run-cancellation/agent-cancel-run",
-                  "run-cancellation/team-cancel-run",
-                  "run-cancellation/workflow-cancel-run"
                 ]
               },
               "scheduler/overview"
@@ -5580,6 +5356,10 @@
                       "examples/knowledge/readers/csv-reader-custom-encodings",
                       "examples/knowledge/readers/csv-reader-url-async",
                       "examples/knowledge/readers/doc-kb-async",
+                      "examples/knowledge/readers/docling-reader",
+                      "examples/knowledge/readers/docling-reader-async",
+                      "examples/knowledge/readers/docling-multi-formats",
+                      "examples/knowledge/readers/docling-reader-url",
                       "examples/knowledge/readers/excel-legacy-xls",
                       "examples/knowledge/readers/excel-reader",
                       "examples/knowledge/readers/firecrawl-reader",
@@ -12293,6 +12073,10 @@
     {
       "source": "/integrations/toolkits/others/github",
       "destination": "/tools/toolkits/others/github"
+    },
+    {
+      "source": "/integrations/toolkits/others/gitlab",
+      "destination": "/tools/toolkits/others/gitlab"
     },
     {
       "source": "/integrations/toolkits/others/composio",

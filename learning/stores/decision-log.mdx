@@ -11,7 +11,7 @@ The Decision Log Store records decisions made by agents with reasoning, context,
 |--------|-------|
 | **Scope** | Per agent |
 | **Persistence** | Long-term |
-| **Default mode** | Agentic |
+| **Default mode** | Always (`DecisionLogConfig()`), Agentic (`decision_log=True`) |
 | **Supported modes** | Always, Agentic |
 
 ## Basic Usage
@@ -26,7 +26,7 @@ agent = Agent(
     model=OpenAIChat(id="gpt-4o"),
     db=PostgresDb(db_url="postgresql+psycopg://ai:ai@localhost:5532/ai"),
     learning=LearningMachine(
-        decision_log=DecisionLogConfig(),
+        decision_log=DecisionLogConfig(),  # defaults to LearningMode.ALWAYS
     ),
     instructions=[
         "When you make a significant choice, use log_decision to record it.",
