@@ -1,11 +1,11 @@
 ---
 title: Fallback Models
 sidebarTitle: Fallback Models
-description: Automatic model failover when a provider errors out. No external proxy needed.
+description: Automatic model failover when a provider fails. No external proxy needed.
 keywords: [fallback models, model failover, resilience, rate limits, context window, error handling]
 ---
 
-When the primary model fails (rate limits, outages, context window limits), fallback models are tried in order until one succeeds. Works with any model provider Agno supports.
+When the primary model fails (rate limits, outages, context window limits), fallback models are tried in order until one succeeds.
 
 ```python
 from agno.agent import Agent
@@ -48,7 +48,7 @@ team = Team(
 
 ## Error-Specific Fallbacks
 
-Use `FallbackConfig` to route different error types to different models:
+`FallbackConfig` routes different error types to different models:
 
 ```python
 from agno.agent import Agent
@@ -86,9 +86,9 @@ agent = Agent(
 
 If a specific list is empty, the general `models` list is used as a catch-all.
 
-## How Retry and Fallback Interact
+## Retry vs. Fallback
 
-Retry and fallback are separate layers. Retry happens inside each model. Fallback happens after the retry loop is exhausted.
+Retry and fallback are separate layers. Retry happens inside each model. Fallback triggers after the retry loop is exhausted.
 
 ```
 call_model_with_fallback(model, fallback_config)
@@ -99,7 +99,7 @@ call_model_with_fallback(model, fallback_config)
        └─ fallback.response()     ← each fallback gets its own retries
 ```
 
-Each model instance controls its own retry behavior:
+Each model controls its own retry behavior:
 
 ```python
 agent = Agent(
@@ -110,21 +110,21 @@ agent = Agent(
 )
 ```
 
-The primary model retries 3 times with backoff. Only after all 3 retries fail does the fallback kick in, which then gets 2 retries of its own.
+The primary model retries 3 times with backoff. Only after all 3 fail does the fallback kick in with 2 retries of its own.
 
 ## Parameters
 
-These parameters are available on both `Agent` and `Team`:
+Available on both `Agent` and `Team`:
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `fallback_models` | `List[Model \| str]` | Models tried in order on any failure. Shorthand for `FallbackConfig(models=...)`. |
-| `fallback_config` | `FallbackConfig` | Advanced configuration with error-specific routing. Takes precedence over `fallback_models` if both are provided. |
+| `fallback_config` | `FallbackConfig` | Error-specific routing. Takes precedence over `fallback_models` if both are set. |
 
 ### FallbackConfig
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `models` | `List[Model \| str]` | General fallback models for any error type. |
-| `rate_limit_models` | `List[Model \| str]` | Fallback models for rate-limit (429) errors. |
-| `context_window_models` | `List[Model \| str]` | Fallback models for context-window-exceeded errors. |
+| `models` | `List[Model \| str]` | General fallback for any error type. |
+| `rate_limit_models` | `List[Model \| str]` | Fallback for rate-limit (429) errors. |
+| `context_window_models` | `List[Model \| str]` | Fallback for context-window-exceeded errors. |
