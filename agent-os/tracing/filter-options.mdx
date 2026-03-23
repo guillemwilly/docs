@@ -1,0 +1,132 @@
+---
+title: Filter Options
+description: "Filter and search traces using structured queries, time ranges, and view toggles."
+sidebarTitle: Filter Options
+---
+
+
+
+
+## Construct Queries
+
+The filter bar supports structured queries with autocomplete for field names, operators, and enum values.
+
+{/* TODO: Screenshot showing autocomplete dropdown in the filter bar */}
+<Frame caption="Filter bar with autocomplete suggestions">
+  <img src="/images/traces-sql-filter.png" alt="Filter bar showing autocomplete suggestions" />
+</Frame>
+
+**Syntax:**
+
+```
+field operator value
+```
+
+### Fields
+
+Fields are fetched dynamically and may vary. The defaults:
+
+| Field | Type | Available In |
+|-------|------|--------------|
+| `run_id` | text | Runs |
+| `session_id` | text | Runs |
+| `status` | enum: `ok`, `error` | Runs |
+| `user_id` | text | Runs, Sessions |
+| `agent_id` | text | Runs, Sessions |
+| `team_id` | text | Runs, Sessions |
+
+### Operators
+
+| Operator | Symbol | Works With |
+|----------|--------|------------|
+| Equals | `=` | all types |
+| Not equals | `!=` | all types |
+| Greater than | `>` | number, datetime |
+| Greater than or equal | `>=` | number, datetime |
+| Less than | `<` | number, datetime |
+| Less than or equal | `<=` | number, datetime |
+| Contains | `contains` | text |
+| Not contains | `!contains` | text |
+| Starts with | `startswith` | text |
+| In (multiple values) | `in` | enum |
+
+### Combining Conditions
+
+- `AND` — all conditions must match
+- `OR` — any condition must match
+- Operators and keywords are **case-insensitive** (`and`, `AND`, `And` all work)
+
+### Examples
+
+Single condition:
+
+```
+status = ok
+```
+
+```
+session_id = 625185b5-6a7a-43bd-afae-339a989ea1cc
+```
+
+Text matching:
+
+```
+agent_id contains my-agent
+```
+
+```
+agent_id startswith chatbot
+```
+
+Multiple conditions:
+
+```
+status = ok AND agent_id = my-agent
+```
+
+```
+status in "ERROR" AND agent_id != "sdghs"
+```
+
+Mixed operators:
+
+```
+status = ok AND agent_id = my-agent OR team_id = backend
+```
+
+
+## Time Filters
+
+The date picker sits next to the filter bar.
+
+<Frame caption="Date picker presets">
+  <img src="/images/traces-date-filter.png" alt="Date picker with preset and custom ranges" />
+</Frame>
+
+| Preset |
+|--------|
+| Last 30 minutes |
+| Last 1 hour |
+| Last 6 hours |
+| Last 1 day |
+| Last 7 days |
+| All time |
+| Custom (pick start and end dates) |
+
+<Note>
+  The filter bar and date picker are **mutually exclusive**. Applying a text filter clears the date range. Picking a date range clears the text filter.
+</Note>
+
+## Views
+
+Toggle between two views using the **Runs / Sessions** tab at the top right of the filter bar.
+
+
+<Frame caption="Runs and Sessions view toggle">
+  <img src="/images/traces-view-filter.png" alt="Runs and Sessions view toggle" />
+</Frame>
+
+- **Runs** — individual trace executions
+- **Sessions** — traces grouped by session
+
+

@@ -4280,6 +4280,7 @@
                 "group": "Tracing",
                 "pages": [
                   "agent-os/tracing/overview",
+                  "agent-os/tracing/filter-options",
                   {
                     "group": "Usage",
                     "pages": [
