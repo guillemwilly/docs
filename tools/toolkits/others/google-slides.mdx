@@ -1,0 +1,216 @@
+---
+title: Google Slides
+---
+
+**GoogleSlidesTools** enable an Agent to create, manage, and manipulate Google Slides presentations. Add slides with various layouts, insert text boxes, tables, images, and videos, read slide content, and manage slide order.
+
+## Getting Started
+
+<Steps>
+  <Step title="Install dependencies">
+    ```shell
+    uv pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
+    ```
+  </Step>
+
+  <Step title="Setup Google Cloud project">
+    Enable the [Google Slides API](https://console.cloud.google.com/apis/enableflow?apiid=slides.googleapis.com) and [Google Drive API](https://console.cloud.google.com/apis/enableflow?apiid=drive.googleapis.com) in your Google Cloud project, then create OAuth credentials.
+
+    <Accordion title="Detailed OAuth setup instructions">
+      1. Go To **API & Service > OAuth Consent Screen**
+
+      2. Select User Type
+         - Google Workspace user: select Internal
+         - Otherwise: select External
+
+      3. Fill in app details (App name, logo, support email, etc)
+
+      4. Select Scope
+         - Click Add or Remove Scope
+         - Select `/auth/presentations` and `/auth/drive.file`
+         - Save and continue
+
+      5. Add Test Users
+         - Click Add Users and enter the email addresses to allow during testing
+         - Only these users can access the app in "Testing" mode
+
+      6. Generate OAuth 2.0 Client ID
+         - Go to **Credentials > Create Credentials > OAuth Client ID**
+         - Select Application Type as **Desktop app**
+         - Download the JSON file
+    </Accordion>
+  </Step>
+
+  <Step title="Configure authentication">
+    <Tabs>
+      <Tab title="Environment Variables">
+        ```shell
+        export GOOGLE_CLIENT_ID=your_client_id_here
+        export GOOGLE_CLIENT_SECRET=your_client_secret_here
+        export GOOGLE_PROJECT_ID=your_project_id_here
+        ```
+      </Tab>
+      <Tab title="Credentials File">
+        Place the downloaded `credentials.json` in your working directory, or pass the path explicitly.
+        ```python
+        GoogleSlidesTools(creds_path="path/to/credentials.json")
+        ```
+      </Tab>
+      <Tab title="Service Account">
+        For server/bot deployments without browser access. Create a service account at **IAM & Admin > Service Accounts**, download the JSON key file, then:
+        ```shell
+        export GOOGLE_SERVICE_ACCOUNT_FILE=/path/to/service-account-key.json
+        ```
+        Or pass it directly:
+        ```python
+        GoogleSlidesTools(service_account_path="path/to/service-account.json")
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Create and run an agent">
+    ```python cookbook/91_tools/googleslides_tools.py
+    from agno.agent import Agent
+    from agno.models.google import Gemini
+    from agno.tools.google.slides import GoogleSlidesTools
+
+    agent = Agent(
+        model=Gemini(id="gemini-2.0-flash"),
+        tools=[
+            GoogleSlidesTools(
+                oauth_port=8080,
+            )
+        ],
+        instructions=[
+            "You are a Google Slides assistant that helps users create and manage presentations.",
+            "Always call get_presentation_metadata before modifying slides to get current slide IDs.",
+            "Use slide_id values returned by the API -- never guess them.",
+            "Return the presentation ID and URL after creating a presentation.",
+        ],
+        add_datetime_to_context=True,
+        markdown=True,
+    )
+
+    agent.print_response(
+        "Create a new Google Slides presentation titled 'Quarterly Business Review'. "
+        "Then add the following slides: "
+        "1. A TITLE slide with title 'Q3 2025 Business Review' and subtitle 'Prepared by the Strategy Team'. "
+        "2. A TITLE_AND_BODY slide with title 'Agenda' and body listing: Revenue Overview, Key Metrics, Product Roadmap, Q4 Goals.",
+        stream=True,
+    )
+    ```
+  </Step>
+</Steps>
+
+## Toolkit Params
+
+| Parameter                          | Type                          | Default        | Description                                                |
+| ---------------------------------- | ----------------------------- | -------------- | ---------------------------------------------------------- |
+| `creds`                            | `Credentials`                 | `None`         | Pre-fetched OAuth credentials to skip auth flow           |
+| `creds_path`                       | `str`                         | `None`         | Path to OAuth credentials JSON file                        |
+| `token_path`                       | `str`                         | `None`         | Path to token file for storing access/refresh tokens       |
+| `service_account_path`             | `str`                         | `None`         | Path to service account JSON key. When set, OAuth is skipped |
+| `scopes`                           | `List[str]`                   | `None`         | Custom OAuth scopes (defaults to `presentations` + `drive.file`) |
+| `oauth_port`                       | `int`                         | `0`            | Port for OAuth authentication callback (0 = auto)          |
+| `all`                              | `bool`                        | `False`        | Master override: enable all tools including destructive ones |
+| `enable_create_presentation`       | `bool`                        | `True`         | Enable create_presentation tool                            |
+| `enable_get_presentation`          | `bool`                        | `True`         | Enable get_presentation tool                               |
+| `enable_list_presentations`        | `bool`                        | `True`         | Enable list_presentations tool                             |
+| `enable_get_presentation_metadata` | `bool`                        | `True`         | Enable get_presentation_metadata tool                      |
+| `enable_get_page`                  | `bool`                        | `True`         | Enable get_page tool                                       |
+| `enable_get_slide_text`            | `bool`                        | `True`         | Enable get_slide_text tool                                 |
+| `enable_read_all_text`             | `bool`                        | `True`         | Enable read_all_text tool                                  |
+| `enable_get_thumbnail_url`         | `bool`                        | `True`         | Enable get_thumbnail_url tool                              |
+| `enable_add_slide`                 | `bool`                        | `True`         | Enable add_slide tool                                      |
+| `enable_add_text_box`              | `bool`                        | `True`         | Enable add_text_box tool                                   |
+| `enable_add_table`                 | `bool`                        | `True`         | Enable add_table tool                                      |
+| `enable_set_background_image`      | `bool`                        | `True`         | Enable set_background_image tool                           |
+| `enable_duplicate_slide`           | `bool`                        | `True`         | Enable duplicate_slide tool                                |
+| `enable_move_slides`               | `bool`                        | `True`         | Enable move_slides tool                                    |
+| `enable_insert_youtube_video`      | `bool`                        | `True`         | Enable insert_youtube_video tool                           |
+| `enable_insert_drive_video`        | `bool`                        | `True`         | Enable insert_drive_video tool                             |
+| `enable_batch_update_presentation` | `bool`                        | `True`         | Enable batch_update_presentation tool                      |
+| `enable_delete_presentation`       | `bool`                        | `False`        | Enable delete_presentation tool (destructive)              |
+| `enable_delete_slide`              | `bool`                        | `False`        | Enable delete_slide tool (destructive)                     |
+
+## Toolkit Functions
+
+### Presentation Management
+
+| Function                     | Description                                                                                  |
+| ---------------------------- | -------------------------------------------------------------------------------------------- |
+| `create_presentation`        | Create a blank presentation. Parameters: `title` (str)                                       |
+| `get_presentation`           | Fetch full presentation metadata and content. Parameters: `presentation_id` (str), `fields` (str, optional) |
+| `list_presentations`         | List all accessible presentations. Parameters: `page_size` (int), `page_token` (str, optional) |
+| `get_presentation_metadata`  | Get lightweight metadata (title, slide count, slide IDs). Parameters: `presentation_id` (str) |
+
+### Reading Slides
+
+| Function             | Description                                                                                  |
+| -------------------- | -------------------------------------------------------------------------------------------- |
+| `get_page`           | Retrieve full content of a specific slide. Parameters: `presentation_id` (str), `page_object_id` (str) |
+| `get_slide_text`     | Extract text content from a single slide. Parameters: `presentation_id` (str), `page_object_id` (str) |
+| `read_all_text`      | Extract all text from every slide. Parameters: `presentation_id` (str)                       |
+| `get_thumbnail_url`  | Get thumbnail image URL for a slide. Parameters: `presentation_id` (str), `slide_id` (str)   |
+
+### Creating & Modifying Slides
+
+| Function                      | Description                                                                                  |
+| ----------------------------- | -------------------------------------------------------------------------------------------- |
+| `add_slide`                   | Add a slide with a layout and optional text. Parameters: `presentation_id` (str), `layout` (str), `title` (str), `subtitle` (str), `body` (str), `body_2` (str), `insertion_index` (int) |
+| `add_text_box`                | Create a positioned text box on a slide. Parameters: `presentation_id` (str), `slide_id` (str), `text` (str), `x` (float), `y` (float), `width` (float), `height` (float) |
+| `add_table`                   | Create a table, optionally pre-populated. Parameters: `presentation_id` (str), `slide_id` (str), `rows` (int), `columns` (int), `content` (list[list[str]]) |
+| `set_background_image`        | Set a publicly accessible image as slide background. Parameters: `presentation_id` (str), `slide_id` (str), `image_url` (str) |
+| `duplicate_slide`             | Duplicate a slide (copy inserted after original). Parameters: `presentation_id` (str), `slide_id` (str) |
+| `move_slides`                 | Reorder slides to a target position. Parameters: `presentation_id` (str), `slide_ids` (list[str]), `insertion_index` (int) |
+| `insert_youtube_video`        | Embed a YouTube video on a slide. Parameters: `presentation_id` (str), `slide_id` (str), `video_id` (str), `x` (float), `y` (float), `width` (float), `height` (float) |
+| `insert_drive_video`          | Embed a Google Drive video on a slide. Parameters: `presentation_id` (str), `slide_id` (str), `file_id` (str), `x` (float), `y` (float), `width` (float), `height` (float) |
+| `batch_update_presentation`   | Apply raw [batch update](https://developers.google.com/slides/api/reference/rest/v1/presentations/batchUpdate) requests for advanced operations. Parameters: `presentation_id` (str), `requests` (list[dict]) |
+
+### Destructive Operations
+
+These tools are **disabled by default**. Pass `enable_delete_presentation=True` or `enable_delete_slide=True` to enable them.
+
+| Function                | Description                                                                        |
+| ----------------------- | ---------------------------------------------------------------------------------- |
+| `delete_presentation`   | Permanently delete a presentation via Drive API. Parameters: `presentation_id` (str) |
+| `delete_slide`          | Remove a slide from the presentation. Parameters: `presentation_id` (str), `slide_id` (str) |
+
+You can use `include_tools` or `exclude_tools` to modify the list of tools the agent has access to. Learn more about [selecting tools](/tools/selecting-tools).
+
+## Cookbook Examples
+
+The [`googleslides_tools.py`](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/googleslides_tools.py) cookbook demonstrates 8 scenarios:
+
+| Scenario                             | Tools Used                                                                     |
+| ------------------------------------ | ------------------------------------------------------------------------------ |
+| Create presentation with layouts     | `create_presentation`, `add_slide` (x5), `get_presentation_metadata`           |
+| Add table and text box               | `get_presentation_metadata`, `add_table`, `add_text_box`                       |
+| Read slide content and thumbnails    | `read_all_text`, `get_slide_text`, `get_thumbnail_url`                         |
+| Duplicate and reorder slides         | `get_presentation_metadata`, `duplicate_slide`, `move_slides`                  |
+| Get detailed presentation data       | `get_presentation`, `get_page`, `get_presentation_metadata`                    |
+| Insert YouTube video                 | `get_presentation_metadata`, `insert_youtube_video`                            |
+| Set background image                 | `get_presentation_metadata`, `set_background_image`                            |
+| List all presentations               | `list_presentations`                                                           |
+
+## Slide Layouts
+
+The `add_slide` function supports the following Google Slides predefined layouts:
+
+| Layout                   | Description                                |
+| ------------------------ | ------------------------------------------ |
+| `BLANK`                  | Empty slide                                |
+| `TITLE`                  | Title and subtitle                         |
+| `TITLE_AND_BODY`         | Title with body text                       |
+| `TITLE_AND_TWO_COLUMNS`  | Title with two body columns                |
+| `TITLE_ONLY`             | Title only, no body placeholder            |
+| `SECTION_HEADER`         | Large section header                       |
+| `ONE_COLUMN_TEXT`         | Single column of text                      |
+| `MAIN_POINT`             | Large main point text                      |
+| `BIG_NUMBER`             | Large number display                       |
+
+## Developer Resources
+
+- [Source](https://github.com/agno-agi/agno/blob/main/libs/agno/agno/tools/google/slides.py)
+- [Cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/googleslides_tools.py)
