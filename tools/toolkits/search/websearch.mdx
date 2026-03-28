@@ -11,7 +11,7 @@ This is the recommended toolkit for general web search functionality. For DuckDu
 The following example requires the `ddgs` library. To install it, run the following command:
 
 ```shell
-pip install -U ddgs
+uv pip install -U ddgs
 ```
 
 ## Example
@@ -38,11 +38,13 @@ agent_google.print_response("Latest AI news", markdown=True)
 | `enable_search`     | `bool`            | `True`   | Enable web search function.                                                                          |
 | `enable_news`       | `bool`            | `True`   | Enable news search function.                                                                         |
 | `backend`           | `str`             | `"auto"` | The backend to use for searching. Options: `"auto"`, `"duckduckgo"`, `"google"`, `"bing"`, `"brave"`, `"yandex"`, `"yahoo"`, etc. |
-| `modifier`          | `Optional[str]`   | `None`   | A modifier to be prepended to search queries.                                                        |
+| `modifier`          | `Optional[str]`   | `None`   | A modifier to prepend to search queries.                                                             |
 | `fixed_max_results` | `Optional[int]`   | `None`   | A fixed number of maximum results.                                                                   |
-| `proxy`             | `Optional[str]`   | `None`   | Proxy to be used for requests.                                                                       |
-| `timeout`           | `Optional[int]`   | `10`     | The maximum number of seconds to wait for a response.                                                |
+| `proxy`             | `Optional[str]`   | `None`   | Proxy to use for requests.                                                                           |
+| `timeout`           | `Optional[int]`   | `10`     | Maximum seconds to wait for a response.                                                              |
 | `verify_ssl`        | `bool`            | `True`   | Whether to verify SSL certificates.                                                                  |
+| `timelimit`         | `Optional[str]`   | `None`   | Time limit for results. `"d"` (day), `"w"` (week), `"m"` (month), `"y"` (year).                     |
+| `region`            | `Optional[str]`   | `None`   | Region for results (e.g., `"us-en"`, `"uk-en"`, `"ru-ru"`).                                         |
 
 ## Toolkit Functions
 
