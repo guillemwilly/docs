@@ -4431,25 +4431,7 @@
               "deploy/introduction",
               "deploy/templates",
               "deploy/apps",
-              "deploy/interfaces",
-              {
-                "group": "Agno Infra",
-                "pages": [
-                  "infra/overview",
-                  {
-                    "group": "CLI Reference",
-                    "pages": [
-                      "reference/agno-infra/cli/ws/create",
-                      "reference/agno-infra/cli/ws/up",
-                      "reference/agno-infra/cli/ws/down",
-                      "reference/agno-infra/cli/ws/restart",
-                      "reference/agno-infra/cli/ws/patch",
-                      "reference/agno-infra/cli/ws/config",
-                      "reference/agno-infra/cli/ws/delete"
-                    ]
-                  }
-                ]
-              }
+              "deploy/interfaces"
             ]
           },
           {
@@ -4632,6 +4614,24 @@
                 "group": "Telegram",
                 "pages": [
                   "deploy/interfaces/telegram/overview"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Agno Infra",
+            "pages": [
+              "deploy/infra/overview",
+              {
+                "group": "CLI Reference",
+                "pages": [
+                  "deploy/infra/cli/ws/create",
+                  "deploy/infra/cli/ws/up",
+                  "deploy/infra/cli/ws/down",
+                  "deploy/infra/cli/ws/restart",
+                  "deploy/infra/cli/ws/patch",
+                  "deploy/infra/cli/ws/config",
+                  "deploy/infra/cli/ws/delete"
                 ]
               }
             ]
@@ -14699,7 +14699,39 @@
     },
     {
       "source": "/deploy/agno-infra",
-      "destination": "/infra/overview"
+      "destination": "/deploy/infra/overview"
+    },
+    {
+      "source": "/infra/overview",
+      "destination": "/deploy/infra/overview"
+    },
+    {
+      "source": "/reference/agno-infra/cli/ws/create",
+      "destination": "/deploy/infra/cli/ws/create"
+    },
+    {
+      "source": "/reference/agno-infra/cli/ws/up",
+      "destination": "/deploy/infra/cli/ws/up"
+    },
+    {
+      "source": "/reference/agno-infra/cli/ws/down",
+      "destination": "/deploy/infra/cli/ws/down"
+    },
+    {
+      "source": "/reference/agno-infra/cli/ws/restart",
+      "destination": "/deploy/infra/cli/ws/restart"
+    },
+    {
+      "source": "/reference/agno-infra/cli/ws/patch",
+      "destination": "/deploy/infra/cli/ws/patch"
+    },
+    {
+      "source": "/reference/agno-infra/cli/ws/config",
+      "destination": "/deploy/infra/cli/ws/config"
+    },
+    {
+      "source": "/reference/agno-infra/cli/ws/delete",
+      "destination": "/deploy/infra/cli/ws/delete"
     },
     {
       "source": "/deploy/templates/aws/customize/ci-cd",
