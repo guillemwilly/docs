@@ -1,0 +1,107 @@
+---
+title: Multiple Instances
+description: Multiple Slack bots on a single AgentOS server with prefix-based routing
+---
+
+## Code
+
+```python multiple_instances.py
+from os import getenv
+
+from agno.agent import Agent
+from agno.db.sqlite.sqlite import SqliteDb
+from agno.models.openai import OpenAIChat
+from agno.os.app import AgentOS
+from agno.os.interfaces.slack import Slack
+from agno.tools.websearch import WebSearchTools
+
+agent_db = SqliteDb(session_table="agent_sessions", db_file="tmp/persistent_memory.db")
+
+research_agent = Agent(
+    name="Research Agent",
+    model=OpenAIChat(id="gpt-5-mini"),
+    tools=[WebSearchTools()],
+    db=agent_db,
+    add_history_to_context=True,
+    num_history_runs=3,
+    add_datetime_to_context=True,
+)
+
+analyst_agent = Agent(
+    name="Analyst Agent",
+    model=OpenAIChat(id="gpt-5-mini"),
+    instructions=[
+        "You are a data analyst. Help users interpret data and create insights."
+    ],
+    db=agent_db,
+    add_history_to_context=True,
+    num_history_runs=3,
+    add_datetime_to_context=True,
+)
+
+agent_os = AgentOS(
+    agents=[research_agent, analyst_agent],
+    interfaces=[
+        Slack(
+            agent=research_agent,
+            prefix="/research",
+            token=getenv("RESEARCH_SLACK_TOKEN"),
+            signing_secret=getenv("RESEARCH_SLACK_SIGNING_SECRET"),
+        ),
+        Slack(
+            agent=analyst_agent,
+            prefix="/analyst",
+            token=getenv("ANALYST_SLACK_TOKEN"),
+            signing_secret=getenv("ANALYST_SLACK_SIGNING_SECRET"),
+        ),
+    ],
+)
+app = agent_os.get_app()
+
+
+if __name__ == "__main__":
+    agent_os.serve(app="multiple_instances:app", reload=True)
+```
+
+## Usage
+
+<Steps>
+  <Snippet file="create-venv-step.mdx" />
+
+  <Step title="Set Environment Variables">
+    ```bash
+    export RESEARCH_SLACK_TOKEN=***
+    export RESEARCH_SLACK_SIGNING_SECRET=***
+    export ANALYST_SLACK_TOKEN=***
+    export ANALYST_SLACK_SIGNING_SECRET=***
+    export OPENAI_API_KEY=***
+    ```
+  </Step>
+
+  <Step title="Install Dependencies">
+    ```bash
+    uv pip install 'agno[slack]'
+    ```
+  </Step>
+
+  <Step title="Run Example">
+    ```bash
+    python multiple_instances.py
+    ```
+  </Step>
+
+  <Step title="Configure Event Subscriptions">
+    Set each Slack app's Event Subscription URL to its prefix:
+    ```
+    @ResearchBot -> https://<your-ngrok-url>/research/events
+    @AnalystBot  -> https://<your-ngrok-url>/analyst/events
+    ```
+  </Step>
+</Steps>
+
+## Key Features
+
+- **Prefix-Based Routing**: Each agent gets its own event path (`/research/events`, `/analyst/events`)
+- **Shared Server**: Both agents run on a single AgentOS instance
+- **Separate Bot Tokens**: Each interface uses its own Slack app credentials
+- **Shared Database**: Both agents share the same SQLite database

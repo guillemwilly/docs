@@ -1,0 +1,113 @@
+---
+title: Multi-Bot
+description: Two independent Slack bots on the same workspace with separate prefixes, tokens, and session isolation
+---
+
+## Code
+
+```python multi_bot.py
+from os import getenv
+
+from agno.agent import Agent
+from agno.db.sqlite import SqliteDb
+from agno.models.openai import OpenAIChat
+from agno.os.app import AgentOS
+from agno.os.interfaces.slack import Slack
+
+db = SqliteDb(session_table="agent_sessions", db_file="tmp/multi_bot.db")
+
+ace_agent = Agent(
+    id="ace",
+    name="Ace",
+    model=OpenAIChat(id="gpt-4.1-mini"),
+    db=db,
+    instructions=[
+        "You are Ace, a research assistant. Always introduce yourself as Ace.",
+        "When answering, cite sources and be thorough.",
+    ],
+    add_history_to_context=True,
+    num_history_runs=5,
+    markdown=True,
+)
+
+dash_agent = Agent(
+    id="dash",
+    name="Dash",
+    model=OpenAIChat(id="gpt-4.1-mini"),
+    db=db,
+    instructions=[
+        "You are Dash, a concise summarizer. Always introduce yourself as Dash.",
+        "Keep answers concise - 2-3 sentences max.",
+    ],
+    add_history_to_context=True,
+    num_history_runs=5,
+    markdown=True,
+)
+
+agent_os = AgentOS(
+    agents=[ace_agent, dash_agent],
+    interfaces=[
+        Slack(
+            agent=ace_agent,
+            prefix="/ace",
+            token=getenv("ACE_SLACK_TOKEN"),
+            signing_secret=getenv("ACE_SLACK_SIGNING_SECRET"),
+            streaming=True,
+            reply_to_mentions_only=False,
+        ),
+        Slack(
+            agent=dash_agent,
+            prefix="/slack",
+            token=getenv("DASH_SLACK_TOKEN"),
+            signing_secret=getenv("DASH_SLACK_SIGNING_SECRET"),
+            streaming=True,
+            reply_to_mentions_only=False,
+        ),
+    ],
+)
+app = agent_os.get_app()
+
+if __name__ == "__main__":
+    agent_os.serve(app="multi_bot:app", reload=True)
+```
+
+## Usage
+
+<Steps>
+  <Snippet file="create-venv-step.mdx" />
+  <Step title="Set Environment Variables">
+    ```bash
+    # Ace bot credentials
+    export ACE_SLACK_TOKEN=xoxb-ace-bot-token
+    export ACE_SLACK_SIGNING_SECRET=ace-signing-secret
+
+    # Dash bot credentials
+    export DASH_SLACK_TOKEN=xoxb-dash-bot-token
+    export DASH_SLACK_SIGNING_SECRET=dash-signing-secret
+
+    export OPENAI_API_KEY=your-openai-api-key
+    ```
+  </Step>
+  <Step title="Install Dependencies">
+    ```bash
+    uv pip install -U "agno[slack]" openai
+    ```
+  </Step>
+  <Step title="Configure Slack Apps">
+    Create two Slack apps in your workspace. Set their Event Subscription URLs to different prefixes on the same server:
+    - Ace: `https://<your-tunnel>/ace/events`
+    - Dash: `https://<your-tunnel>/slack/events`
+  </Step>
+  <Step title="Run Example">
+    ```bash
+    python multi_bot.py
+    ```
+  </Step>
+</Steps>
+
+## Key Features
+
+- **Multiple Bots, One Server**: Two Slack apps served from a single AgentOS instance using different URL prefixes
+- **Per-Bot Credentials**: Each Slack interface uses its own token and signing secret via environment variables
+- **Session Isolation**: Both bots share a SQLite database but maintain separate sessions per agent ID
+- **Streaming Responses**: Both bots stream their responses in real time

@@ -1,19 +1,21 @@
 ---
-title: "Slack Agent with User Memory"
-description: "Personalized Slack agent that remembers user information and preferences"
+title: Slack Agent with User Memory
+description: MemoryManager captures user preferences and personalizes responses across conversations
 ---
 
 ## Code
 
-```python cookbook/os/interfaces/slack/agent_with_user_memory.py
+```python agent_with_user_memory.py
 from textwrap import dedent
+
 from agno.agent import Agent
 from agno.db.sqlite import SqliteDb
 from agno.memory.manager import MemoryManager
 from agno.models.anthropic.claude import Claude
+from agno.models.openai import OpenAIChat
 from agno.os.app import AgentOS
 from agno.os.interfaces.slack import Slack
-from agno.tools.hackernews import HackerNewsTools
+from agno.tools.websearch import WebSearchTools
 
 agent_db = SqliteDb(session_table="agent_sessions", db_file="tmp/persistent_memory.db")
 
@@ -24,13 +26,14 @@ memory_manager = MemoryManager(
                     Collect Information about the users likes and dislikes,
                     Collect information about what the user is doing with their life right now
                 """,
-    model=Claude(id="claude-sonnet-4-5"),
+    model=OpenAIChat(id="gpt-4o-mini"),
 )
+
 
 personal_agent = Agent(
     name="Basic Agent",
     model=Claude(id="claude-sonnet-4-20250514"),
-    tools=[HackerNewsTools()],
+    tools=[WebSearchTools()],
     add_history_to_context=True,
     num_history_runs=3,
     add_datetime_to_context=True,
@@ -39,18 +42,21 @@ personal_agent = Agent(
     memory_manager=memory_manager,
     update_memory_on_run=True,
     instructions=dedent("""
-        You are a personal AI friend in a slack chat, your purpose is to chat with the user about things and make them feel good.
-        First introduce yourself and ask for their name then, ask about themeselves, their hobbies, what they like to do and what they like to talk about.
-        Use the HackerNews tools to find latest information about things in the conversations
+        You are a personal AI friend in a Slack chat. Your purpose is to chat with the user and make them feel good.
+        First introduce yourself and ask for their name, then ask about themselves, their hobbies, what they like to do and what they like to talk about.
+        Use the web search tool to find the latest information about things in the conversation.
+        You may sometimes receive messages prepended with "group message" — when that happens, reply to the whole group instead of treating them as from a single user.
                         """),
-    debug_mode=True,
 )
 
+
+# Setup our AgentOS app
 agent_os = AgentOS(
     agents=[personal_agent],
     interfaces=[Slack(agent=personal_agent)],
 )
 app = agent_os.get_app()
+
 
 if __name__ == "__main__":
     agent_os.serve(app="agent_with_user_memory:app", reload=True)
@@ -63,30 +69,27 @@ if __name__ == "__main__":
 
   <Step title="Set Environment Variables">
     ```bash
-    export SLACK_TOKEN=xoxb-your-bot-user-token
-    export SLACK_SIGNING_SECRET=your-signing-secret
-    export ANTHROPIC_API_KEY=your-anthropic-api-key
+    export SLACK_TOKEN=***
+    export SLACK_SIGNING_SECRET=***
+    export ANTHROPIC_API_KEY=***
     ```
   </Step>
 
-  <Step title="Install dependencies">
+  <Step title="Install Dependencies">
     ```bash
-    uv pip install -U agno
+    uv pip install 'agno[slack]'
     ```
   </Step>
 
   <Step title="Run Example">
     ```bash
-    python cookbook/os/interfaces/slack/agent_with_user_memory.py
+    python agent_with_user_memory.py
     ```
   </Step>
 </Steps>
 
 ## Key Features
 
-- **Memory Management**: Remembers user names, hobbies, preferences, and activities
-- **HackerNews Integration**: Access to current information during conversations
+- **Memory Management**: Captures user names, hobbies, preferences, and activities across conversations
+- **Web Search**: Fetches current information during conversations via WebSearchTools
 - **Personalized Responses**: Uses stored memories for contextualized replies
-- **Slack Integration**: Works with direct messages and group conversations
-- **Claude Powered**: Advanced reasoning and conversation capabilities
-

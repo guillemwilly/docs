@@ -4279,7 +4279,13 @@
                   "agent-os/interfaces/whatsapp/introduction",
                   "agent-os/interfaces/a2a/introduction",
                   "agent-os/interfaces/ag-ui/introduction",
-                  "agent-os/interfaces/slack/introduction",
+                  {
+                    "group": "Slack",
+                    "pages": [
+                      "agent-os/interfaces/slack/introduction",
+                      "agent-os/interfaces/slack/reference"
+                    ]
+                  },
                   "agent-os/interfaces/telegram/introduction"
                 ]
               },
@@ -4398,9 +4404,18 @@
                     "group": "Slack",
                     "pages": [
                       "agent-os/usage/interfaces/slack/basic",
+                      "agent-os/usage/interfaces/slack/streaming",
+                      "agent-os/usage/interfaces/slack/support-team",
+                      "agent-os/usage/interfaces/slack/channel-summarizer",
+                      "agent-os/usage/interfaces/slack/workflow",
+                      "agent-os/usage/interfaces/slack/multiple-instances",
                       "agent-os/usage/interfaces/slack/agent-with-user-memory",
                       "agent-os/usage/interfaces/slack/reasoning-agent",
-                      "agent-os/usage/interfaces/slack/research-workflow"
+                      "agent-os/usage/interfaces/slack/file-analyst",
+                      "agent-os/usage/interfaces/slack/multi-bot",
+                      "agent-os/usage/interfaces/slack/multimodal-team",
+                      "agent-os/usage/interfaces/slack/multimodal-workflow",
+                      "agent-os/usage/interfaces/slack/research-assistant"
                     ]
                   },
                   {
