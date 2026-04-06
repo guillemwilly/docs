@@ -2,7 +2,7 @@
 title: WhatsApp
 ---
 
-**WhatsAppTools** enable an Agent to send messages via the WhatsApp Business API — text, templates, images, documents, locations, reactions, and interactive messages (reply buttons, list menus).
+**WhatsAppTools** enable an Agent to send messages via the WhatsApp Business API: text, templates, images, documents, locations, reactions, and interactive messages (reply buttons, list menus).
 
 ## Prerequisites
 
@@ -98,15 +98,15 @@ See `cookbook/05_agent_os/interfaces/whatsapp/interactive_concierge.py` for a fu
 
 The toolkit includes Pydantic models for structured interactive messages:
 
-**`ReplyButton`** — A quick-reply button for `send_reply_buttons`:
+**`ReplyButton`**: A quick-reply button for `send_reply_buttons`.
 - `id` (str): Unique button identifier (e.g., `"yes"`, `"no"`).
 - `title` (str): Button display text, max 20 characters.
 
-**`ListSection`** — A section for `send_list_message`, containing `ListRow` items:
+**`ListSection`**: A section for `send_list_message`, containing `ListRow` items.
 - `title` (str): Section heading.
 - `rows` (list of `ListRow`): Selectable rows.
 
-**`ListRow`** — A selectable row inside a `ListSection`:
+**`ListRow`**: A selectable row inside a `ListSection`.
 - `id` (str): Unique row identifier.
 - `title` (str): Row title text.
 - `description` (str, optional): Row description.
@@ -117,5 +117,5 @@ from agno.tools.whatsapp import ReplyButton, ListSection, ListRow
 
 ## Developer Resources
 
-- View [Tools](https://github.com/agno-agi/agno/blob/main/libs/agno/agno/tools/whatsapp.py)
-- View [WhatsApp Interface Cookbooks](https://github.com/agno-agi/agno/tree/main/cookbook/05_agent_os/interfaces/whatsapp)
+- [Tools](https://github.com/agno-agi/agno/blob/main/libs/agno/agno/tools/whatsapp.py)
+- [WhatsApp Interface Cookbooks](https://github.com/agno-agi/agno/tree/main/cookbook/05_agent_os/interfaces/whatsapp)

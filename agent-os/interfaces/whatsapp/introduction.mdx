@@ -10,13 +10,13 @@ Use the WhatsApp interface to serve Agents, Teams, or Workflows on WhatsApp. It 
 ### 1. Create a Meta App
 
 1. Go to the [Meta Developer Portal](https://developers.facebook.com/) and create a developer account.
-2. Create a new app at the [Apps Dashboard](https://developers.facebook.com/apps/). Select **Business** as the app type. If you don't see it, choose **Other**, then **Business** on the next screen.
+2. Create a new app at the [Apps Dashboard](https://developers.facebook.com/apps/). Select **Business** as the app type. If you don't see it, choose **Other** and then **Business** on the next screen.
 3. In the app dashboard, find **WhatsApp** in the product list and click **Set up** to add it to your app.
 
 ### 2. Get Your Credentials
 
 1. In your app dashboard, go to **WhatsApp > API Setup**.
-2. Note your **Phone Number ID** — it's shown below the test phone number.
+2. Note your **Phone Number ID**, shown below the test phone number.
 3. Generate a **Temporary Access Token** from the same page. This token expires in ~24 hours and is only suitable for development.
 4. Add test recipient numbers under the **To** field to send messages during development.
 
@@ -55,7 +55,7 @@ Meta requires webhook endpoints to use **HTTPS**. For local development, use a t
 3. In the Meta app dashboard, go to **WhatsApp > Configuration**.
 4. Set the **Callback URL** to `https://<your-ngrok-url>/whatsapp/webhook`.
 5. Set the **Verify Token** to the same value as your `WHATSAPP_VERIFY_TOKEN` environment variable.
-6. Click **Verify and save**. Meta will send a GET request to your endpoint — it must be running.
+6. Click **Verify and save**. Meta will send a GET request to your endpoint, so it must be running.
 7. Under **Webhook fields**, subscribe to the **messages** field.
 
 ## Example Usage
@@ -123,7 +123,7 @@ Main entry point for Agno WhatsApp applications.
 | `enable_encryption`            | `bool`                                      | `False`        | When `True`, encrypts user phone numbers before storing them as `user_id`. See [Encryption](#phone-number-encryption). |
 | `encryption_key`               | `Optional[str]`                             | `None`         | 32-byte hex key for phone encryption. Falls back to `WHATSAPP_ENCRYPTION_KEY` env var.          |
 
-Provide `agent`, `team`, or `workflow` — at least one is required.
+Provide `agent`, `team`, or `workflow`. At least one is required.
 
 ### Key Method
 
@@ -141,7 +141,7 @@ Returns `{"status": "available"}`. Use for health checks.
 
 ### `GET /whatsapp/webhook`
 
-Handles WhatsApp webhook verification during setup. Meta sends a `hub.verify_token` challenge — the endpoint returns `hub.challenge` if the token matches, `403` if it doesn't, or `500` if `WHATSAPP_VERIFY_TOKEN` is not set.
+Handles WhatsApp webhook verification during setup. Meta sends a `hub.verify_token` challenge. The endpoint returns `hub.challenge` if the token matches, `403` if it doesn't, or `500` if `WHATSAPP_VERIFY_TOKEN` is not set.
 
 ### `POST /whatsapp/webhook`
 
@@ -151,7 +151,7 @@ Receives and processes incoming WhatsApp messages:
 2. Extracts message content (text, image, video, audio, document, or interactive reply).
 3. Downloads any attached media from Meta servers and wraps them as Agno media objects (`Image`, `Video`, `Audio`, `File`).
 4. Runs the agent/team/workflow with the message and media.
-5. Sends the response back — text is auto-split at WhatsApp's 4096-char limit, and generated media (images, audio, video, documents) is uploaded back to Meta and sent.
+5. Sends the response back. Text is auto-split at WhatsApp's 4096-char limit. Generated media (images, audio, video, documents) is uploaded back to Meta and sent.
 
 Responses: `200 {"status": "processing"}`, `200 {"status": "ignored"}` (non-WhatsApp events), `403` (invalid signature).
 
@@ -160,7 +160,7 @@ Responses: `200 {"status": "processing"}`, `200 {"status": "ignored"}` (non-What
 The user's phone number is used as both `user_id` and `session_id`, so each WhatsApp conversation maps to a single session.
 
 - **Session format**: `wa:<entity_id>:<user_id>`
-- **Reset**: Users can send `/new` to start a fresh session. The old session is preserved in the database — a new session ID is created with a random suffix.
+- **Reset**: Users can send `/new` to start a fresh session. The old session is preserved in the database. A new session ID is created with a random suffix.
 - **Database required**: Session reset (`/new`) only works when the agent/team/workflow has a `db` configured.
 
 <Note>
@@ -235,5 +235,5 @@ Each bot needs its own Meta app and phone number. Set each app's webhook callbac
 - **No messages received**: Verify the webhook callback URL and that you subscribed to the `messages` field in Meta's dashboard.
 - **403 on webhook**: Check that `WHATSAPP_APP_SECRET` is set correctly, or set `WHATSAPP_SKIP_SIGNATURE_VALIDATION=true` for local development.
 - **Webhook verification fails**: Ensure `WHATSAPP_VERIFY_TOKEN` matches the value in Meta's dashboard.
-- **Media not sending**: Check `WHATSAPP_ACCESS_TOKEN` has the required permissions and hasn't expired. Temporary tokens expire after ~24 hours — use a [System User token](#get-your-credentials) for production.
+- **Media not sending**: Check `WHATSAPP_ACCESS_TOKEN` has the required permissions and hasn't expired. Temporary tokens expire after ~24 hours. Use a [System User token](#get-your-credentials) for production.
 - **Bot not replying**: Review application logs. Common causes: missing env vars, expired access token, or agent errors.
