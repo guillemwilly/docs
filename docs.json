@@ -2310,7 +2310,8 @@
                 "pages": [
                   "skills/overview",
                   "skills/creating-skills",
-                  "skills/loading-skills"
+                  "skills/loading-skills",
+                  "skills/team-skills"
                 ]
               },
               {
@@ -4990,6 +4991,13 @@
                       "examples/teams/tools/custom-tools",
                       "examples/teams/tools/member-tool-hooks",
                       "examples/teams/tools/tool-hooks"
+                    ]
+                  },
+                  {
+                    "group": "Skills",
+                    "pages": [
+                      "examples/teams/skills/overview",
+                      "examples/teams/skills/basic-skills-team"
                     ]
                   },
                   {
