@@ -44,7 +44,7 @@ knowledge.insert(
 | Google Cloud Storage | `GcsConfig` | `pip install google-cloud-storage` |
 | SharePoint | `SharePointConfig` | `pip install msal requests` |
 | GitHub | `GitHubConfig` | `pip install requests` |
-| Azure Blob Storage | `AzureBlobConfig` | `pip install azure-identity azure-storage-blob` |
+| Azure Blob Storage | `AzureBlobConfig` | `pip install azure-identity azure-storage-blob` (`azure-identity` is only for Service Principal authentication) |
 
 All configs are importable from `agno.knowledge.remote_content`.
 
@@ -151,6 +151,10 @@ sharepoint = SharePointConfig(
 
 ### AzureBlobConfig
 
+Supports two authentication methods: **Service Principal** (Azure AD client credentials) and **SAS** (Shared Access Signature) token. Provide one or the other, not both.
+
+<Tabs>
+  <Tab title="Service Principal">
 ```python
 from agno.knowledge.remote_content import AzureBlobConfig
 
@@ -165,13 +169,31 @@ azure = AzureBlobConfig(
 )
 ```
 
+  </Tab>
+  <Tab title="SAS Token">
+```python
+from agno.knowledge.remote_content import AzureBlobConfig
+
+azure = AzureBlobConfig(
+    id="azure-docs",
+    name="Azure Blob Documents",
+    sas_token="sv=2022-11-02&ss=b&srt=sco&sp=rl&se=...",
+    storage_account="mystorageaccount",
+    container="documents",
+)
+```
+
+  </Tab>
+</Tabs>
+
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `id` | `str` | required | Unique identifier |
 | `name` | `str` | required | Display name |
-| `tenant_id` | `str` | required | Azure AD tenant ID |
-| `client_id` | `str` | required | Azure AD application client ID |
-| `client_secret` | `str` | required | Azure AD application client secret |
+| `tenant_id` | `Optional[str]` | `None` | Azure AD tenant ID (Service Principal auth) |
+| `client_id` | `Optional[str]` | `None` | Azure AD application client ID (Service Principal auth) |
+| `client_secret` | `Optional[str]` | `None` | Azure AD application client secret (Service Principal auth) |
+| `sas_token` | `Optional[str]` | `None` | SAS token string (SAS token auth) |
 | `storage_account` | `str` | required | Azure storage account name |
 | `container` | `str` | required | Blob container name |
 | `prefix` | `Optional[str]` | `None` | Default prefix |

@@ -1,33 +1,40 @@
 ---
-title: "Basic Slack Agent"
-description: "Create a basic AI agent that integrates with Slack for conversations"
+title: Basic Slack Agent
+description: Minimal Slack bot with SQLite session persistence and @mention replies
 ---
 
 ## Code
 
-```python cookbook/os/interfaces/slack/basic.py
+```python basic.py
 from agno.agent import Agent
-from agno.db.sqlite import SqliteDb
-from agno.models.openai import OpenAIResponses
-from agno.os import AgentOS
+from agno.db.sqlite.sqlite import SqliteDb
+from agno.models.openai import OpenAIChat
+from agno.os.app import AgentOS
 from agno.os.interfaces.slack import Slack
 
 agent_db = SqliteDb(session_table="agent_sessions", db_file="tmp/persistent_memory.db")
 
 basic_agent = Agent(
     name="Basic Agent",
-    model=OpenAIResponses(id="gpt-5.2"),
+    model=OpenAIChat(id="gpt-4o"),
     db=agent_db,
     add_history_to_context=True,
     num_history_runs=3,
     add_datetime_to_context=True,
 )
 
+# Setup our AgentOS app
 agent_os = AgentOS(
     agents=[basic_agent],
-    interfaces=[Slack(agent=basic_agent)],
+    interfaces=[
+        Slack(
+            agent=basic_agent,
+            reply_to_mentions_only=True,  # The Agent will react only to messages mentioning it
+        )
+    ],
 )
 app = agent_os.get_app()
+
 
 if __name__ == "__main__":
     agent_os.serve(app="basic:app", reload=True)
@@ -40,30 +47,27 @@ if __name__ == "__main__":
 
   <Step title="Set Environment Variables">
     ```bash
-    export SLACK_TOKEN=xoxb-your-bot-user-token
-    export SLACK_SIGNING_SECRET=your-signing-secret
-    export OPENAI_API_KEY=your_openai_api_key
+    export SLACK_TOKEN=***
+    export SLACK_SIGNING_SECRET=***
+    export OPENAI_API_KEY=***
     ```
   </Step>
 
-  <Step title="Install dependencies">
+  <Step title="Install Dependencies">
     ```bash
-    uv pip install -U agno
+    uv pip install 'agno[slack]'
     ```
   </Step>
 
   <Step title="Run Example">
     ```bash
-    python cookbook/os/interfaces/slack/basic.py
+    python basic.py
     ```
   </Step>
 </Steps>
 
 ## Key Features
 
-- **Slack Integration**: Responds to direct messages and channel mentions
-- **Conversation History**: Maintains context with last 3 interactions
-- **Persistent Memory**: SQLite database for session storage
-- **DateTime Context**: Time-aware responses
-- **GPT-4o Powered**: Intelligent conversational capabilities
-
+- **Mention-Only Replies**: Responds only to @mentions in channels
+- **Session Persistence**: SQLite database stores conversation history across restarts
+- **Conversation History**: Last 3 interactions included in context

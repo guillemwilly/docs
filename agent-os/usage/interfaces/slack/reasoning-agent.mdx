@@ -1,44 +1,43 @@
 ---
-title: "Slack Reasoning Finance Agent"
-description: "Slack agent with advanced reasoning and financial analysis capabilities"
+title: Reasoning Finance Agent
+description: ReasoningTools and WebSearch for step-by-step financial analysis on Slack
 ---
 
 ## Code
 
-```python cookbook/os/interfaces/slack/reasoning_agent.py
+```python reasoning_agent.py
 from agno.agent import Agent
-from agno.db.sqlite.sqlite import SqliteDb
-from agno.models.anthropic.claude import Claude
+from agno.db.sqlite import SqliteDb
+from agno.models.anthropic import Claude
 from agno.os.app import AgentOS
-from agno.os.interfaces.slack.slack import Slack
-from agno.tools.thinking import ThinkingTools
-from agno.tools.yfinance import YFinanceTools
+from agno.os.interfaces.slack import Slack
+from agno.tools.reasoning import ReasoningTools
+from agno.tools.websearch import WebSearchTools
 
 agent_db = SqliteDb(session_table="agent_sessions", db_file="tmp/persistent_memory.db")
 
 reasoning_finance_agent = Agent(
     name="Reasoning Finance Agent",
-    model=Claude(id="claude-3-7-sonnet-latest"),
+    model=Claude(id="claude-sonnet-4-20250514"),
     db=agent_db,
     tools=[
-        ThinkingTools(add_instructions=True),
-        YFinanceTools(
-            stock_price=True,
-            analyst_recommendations=True,
-            company_info=True,
-            company_news=True,
-        ),
+        ReasoningTools(add_instructions=True),
+        WebSearchTools(),
     ],
     instructions="Use tables to display data. When you use thinking tools, keep the thinking brief.",
+    add_history_to_context=True,
+    num_history_runs=3,
     add_datetime_to_context=True,
     markdown=True,
 )
 
+# Setup our AgentOS app
 agent_os = AgentOS(
     agents=[reasoning_finance_agent],
     interfaces=[Slack(agent=reasoning_finance_agent)],
 )
 app = agent_os.get_app()
+
 
 if __name__ == "__main__":
     agent_os.serve(app="reasoning_agent:app", reload=True)
@@ -51,30 +50,27 @@ if __name__ == "__main__":
 
   <Step title="Set Environment Variables">
     ```bash
-    export SLACK_TOKEN=xoxb-your-bot-user-token
-    export SLACK_SIGNING_SECRET=your-signing-secret
-    export ANTHROPIC_API_KEY=your-anthropic-api-key
+    export SLACK_TOKEN=***
+    export SLACK_SIGNING_SECRET=***
+    export ANTHROPIC_API_KEY=***
     ```
   </Step>
 
-  <Step title="Install dependencies">
+  <Step title="Install Dependencies">
     ```bash
-    uv pip install -U agno yfinance
+    uv pip install 'agno[slack]'
     ```
   </Step>
 
   <Step title="Run Example">
     ```bash
-    python cookbook/os/interfaces/slack/reasoning_agent.py
+    python reasoning_agent.py
     ```
   </Step>
 </Steps>
 
 ## Key Features
 
-- **Advanced Reasoning**: ThinkingTools for step-by-step financial analysis
-- **Real-time Data**: Stock prices, analyst recommendations, company news
-- **Claude Powered**: Superior analytical and reasoning capabilities
-- **Slack Integration**: Works in channels and direct messages
-- **Structured Output**: Well-formatted tables and financial insights
-
+- **Chain-of-Thought Reasoning**: ReasoningTools enables structured step-by-step analysis
+- **Web Search**: Searches the web for current information via WebSearchTools
+- **Persistent Sessions**: SQLite database for conversation history across restarts

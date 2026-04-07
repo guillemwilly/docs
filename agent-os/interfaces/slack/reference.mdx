@@ -1,0 +1,71 @@
+---
+title: Slack Reference
+sidebarTitle: Reference
+description: Interface parameters, endpoints, and event handling for the Slack interface.
+keywords: [slack, reference, parameters, endpoints, events, api]
+---
+
+## Interface Parameters
+
+Pass one of `agent`, `team`, or `workflow` to the `Slack` constructor.
+
+```python
+from agno.os.interfaces.slack import Slack
+
+Slack(agent=my_agent, streaming=True, prefix="/slack")
+```
+
+| Parameter | Type | Default | Description |
+| --- | --- | --- | --- |
+| `agent` | `Optional[Agent]` | `None` | Agno `Agent` instance. |
+| `team` | `Optional[Team]` | `None` | Agno `Team` instance. |
+| `workflow` | `Optional[Workflow]` | `None` | Agno `Workflow` instance. |
+| `prefix` | `str` | `"/slack"` | URL prefix for Slack endpoints (e.g., `/slack` means events arrive at `/slack/events`). |
+| `tags` | `Optional[List[str]]` | `None` | FastAPI route tags for API documentation. Defaults to `["Slack"]`. |
+| `reply_to_mentions_only` | `bool` | `True` | When `True` (default), the bot responds to @mentions in channels and all DMs. When `False`, responds to all channel messages. |
+| `token` | `Optional[str]` | `None` | Bot token. Falls back to `SLACK_TOKEN` environment variable. |
+| `signing_secret` | `Optional[str]` | `None` | Slack app signing secret. Falls back to `SLACK_SIGNING_SECRET` environment variable. |
+| `streaming` | `bool` | `True` | Enable real-time streaming with task cards and live text updates. |
+| `loading_messages` | `Optional[List[str]]` | `None` | Status messages shown while the agent processes. Rotated automatically by Slack. |
+| `task_display_mode` | `str` | `"plan"` | How task cards render in the streaming UI. `"plan"` shows a collapsible plan block. |
+| `loading_text` | `str` | `"Thinking..."` | Status text shown while the agent starts processing. |
+| `suggested_prompts` | `Optional[List[Dict[str, str]]]` | `None` | Prompts shown when a user opens a new thread. Each dict has `title` and `message` keys. Defaults to Help and Search prompts. |
+| `ssl` | `Optional[SSLContext]` | `None` | SSL context for the Slack WebClient. |
+| `buffer_size` | `int` | `100` | Characters to buffer before flushing a streaming update. |
+| `max_file_size` | `int` | `1073741824` | Maximum file size in bytes for uploads and downloads (default 1 GB). |
+| `resolve_user_identity` | `bool` | `False` | Look up each user's email and display name via the Slack `users.info` API. When enabled, the agent receives the user's email as `user_id` instead of their Slack ID, and `metadata` includes `user_name` and `user_email`. |
+
+## Endpoints
+
+Available at the `/slack` prefix (customizable with `prefix`).
+
+### `POST {prefix}/events`
+
+Receives all Slack events (URL verification, messages, app mentions, thread starts).
+
+| Status | Description |
+| --- | --- |
+| **200** | Event acknowledged. Processing happens in the background so Slack gets a response within 3 seconds. |
+| **400** | Missing `X-Slack-Request-Timestamp` or `X-Slack-Signature` headers. |
+| **403** | Invalid Slack signing signature. |
+| **500** | `SLACK_SIGNING_SECRET` is not set (checked on each request, not at startup). |
+
+### Built-in Event Handling
+
+| Event | Behavior |
+| --- | --- |
+| URL verification | Echoes the `challenge` field back to Slack during app setup. |
+| `assistant_thread_started` | Sets `suggested_prompts` on new threads (streaming mode only). |
+| Retry deduplication | Events with `X-Slack-Retry-Num` are acknowledged without reprocessing. The original event is already being processed in the background. |
+| Bot self-loop prevention | Events with `bot_id` or subtypes `bot_message`, `message_changed`, `message_deleted`, and other bot lifecycle events are ignored. |
+
+## Developer Resources
+
+<CardGroup cols={2}>
+  <Card title="Slack Guide" icon="book" href="/agent-os/interfaces/slack/introduction">
+    Setup, code examples, streaming behavior, and troubleshooting.
+  </Card>
+  <Card title="SlackTools Reference" icon="wrench" href="/tools/toolkits/social/slack">
+    Toolkit parameters and methods for sending messages, searching, and file management.
+  </Card>
+</CardGroup>

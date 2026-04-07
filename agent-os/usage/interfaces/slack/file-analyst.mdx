@@ -1,0 +1,87 @@
+---
+title: File Analyst
+description: Slack bot that downloads shared files, analyzes their content, and uploads results back to the channel
+---
+
+## Code
+
+```python file_analyst.py
+from agno.agent import Agent
+from agno.db.sqlite import SqliteDb
+from agno.models.anthropic import Claude
+from agno.os.app import AgentOS
+from agno.os.interfaces.slack import Slack
+from agno.tools.slack import SlackTools
+
+agent_db = SqliteDb(session_table="agent_sessions", db_file="tmp/file_analyst.db")
+
+file_analyst = Agent(
+    name="File Analyst",
+    model=Claude(id="claude-sonnet-4-20250514"),
+    db=agent_db,
+    tools=[
+        SlackTools(
+            enable_download_file=True,
+            enable_get_channel_history=True,
+            enable_upload_file=True,
+            output_directory="/tmp/slack_analysis",
+        )
+    ],
+    instructions=[
+        "You are a file analysis assistant.",
+        "When users share files or mention file IDs (F12345...), download and analyze them.",
+        "For CSV/data files: identify patterns, outliers, and key statistics.",
+        "For code files: explain what the code does, suggest improvements.",
+        "For text/docs: summarize key points.",
+        "You can upload analysis results back to Slack as new files.",
+        "Always explain your analysis in plain language.",
+    ],
+    add_history_to_context=True,
+    num_history_runs=5,
+    markdown=True,
+)
+
+agent_os = AgentOS(
+    agents=[file_analyst],
+    interfaces=[
+        Slack(
+            agent=file_analyst,
+            reply_to_mentions_only=True,
+        )
+    ],
+)
+app = agent_os.get_app()
+
+if __name__ == "__main__":
+    agent_os.serve(app="file_analyst:app", reload=True)
+```
+
+## Usage
+
+<Steps>
+  <Snippet file="create-venv-step.mdx" />
+  <Step title="Set Environment Variables">
+    ```bash
+    export SLACK_TOKEN=xoxb-your-bot-user-token
+    export SLACK_SIGNING_SECRET=your-signing-secret
+    export ANTHROPIC_API_KEY=your-anthropic-api-key
+    ```
+  </Step>
+  <Step title="Install Dependencies">
+    ```bash
+    uv pip install -U "agno[slack]" anthropic
+    ```
+  </Step>
+  <Step title="Run Example">
+    ```bash
+    python file_analyst.py
+    ```
+  </Step>
+</Steps>
+
+## Key Features
+
+- **File Download and Upload**: Uses SlackTools to download shared files, analyze them, and upload results back to the channel
+- **Multi-Format Analysis**: Handles CSV/data files (statistics, patterns), code files (explanation, improvements), and text documents (summaries)
+- **Claude-Powered Comprehension**: Uses Claude Sonnet for strong document understanding across file types
+- **Session Persistence**: SQLite database stores conversation history across restarts

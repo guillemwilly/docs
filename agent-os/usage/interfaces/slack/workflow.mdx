@@ -1,27 +1,25 @@
 ---
-title: "Slack Research Workflow"
-description: "Integrate a research and writing workflow with Slack for structured AI-powered content creation"
+title: Slack Workflow
+description: Research and write two-step workflow with WebSearch and SQLite sessions
 ---
 
 ## Code
 
-```python research_workflow.py
+```python basic_workflow.py
 from agno.agent import Agent
-from agno.db.postgres import PostgresDb
-from agno.models.openai import OpenAIResponses
-from agno.os import AgentOS
+from agno.db.sqlite import SqliteDb
+from agno.models.openai import OpenAIChat
+from agno.os.app import AgentOS
 from agno.os.interfaces.slack import Slack
-from agno.tools.hackernews import HackerNewsTools
+from agno.tools.websearch import WebSearchTools
 from agno.workflow.step import Step
 from agno.workflow.workflow import Workflow
-
-workflow_db = PostgresDb(db_url="postgresql+psycopg://ai:ai@localhost:5532/ai")
 
 # Define agents for the workflow
 researcher_agent = Agent(
     name="Research Agent",
-    model=OpenAIResponses(id="gpt-5.2"),
-    tools=[HackerNewsTools()],
+    model=OpenAIChat(id="gpt-4o-mini"),
+    tools=[WebSearchTools()],
     role="Search the web and gather comprehensive research on the given topic",
     instructions=[
         "Search for the most recent and relevant information",
@@ -32,7 +30,7 @@ researcher_agent = Agent(
 
 writer_agent = Agent(
     name="Content Writer",
-    model=OpenAIResponses(id="gpt-5.2"),
+    model=OpenAIChat(id="gpt-4o-mini"),
     role="Create engaging content based on research findings",
     instructions=[
         "Write in a clear, engaging, and professional tone",
@@ -54,12 +52,17 @@ writing_step = Step(
 )
 
 # Create the workflow
+workflow_db = SqliteDb(
+    session_table="workflow_sessions", db_file="tmp/basic_workflow.db"
+)
+
 content_workflow = Workflow(
     name="Content Creation Workflow",
     description="Research and create content on any topic via Slack",
     db=workflow_db,
     steps=[research_step, writing_step],
-    session_id="slack_workflow_session",
+    add_workflow_history_to_steps=True,
+    num_history_runs=3,
 )
 
 # Create AgentOS with Slack interface for the workflow
@@ -71,7 +74,7 @@ agent_os = AgentOS(
 app = agent_os.get_app()
 
 if __name__ == "__main__":
-    agent_os.serve(app="research_workflow:app", reload=True)
+    agent_os.serve(app="basic_workflow:app", reload=True)
 ```
 
 ## Usage
@@ -81,22 +84,28 @@ if __name__ == "__main__":
 
   <Step title="Set Environment Variables">
     ```bash
-    export SLACK_TOKEN=xoxb-your-bot-user-token
-    export SLACK_SIGNING_SECRET=your-signing-secret
-    export OPENAI_API_KEY=your_openai_api_key
+    export SLACK_TOKEN=***
+    export SLACK_SIGNING_SECRET=***
+    export OPENAI_API_KEY=***
     ```
   </Step>
 
-  <Step title="Install dependencies">
+  <Step title="Install Dependencies">
     ```bash
-    uv pip install -U agno psycopg
+    uv pip install 'agno[slack]'
     ```
   </Step>
 
   <Step title="Run Example">
     ```bash
-    python research_workflow.py
+    python basic_workflow.py
     ```
   </Step>
 </Steps>
 
+## Key Features
+
+- **Two-Step Pipeline**: Research Agent gathers information, Content Writer produces a polished summary
+- **Workflow on Slack**: The Workflow object (not individual agents) is passed to the Slack interface
+- **Sequential Steps**: Steps execute in order, passing output from research to writing
+- **SQLite Sessions**: Workflow state persists in SQLite
