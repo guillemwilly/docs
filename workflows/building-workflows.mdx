@@ -9,7 +9,7 @@ Workflows are a powerful way to orchestrate your agents and teams. They are a se
 ## Building Blocks
 
 1. The **`Workflow`** class is the top-level orchestrator that manages the entire execution process.
-2. **`Step`** is the fundamental unit of work in the workflow system. Each step encapsulates exactly one `executor` - either an `Agent`, a `Team`, or a custom Python function. This design ensures clarity and maintainability while preserving the individual characteristics of each executor.
+2. **`Step`** is the fundamental unit of work in the workflow system. Each step encapsulates exactly one executor: an `Agent`, a `Team`, a custom Python function, or a nested `Workflow`. This design ensures clarity and maintainability while preserving the individual characteristics of each executor.
 3. **`Loop`** is a construct that allows you to execute one or more steps multiple times. This is useful when you need to repeat a set of steps until a certain condition is met.
 4. **`Parallel`** is a construct that allows you to execute one or more steps in parallel. This is useful when you need to execute a set of steps concurrently with the outputs joined together.
 5. **`Condition`** makes a step conditional based on criteria you specify.

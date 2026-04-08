@@ -1,0 +1,14 @@
+---
+title: "Nested Workflows"
+sidebarTitle: "Overview"
+description: "Runnable workflow examples under: cookbook/04_workflows/06_advanced_concepts/workflow_as_a_step."
+---
+| Example | Description |
+|---------|-------------|
+| [Nested Workflow](/examples/workflows/advanced-concepts/nested-workflows/nested-workflow) | Basic nested workflow: inner research pipeline feeds into outer writing step. |
+| [Auto-Wrap](/examples/workflows/advanced-concepts/nested-workflows/nested-workflow-auto-wrap) | Pass a `Workflow` directly in the `steps` list without wrapping in `Step()`. |
+| [Event Inspection](/examples/workflows/advanced-concepts/nested-workflows/nested-workflow-events) | Stream events from nested workflows and inspect `nested_depth`, `workflow_id`, and `workflow_name`. |
+| [With Condition](/examples/workflows/advanced-concepts/nested-workflows/nested-workflow-with-condition) | Inner workflow contains a `Condition` step for conditional fact-checking. |
+| [With Loop](/examples/workflows/advanced-concepts/nested-workflows/nested-workflow-with-loop) | Inner workflow contains a `Loop` step for iterative research refinement. |
+| [With Router](/examples/workflows/advanced-concepts/nested-workflows/nested-workflow-with-router) | Inner workflow contains a `Router` step for topic-based specialist routing. |
+| [Deeply Nested (3 Levels)](/examples/workflows/advanced-concepts/nested-workflows/deeply-nested-workflow) | Three levels of nesting with parallel branches at level 2. |
