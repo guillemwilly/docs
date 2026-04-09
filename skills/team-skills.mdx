@@ -1,0 +1,116 @@
+---
+title: Team Skills
+sidebarTitle: Team Skills
+description: Give the team leader direct access to skills without delegating to a member agent.
+---
+
+Pass a `Skills` instance to the `skills` parameter on `Team`. The team leader gets skill tools and system prompt snippets directly.
+
+```python
+from agno.agent import Agent
+from agno.models.openai import OpenAIResponses
+from agno.skills import Skills, LocalSkills
+from agno.team import Team
+
+implementer = Agent(
+    name="Implementer",
+    role="Write code based on review feedback",
+    model=OpenAIResponses(id="gpt-4o"),
+)
+
+team = Team(
+    name="Code Review Team",
+    model=OpenAIResponses(id="gpt-4o"),
+    members=[implementer],
+    skills=Skills(loaders=[LocalSkills("/path/to/skills")]),
+    instructions=[
+        "Use your skills to review code, then delegate implementation to the Implementer.",
+    ],
+)
+
+team.print_response("Review this function and improve it", stream=True)
+```
+
+The leader model receives:
+- Skill summaries in its system prompt (via `get_system_prompt_snippet()`)
+- Skill tools: `get_skill_instructions`, `get_skill_reference`, `get_skill_script`
+
+## Team-Level vs. Member-Level Skills
+
+| Approach | When to use |
+|----------|-------------|
+| `Team(skills=...)` | The leader needs domain expertise to coordinate (e.g., review standards, routing rules) |
+| `Agent(skills=...)` on a member | A specialist agent needs the expertise to do its own work |
+| Both | The leader needs context to delegate, and members need context to execute |
+
+## How It Works
+
+Skills on a team follow the same pattern as knowledge, memory, and tools:
+
+1. `skills.get_tools()` adds skill tools to the leader's tool list
+2. `skills.get_system_prompt_snippet()` injects skill metadata into the leader's system prompt
+3. The leader discovers, loads, and uses skills on demand during the run
+
+## Complete Example
+
+```python
+from pathlib import Path
+
+from agno.agent import Agent
+from agno.models.openai import OpenAIResponses
+from agno.skills import Skills, LocalSkills
+from agno.team import Team
+
+skills_dir = Path(__file__).parent / "sample_skills"
+
+implementer = Agent(
+    name="Implementer",
+    role="Write code based on the review feedback",
+    model=OpenAIResponses(id="gpt-4o"),
+    instructions=[
+        "You write clean, well-tested Python code.",
+        "When given review feedback, produce an improved version of the code.",
+    ],
+)
+
+review_team = Team(
+    name="Code Review Team",
+    model=OpenAIResponses(id="gpt-4o"),
+    members=[implementer],
+    skills=Skills(loaders=[LocalSkills(str(skills_dir))]),
+    instructions=[
+        "You are a team leader with access to code review skills.",
+        "Use your skills to review code, then delegate implementation work to the Implementer.",
+    ],
+    markdown=True,
+    show_members_responses=True,
+)
+
+if __name__ == "__main__":
+    review_team.print_response(
+        "Review this Python code and suggest improvements, "
+        "then have the Implementer write the improved version:\n\n"
+        "```python\n"
+        "def calculate_total(items):\n"
+        "    total = 0\n"
+        "    for i in range(len(items)):\n"
+        "        total = total + items[i]['price'] * items[i]['quantity']\n"
+        "    return total\n"
+        "```",
+        stream=True,
+    )
+```
+
+## Next Steps
+
+| Task | Guide |
+|------|-------|
+| Create skills | [Creating Skills](/skills/creating-skills) |
+| Load skills into agents | [Loading Skills](/skills/loading-skills) |
+| Build teams | [Building Teams](/teams/building-teams) |
+
+## Developer Resources
+
+- [Team reference](/reference/teams/team)
+- [Skills examples](/examples/agents/skills/basic-skills)
+- [Team skills example](/examples/teams/skills/basic-skills-team)
