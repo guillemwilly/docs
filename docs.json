@@ -166,10 +166,12 @@
                     "pages": [
                       "workflows/hitl/overview",
                       "workflows/hitl/step",
+                      "workflows/hitl/output-review",
                       "workflows/hitl/router",
                       "workflows/hitl/condition",
                       "workflows/hitl/loop",
                       "workflows/hitl/steps",
+                      "workflows/hitl/timeout",
                       "workflows/hitl/error-handling"
                     ]
                   },

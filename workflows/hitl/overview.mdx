@@ -66,20 +66,23 @@ workflow = Workflow(db=PostgresDb(db_url="postgresql://..."), ...)
 |------|----------|------|
 | [Confirmation](#confirmation) | Approve/reject before step execution | `requires_confirmation=True` |
 | [User Input](#user-input) | Collect parameters before step execution | `requires_user_input=True` |
+| [Output Review](/workflows/hitl/output-review) | Review/edit/reject output after step execution | `requires_output_review=True` |
 | [Route Selection](#route-selection) | User chooses which path(s) to execute | **Router** with `requires_user_input=True` |
+| [Iteration Review](/workflows/hitl/loop#iteration-review) | Review output between loop iterations | `requires_iteration_review=True` |
+| [Timeout](/workflows/hitl/timeout) | Auto-resolve if no human response in time | `hitl_timeout=300` |
 | [Error Handling](#error-handling) | Retry or skip failed steps | `on_error=OnError.pause` |
 
 ## Supported Primitives
 
 HITL is supported on all workflow primitives:
 
-| Primitive | Confirmation | User Input | Route Selection |
-|-----------|--------------|------------|-----------------|
-| [Step](/workflows/hitl/step) | ✓ | ✓ | - |
-| [Steps](/workflows/hitl/steps) | ✓ | - | - |
-| [Condition](/workflows/hitl/condition) | ✓ | - | - |
-| [Loop](/workflows/hitl/loop) | ✓ | - | - |
-| [Router](/workflows/hitl/router) | ✓ | - | ✓ |
+| Primitive | Confirmation | User Input | Output Review | Route Selection |
+|-----------|--------------|------------|---------------|-----------------|
+| [Step](/workflows/hitl/step) | ✓ | ✓ | [✓](/workflows/hitl/output-review) | - |
+| [Steps](/workflows/hitl/steps) | ✓ | - | - | - |
+| [Condition](/workflows/hitl/condition) | ✓ | - | - | - |
+| [Loop](/workflows/hitl/loop) | ✓ | - | [✓](/workflows/hitl/loop#iteration-review) | - |
+| [Router](/workflows/hitl/router) | ✓ | - | [✓](/workflows/hitl/router#output-review) | ✓ |
 
 ## Run Output Properties
 
@@ -90,6 +93,7 @@ When a workflow pauses, check these properties on `WorkflowRunOutput`:
 | `is_paused` | `True` if workflow is waiting for user action |
 | `steps_requiring_confirmation` | Steps needing confirm/reject |
 | `steps_requiring_user_input` | Steps needing user input values |
+| `steps_requiring_output_review` | Steps needing output review after execution |
 | `steps_requiring_route` | Routers needing route selection |
 | `steps_with_errors` | Steps that failed with `on_error="pause"` |
 
@@ -213,6 +217,7 @@ The `on_reject` parameter controls what happens when a user rejects a step:
 |-------|----------|
 | `OnReject.skip` | Skip the step and continue with the next (default for most primitives) |
 | `OnReject.cancel` | Cancel the entire workflow |
+| `OnReject.retry` | Re-execute the step. Pair with `reject(feedback=...)` to send feedback to the agent. See [Output Review](/workflows/hitl/output-review#reject-with-retry) |
 | `OnReject.else_branch` | For Condition only: execute `else_steps` (default for Condition) |
 
 ## Streaming
@@ -262,6 +267,9 @@ Step(name="process", executor=process_data)
   <Card title="Step HITL" icon="pause" href="/workflows/hitl/step">
     Confirmation and user input on individual steps
   </Card>
+  <Card title="Output Review" icon="eye" href="/workflows/hitl/output-review">
+    Review, edit, or reject output after step execution
+  </Card>
   <Card title="Router HITL" icon="route" href="/workflows/hitl/router">
     User-driven route selection and confirmation
   </Card>
@@ -269,10 +277,13 @@ Step(name="process", executor=process_data)
     User-controlled branching decisions
   </Card>
   <Card title="Loop HITL" icon="rotate" href="/workflows/hitl/loop">
-    Confirm before starting iterative execution
+    Start confirmation and per-iteration review
   </Card>
   <Card title="Steps HITL" icon="layer-group" href="/workflows/hitl/steps">
     Confirm before executing a pipeline
+  </Card>
+  <Card title="Timeout" icon="clock" href="/workflows/hitl/timeout">
+    Auto-resolve HITL pauses after a deadline
   </Card>
   <Card title="Error Handling" icon="triangle-exclamation" href="/workflows/hitl/error-handling">
     Retry or skip failed steps
@@ -281,7 +292,7 @@ Step(name="process", executor=process_data)
 
 ## Developer Resources
 
-- [Cookbooks](https://github.com/agno-agi/agno/tree/main/cookbook/04_workflows/_07_human_in_the_loop)
+- [Cookbooks](https://github.com/agno-agi/agno/tree/main/cookbook/04_workflows/08_human_in_the_loop)
 - [Step reference](/reference/workflows/step)
 - [Router reference](/reference/workflows/router-steps)
 - [Condition reference](/reference/workflows/conditional-steps)

@@ -1,11 +1,11 @@
 ---
 title: Step HITL
 sidebarTitle: Step
-description: Pause individual steps for confirmation or user input before execution.
-keywords: [workflow, step, HITL, confirmation, user input, pause]
+description: Pause individual steps for confirmation, user input, or output review.
+keywords: [workflow, step, HITL, confirmation, user input, output review, pause]
 ---
 
-Steps support two HITL modes: confirmation (approve/reject) and user input (collect parameters).
+Steps support three HITL modes: confirmation (approve/reject before execution), user input (collect parameters before execution), and [output review](/workflows/hitl/output-review) (review/edit/reject after execution).
 
 ## Confirmation
 
@@ -63,6 +63,7 @@ print(run_output.content)
 |-------|----------|
 | `OnReject.skip` | Skip this step and continue with the next (default) |
 | `OnReject.cancel` | Cancel the entire workflow |
+| `OnReject.retry` | Re-execute the step. Used with [output review](/workflows/hitl/output-review#reject-with-retry) |
 
 ## User Input
 
@@ -245,5 +246,10 @@ while run_output.is_paused:
 
 ## Developer Resources
 
+- [Output Review](/workflows/hitl/output-review)
+- [Timeout](/workflows/hitl/timeout)
 - [Workflow HITL overview](/workflows/hitl/overview)
 - [Step reference](/reference/workflows/step)
+- [Confirmation cookbooks](https://github.com/agno-agi/agno/tree/main/cookbook/04_workflows/08_human_in_the_loop/confirmation)
+- [User input cookbooks](https://github.com/agno-agi/agno/tree/main/cookbook/04_workflows/08_human_in_the_loop/user_input)
+- [Output review cookbooks](https://github.com/agno-agi/agno/tree/main/cookbook/04_workflows/08_human_in_the_loop/output_review)

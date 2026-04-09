@@ -1,11 +1,11 @@
 ---
 title: Router HITL
 sidebarTitle: Router
-description: Let users select routes or confirm automated routing decisions.
-keywords: [workflow, router, HITL, route selection, confirmation, branching]
+description: Select routes, confirm routing decisions, or review router output before continuing.
+keywords: [workflow, router, HITL, route selection, confirmation, output review, branching]
 ---
 
-Routers support two HITL modes: user selection (user chooses routes) and confirmation (user approves automated routing).
+Routers support three HITL modes: user selection (user chooses routes), confirmation (user approves automated routing), and output review (review router output after execution).
 
 ## User Selection
 
@@ -160,14 +160,80 @@ for req in run_output.steps_requiring_confirmation:
 | `confirmation_message` | `str` | Message shown to the user |
 | `on_reject` | `OnReject` | Action when rejected: `skip` (default), `cancel` |
 
-## User Selection vs Confirmation
+## Output Review
 
-| Mode | Selector | User Action | Use Case |
-|------|----------|-------------|----------|
-| User Selection | None | Chooses route(s) | Interactive wizards, user-driven workflows |
-| Confirmation | Function | Approves/rejects | Oversight of automated decisions |
+Review a router's output after execution. If rejected, the reviewer can pick a different route. Set `on_reject=OnReject.retry` to re-route on rejection.
 
-Use **user selection** when the user should decide the path. Use **confirmation** when the system decides but needs human approval.
+```python
+from agno.workflow import Workflow, OnReject
+from agno.workflow.router import Router
+from agno.workflow.step import Step
+from agno.workflow.types import StepInput, StepOutput
+from agno.db.sqlite import SqliteDb
+
+workflow = Workflow(
+    name="router_review_workflow",
+    db=SqliteDb(db_file="workflow.db"),
+    steps=[
+        Router(
+            name="analysis_router",
+            selector=lambda si: [Step(name="quick", executor=quick_analysis)],
+            choices=[
+                Step(name="quick", description="Fast analysis (2 min)", executor=quick_analysis),
+                Step(name="deep", description="Thorough analysis (10 min)", executor=deep_analysis),
+                Step(name="custom", description="Custom analysis", executor=custom_analysis),
+            ],
+            requires_output_review=True,
+            output_review_message="Review the analysis. Approve, or pick a different type?",
+            on_reject=OnReject.retry,
+            hitl_max_retries=5,
+        ),
+        Step(name="report", executor=generate_report),
+    ],
+)
+
+run_output = workflow.run("Analyze Q4 sales data")
+
+while run_output.is_paused:
+    for req in run_output.steps_requiring_output_review:
+        print(req.step_output.content)
+        print(f"Available routes: {req.available_choices}")
+
+        choice = input("Approve? (yes/no): ").strip().lower()
+        if choice in ("yes", "y"):
+            req.confirm()
+        else:
+            req.reject()
+
+    # After rejection, pick a different route
+    for req in run_output.steps_requiring_route:
+        print(f"Pick a different route: {req.available_choices}")
+        selection = input("Your choice: ").strip()
+        req.select(selection)
+
+    run_output = workflow.continue_run(run_output)
+```
+
+The router executes the selected branch, then pauses for review. On rejection with `OnReject.retry`, the workflow re-pauses for route selection so the reviewer can pick a different branch.
+
+### Output Review Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `requires_output_review` | `bool` | `False` | Pause after execution for review |
+| `output_review_message` | `str` | `None` | Message shown to the reviewer |
+| `on_reject` | `OnReject` | `OnReject.skip` | Action on rejection: `skip`, `cancel`, `retry` (re-route) |
+| `hitl_max_retries` | `int` | `3` | Maximum re-route attempts |
+
+## Comparing HITL Modes
+
+| Mode | When It Pauses | User Action | Use Case |
+|------|----------------|-------------|----------|
+| User Selection | Before execution | Chooses route(s) | Interactive wizards, user-driven workflows |
+| Confirmation | Before execution | Approves/rejects | Oversight of automated decisions |
+| Output Review | After execution | Approves/rejects/re-routes | Review results before continuing |
+
+Use **user selection** when the user should decide the path. Use **confirmation** when the system decides but needs human approval. Use **output review** when the result matters more than the route chosen.
 
 ## Streaming
 
@@ -196,6 +262,7 @@ while run_output.is_paused:
 
 ## Developer Resources
 
+- [Output Review](/workflows/hitl/output-review)
 - [Workflow HITL overview](/workflows/hitl/overview)
 - [Router reference](/reference/workflows/router-steps)
 - [Branching workflow pattern](/workflows/workflow-patterns/branching-workflow)
