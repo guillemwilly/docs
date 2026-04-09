@@ -5,7 +5,7 @@ description: Pause individual steps for confirmation, user input, or output revi
 keywords: [workflow, step, HITL, confirmation, user input, output review, pause, human review]
 ---
 
-Steps support three HITL modes: confirmation (approve/reject before execution), user input (collect parameters before execution), and output review (review results after execution).
+Steps support three HITL modes: confirmation (approve/reject before execution), user input (collect parameters before execution), and [output review](/workflows/hitl/output-review) (review/edit/reject after execution).
 
 All HITL settings are configured via [`HumanReview`](/workflows/hitl/human-review).
 
@@ -68,6 +68,7 @@ print(run_output.content)
 |-------|----------|
 | `OnReject.skip` | Skip this step and continue with the next (default) |
 | `OnReject.cancel` | Cancel the entire workflow |
+| `OnReject.retry` | Re-execute the step. Used with [output review](/workflows/hitl/output-review#reject-with-retry) |
 
 ## User Input
 
@@ -189,7 +190,7 @@ For agent-based steps, user input is automatically appended to the message.
 
 ## Output Review
 
-Pause after a step executes so the user can review the output before the workflow continues. If the user rejects, the step re-executes (up to `max_retries`).
+Pause after a step executes so the user can review the output before the workflow continues. If the user rejects, the step re-executes (up to `max_retries`). See the dedicated [Output Review](/workflows/hitl/output-review) page for full details including editing output and reject with feedback.
 
 ```python
 from agno.workflow import Workflow, OnReject
@@ -219,14 +220,18 @@ workflow = Workflow(
 run_output = workflow.run("Write a blog post about AI agents")
 
 while run_output.is_paused:
-    for req in run_output.steps_requiring_confirmation:
-        print(f"Output: {req.step_output}")
-        print(f"Message: {req.confirmation_message}")
+    for req in run_output.steps_requiring_output_review:
+        print(f"Output: {req.step_output.content}")
+        print(f"Message: {req.output_review_message}")
         
         if input("Approve? (y/n): ").lower() == "y":
             req.confirm()
         else:
-            req.reject()
+            feedback = input("Feedback (optional): ").strip()
+            if feedback:
+                req.reject(feedback=feedback)
+            else:
+                req.reject()
     
     run_output = workflow.continue_run(run_output)
 
@@ -244,7 +249,7 @@ print(run_output.content)
 
 ### Timeout
 
-Set a deadline for the user to respond. If it expires, `on_timeout` fires automatically.
+Set a deadline for the user to respond. If it expires, `on_timeout` fires automatically. See the dedicated [Timeout](/workflows/hitl/timeout) page for full details.
 
 ```python
 from agno.workflow import OnTimeout
@@ -333,5 +338,10 @@ while run_output.is_paused:
 ## Developer Resources
 
 - [HumanReview Config](/workflows/hitl/human-review)
+- [Output Review](/workflows/hitl/output-review)
+- [Timeout](/workflows/hitl/timeout)
 - [Workflow HITL overview](/workflows/hitl/overview)
 - [Step reference](/reference/workflows/step)
+- [Confirmation cookbooks](https://github.com/agno-agi/agno/tree/main/cookbook/04_workflows/08_human_in_the_loop/confirmation)
+- [User input cookbooks](https://github.com/agno-agi/agno/tree/main/cookbook/04_workflows/08_human_in_the_loop/user_input)
+- [Output review cookbooks](https://github.com/agno-agi/agno/tree/main/cookbook/04_workflows/08_human_in_the_loop/output_review)

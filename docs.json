@@ -157,6 +157,7 @@
                       "workflows/workflow-patterns/iterative-workflow",
                       "workflows/workflow-patterns/branching-workflow",
                       "workflows/workflow-patterns/grouped-steps-workflow",
+                      "workflows/workflow-patterns/nested-workflow",
                       "workflows/workflow-patterns/advanced-workflow-patterns"
                     ]
                   },
@@ -166,10 +167,12 @@
                       "workflows/hitl/overview",
                       "workflows/hitl/human-review",
                       "workflows/hitl/step",
+                      "workflows/hitl/output-review",
                       "workflows/hitl/router",
                       "workflows/hitl/condition",
                       "workflows/hitl/loop",
                       "workflows/hitl/steps",
+                      "workflows/hitl/timeout",
                       "workflows/hitl/error-handling"
                     ]
                   },
@@ -2316,7 +2319,8 @@
                 "pages": [
                   "skills/overview",
                   "skills/creating-skills",
-                  "skills/loading-skills"
+                  "skills/loading-skills",
+                  "skills/team-skills"
                 ]
               },
               {
@@ -5010,6 +5014,13 @@
                     ]
                   },
                   {
+                    "group": "Skills",
+                    "pages": [
+                      "examples/teams/skills/overview",
+                      "examples/teams/skills/basic-skills-team"
+                    ]
+                  },
+                  {
                     "group": "Advanced",
                     "pages": [
                       "examples/teams/task-mode/overview",
@@ -5156,7 +5167,15 @@
                       "examples/workflows/advanced-concepts/structured-io/structured-io-team",
                       "examples/workflows/advanced-concepts/tools/workflow-tools",
                       "examples/workflows/advanced-concepts/workflow-agent/basic-workflow-agent",
-                      "examples/workflows/advanced-concepts/workflow-agent/workflow-agent-with-condition"
+                      "examples/workflows/advanced-concepts/workflow-agent/workflow-agent-with-condition",
+                      "examples/workflows/advanced-concepts/nested-workflows/overview",
+                      "examples/workflows/advanced-concepts/nested-workflows/nested-workflow",
+                      "examples/workflows/advanced-concepts/nested-workflows/nested-workflow-auto-wrap",
+                      "examples/workflows/advanced-concepts/nested-workflows/nested-workflow-events",
+                      "examples/workflows/advanced-concepts/nested-workflows/nested-workflow-with-condition",
+                      "examples/workflows/advanced-concepts/nested-workflows/nested-workflow-with-loop",
+                      "examples/workflows/advanced-concepts/nested-workflows/nested-workflow-with-router",
+                      "examples/workflows/advanced-concepts/nested-workflows/deeply-nested-workflow"
                     ]
                   }
                 ]

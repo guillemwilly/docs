@@ -91,20 +91,21 @@ Flat parameters (`requires_confirmation=True`, `confirmation_message="..."`) sti
 |------|----------|-------|
 | [Confirmation](#confirmation) | Approve/reject before step execution | `requires_confirmation=True` |
 | [User Input](#user-input) | Collect parameters before step execution | `requires_user_input=True` |
-| [Output Review](#output-review) | Review output after step execution | `requires_output_review=True` |
-| [Iteration Review](#iteration-review) | Review each loop iteration | `requires_iteration_review=True` |
+| [Output Review](/workflows/hitl/output-review) | Review/edit/reject output after step execution | `requires_output_review=True` |
 | [Route Selection](#route-selection) | User chooses which path(s) to execute | **Router** with `requires_user_input=True` |
+| [Iteration Review](/workflows/hitl/loop#iteration-review) | Review output between loop iterations | `requires_iteration_review=True` |
+| [Timeout](/workflows/hitl/timeout) | Auto-resolve if no human response in time | `timeout=300` |
 | [Error Handling](#error-handling) | Retry or skip failed steps | `on_error=OnError.pause` |
 
 ## Supported Primitives
 
 | Primitive | Confirmation | User Input | Output Review | Iteration Review | Route Selection |
 |-----------|--------------|------------|---------------|------------------|-----------------|
-| [Step](/workflows/hitl/step) | ✓ | ✓ | ✓ | - | - |
+| [Step](/workflows/hitl/step) | ✓ | ✓ | [✓](/workflows/hitl/output-review) | - | - |
 | [Steps](/workflows/hitl/steps) | ✓ | - | - | - | - |
 | [Condition](/workflows/hitl/condition) | ✓ | - | - | - | - |
-| [Loop](/workflows/hitl/loop) | ✓ | - | - | ✓ | - |
-| [Router](/workflows/hitl/router) | ✓ | - | ✓ | - | ✓ |
+| [Loop](/workflows/hitl/loop) | ✓ | - | [✓](/workflows/hitl/loop#iteration-review) | ✓ | - |
+| [Router](/workflows/hitl/router) | ✓ | - | [✓](/workflows/hitl/router#output-review) | - | ✓ |
 
 ## Run Output Properties
 
@@ -115,6 +116,7 @@ When a workflow pauses, check these properties on `WorkflowRunOutput`:
 | `is_paused` | `True` if workflow is waiting for user action |
 | `steps_requiring_confirmation` | Steps needing confirm/reject |
 | `steps_requiring_user_input` | Steps needing user input values |
+| `steps_requiring_output_review` | Steps needing output review after execution |
 | `steps_requiring_route` | Routers needing route selection |
 | `steps_with_errors` | Steps that failed with `on_error="pause"` |
 
@@ -182,7 +184,7 @@ User input is available in the custom function step via `step_input.additional_d
 
 ## Output Review
 
-Pause after a step executes so the user can review the output. Supported on Step and Router.
+Pause after a step executes so the user can review the output. Supported on Step and Router. See the dedicated [Output Review](/workflows/hitl/output-review) page for full details.
 
 ```python
 Step(
@@ -197,7 +199,7 @@ Step(
 )
 ```
 
-When rejected with `on_reject=OnReject.retry`, the step re-executes up to `max_retries` times.
+When rejected with `on_reject=OnReject.retry`, the step re-executes up to `max_retries` times. Pair with `reject(feedback=...)` to send feedback to the agent.
 
 ## Iteration Review
 
@@ -282,12 +284,12 @@ The `on_reject` parameter controls what happens when a user rejects a step:
 |-------|----------|
 | `OnReject.skip` | Skip the step and continue with the next (default for most primitives) |
 | `OnReject.cancel` | Cancel the entire workflow |
-| `OnReject.retry` | Re-execute the step (for output review) |
+| `OnReject.retry` | Re-execute the step. Pair with `reject(feedback=...)` to send feedback to the agent. See [Output Review](/workflows/hitl/output-review#reject-with-retry) |
 | `OnReject.else_branch` | For Condition only: execute `else_steps` (default for Condition) |
 
 ## Timeout
 
-Set a timeout for HITL pauses. If the user does not respond in time, `on_timeout` determines the action.
+Set a timeout for HITL pauses. If the user does not respond in time, `on_timeout` determines the action. See the dedicated [Timeout](/workflows/hitl/timeout) page for full details.
 
 ```python
 from agno.workflow import OnTimeout
@@ -360,6 +362,9 @@ Step(name="process", executor=process_data)
   <Card title="Step HITL" icon="pause" href="/workflows/hitl/step">
     Confirmation, user input, and output review on steps
   </Card>
+  <Card title="Output Review" icon="eye" href="/workflows/hitl/output-review">
+    Review, edit, or reject output after step execution
+  </Card>
   <Card title="Router HITL" icon="route" href="/workflows/hitl/router">
     Route selection, confirmation, and output review
   </Card>
@@ -367,10 +372,13 @@ Step(name="process", executor=process_data)
     User-controlled branching decisions
   </Card>
   <Card title="Loop HITL" icon="rotate" href="/workflows/hitl/loop">
-    Confirmation and iteration review on loops
+    Start confirmation and per-iteration review
   </Card>
   <Card title="Steps HITL" icon="layer-group" href="/workflows/hitl/steps">
     Confirm before executing a pipeline
+  </Card>
+  <Card title="Timeout" icon="clock" href="/workflows/hitl/timeout">
+    Auto-resolve HITL pauses after a deadline
   </Card>
   <Card title="Error Handling" icon="triangle-exclamation" href="/workflows/hitl/error-handling">
     Retry or skip failed steps
@@ -380,7 +388,7 @@ Step(name="process", executor=process_data)
 ## Developer Resources
 
 - [HumanReview Config](/workflows/hitl/human-review)
-- [Cookbooks](https://github.com/agno-agi/agno/tree/main/cookbook/04_workflows/_07_human_in_the_loop)
+- [Cookbooks](https://github.com/agno-agi/agno/tree/main/cookbook/04_workflows/08_human_in_the_loop)
 - [Step reference](/reference/workflows/step)
 - [Router reference](/reference/workflows/router-steps)
 - [Condition reference](/reference/workflows/conditional-steps)

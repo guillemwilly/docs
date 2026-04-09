@@ -1,0 +1,181 @@
+---
+title: Nested Workflow
+description: Run a workflow as a step inside another workflow for complex multi-level pipelines.
+---
+
+Pass a `Workflow` as a step inside another `Workflow`. The inner workflow runs as a single step in the outer workflow, with output chained to the next step.
+
+## Basic Example
+
+```python nested_workflow.py
+from agno.agent import Agent
+from agno.models.openai import OpenAIChat
+from agno.workflow.step import Step
+from agno.workflow.types import StepInput, StepOutput
+from agno.workflow.workflow import Workflow
+
+
+def create_summary(step_input: StepInput) -> StepOutput:
+    previous_content = step_input.get_last_step_content()
+    summary = (
+        f"Summary of research:\n{previous_content[:500]}..."
+        if previous_content
+        else "No content to summarize"
+    )
+    return StepOutput(content=summary)
+
+
+# Inner workflow: research pipeline
+research_agent = Agent(
+    name="Research Agent",
+    model=OpenAIChat(id="gpt-4o-mini"),
+    instructions="You are a research assistant. Provide concise, factual information.",
+)
+
+inner_workflow = Workflow(
+    name="Research Workflow",
+    steps=[
+        Step(name="research", agent=research_agent),
+        Step(name="summary", executor=create_summary),
+    ],
+)
+
+# Outer workflow: uses inner workflow as a step
+writer_agent = Agent(
+    name="Writer Agent",
+    model=OpenAIChat(id="gpt-4o-mini"),
+    instructions="Take the research provided and write a polished article.",
+)
+
+outer_workflow = Workflow(
+    name="Research and Write Workflow",
+    steps=[
+        Step(name="research_phase", workflow=inner_workflow),
+        Step(name="writing_phase", agent=writer_agent),
+    ],
+)
+
+outer_workflow.print_response(
+    input="Tell me about the history of artificial intelligence",
+    stream=True,
+)
+```
+
+The outer workflow runs `inner_workflow` as its first step. The inner workflow's output flows into the `writing_phase` step.
+
+## How It Works
+
+1. The outer workflow reaches a step with `workflow=inner_workflow`
+2. The inner workflow's `.run()` executes with the prepared input (chained from the previous step)
+3. Session state is deep-copied into the inner workflow and merged back after execution
+4. The inner workflow's output is converted to a `StepOutput` with `step_type=StepType.WORKFLOW`
+5. Execution continues to the next step in the outer workflow
+
+## Two Ways to Declare
+
+| Method | Syntax | When to use |
+|--------|--------|-------------|
+| Explicit `Step` wrapper | `Step(name="research", workflow=inner_workflow)` | Custom step name, clarity |
+| Auto-wrap | `steps=[inner_workflow]` | Concise shorthand (uses the workflow's `name` as step name) |
+
+```python auto_wrap.py
+# These are equivalent:
+steps=[Step(name="Research Workflow", workflow=inner_workflow)]
+steps=[inner_workflow]
+```
+
+## Inner workflows and primitives
+
+An inner workflow can use the same primitives and combinations as any top-level workflow in Agno: agents, executors, nested `Step`s, `Condition`, `Loop`, `Router`, and `Parallel`, mixed however your pipeline needs.
+
+The [basic example](#basic-example) uses agent and executor steps inside the inner workflow. [Deep nesting](#deep-nesting) shows multiple levels with `Parallel` and sub-workflows.
+
+| Primitive | Role |
+|-----------|------|
+| `Condition` | Branch on a boolean evaluator |
+| `Loop` | Repeat steps until an end condition or max iterations |
+| `Router` | Choose a branch from a selector |
+| `Parallel` | Run branches concurrently |
+
+## Deep Nesting
+
+Workflows can be nested multiple levels deep. Each level runs its own sub-workflows independently.
+
+```python deeply_nested.py
+from agno.workflow import Parallel
+
+# Level 3: Mini-workflows
+data_workflow = Workflow(
+    name="Data Collection",
+    steps=[
+        Step(name="gather", agent=data_agent),
+        Step(name="analyze", agent=analysis_agent),
+    ],
+)
+
+opinion_workflow = Workflow(
+    name="Expert Opinion",
+    steps=[Step(name="opinion", agent=opinion_agent)],
+)
+
+# Level 2: Parallel research with Level 3 workflows
+level2_workflow = Workflow(
+    name="Comprehensive Research",
+    steps=[
+        Parallel(
+            Step(name="data_branch", workflow=data_workflow),
+            Step(name="opinion_branch", workflow=opinion_workflow),
+            name="parallel_research",
+        ),
+        Step(name="merge", executor=merge_results),
+    ],
+)
+
+# Level 1: Top-level pipeline
+outer_workflow = Workflow(
+    name="Full Pipeline",
+    steps=[
+        Step(name="research", workflow=level2_workflow),
+        Step(name="write", agent=writer),
+    ],
+)
+```
+
+## Streaming Events
+
+When streaming, inner workflow events bubble up with a `nested_depth` field. Use this to distinguish inner vs. outer events.
+
+| Field | Description |
+|-------|-------------|
+| `nested_depth` | `0` for outer workflow, `1` for first-level inner, `2` for deeper nesting |
+| `workflow_id` | Unique ID of the workflow that emitted the event |
+| `workflow_name` | Name of the workflow that emitted the event |
+
+```python event_inspection.py
+from agno.run.workflow import (
+    StepCompletedEvent,
+    StepStartedEvent,
+    WorkflowCompletedEvent,
+    WorkflowStartedEvent,
+)
+
+for event in outer_workflow.run(input="...", stream=True, stream_events=True):
+    if isinstance(event, (WorkflowStartedEvent, StepStartedEvent)):
+        depth = event.nested_depth
+        name = event.workflow_name
+        print(f"{'  ' * depth}[depth={depth}] {type(event).__name__} from {name}")
+```
+
+## Developer Resources
+
+- [Nested workflow example](/examples/workflows/advanced-concepts/nested-workflows/nested-workflow)
+- [Auto-wrap example](/examples/workflows/advanced-concepts/nested-workflows/nested-workflow-auto-wrap)
+- [Event inspection example](/examples/workflows/advanced-concepts/nested-workflows/nested-workflow-events)
+- [With Condition](/examples/workflows/advanced-concepts/nested-workflows/nested-workflow-with-condition)
+- [With Loop](/examples/workflows/advanced-concepts/nested-workflows/nested-workflow-with-loop)
+- [With Router](/examples/workflows/advanced-concepts/nested-workflows/nested-workflow-with-router)
+- [Deep nesting (3 levels)](/examples/workflows/advanced-concepts/nested-workflows/deeply-nested-workflow)
+
+## Reference
+
+For complete API documentation, see [Step Reference](/reference/workflows/step).
