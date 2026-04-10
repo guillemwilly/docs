@@ -1,0 +1,113 @@
+---
+title: Salesforce
+description: "Query, create, update, and manage Salesforce CRM records with SOQL, SOSL, and the REST API."
+---
+
+**SalesforceTools** enable an Agent to interact with Salesforce CRM. Query records with SOQL, search with SOSL, manage objects, and run reports.
+
+Read-only by default. Write operations (create, update, delete) require explicit opt-in.
+
+## Prerequisites
+
+Install the `simple-salesforce` library and set your Salesforce credentials.
+
+```shell
+uv pip install -U simple-salesforce
+```
+
+**Username / Password auth** (most common):
+
+```shell
+export SALESFORCE_USERNAME="you@example.com"
+export SALESFORCE_PASSWORD="your-password"
+export SALESFORCE_SECURITY_TOKEN="token-from-email"
+export SALESFORCE_DOMAIN="login"
+```
+
+To get your security token: Log into Salesforce > click your avatar (top right) > Settings > "Reset My Security Token".
+
+**Session / Instance URL auth** (when SOAP login is disabled):
+
+```python
+SalesforceTools(
+    instance_url="https://your-org.my.salesforce.com",
+    session_id="your-session-id",
+)
+```
+
+## Example
+
+A read-only agent that explores Salesforce objects, runs SOQL queries, and searches across the org.
+
+```python cookbook/91_tools/salesforce_tools.py
+from agno.agent import Agent
+from agno.tools.salesforce import SalesforceTools
+
+agent = Agent(tools=[SalesforceTools()])
+agent.print_response("Find the top 5 accounts by name", stream=True)
+```
+
+Enable write operations for full CRM management:
+
+```python
+from agno.agent import Agent
+from agno.tools.salesforce import SalesforceTools
+
+agent = Agent(
+    tools=[
+        SalesforceTools(
+            enable_create_record=True,
+            enable_update_record=True,
+            enable_delete_record=True,
+        )
+    ],
+)
+agent.print_response(
+    "Create a new lead: Jane Doe, CTO at Acme Corp, email jane@acme.com",
+    stream=True,
+)
+```
+
+## Toolkit Params
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `username` | `Optional[str]` | `None` | Salesforce username. Falls back to `SALESFORCE_USERNAME` env var. |
+| `password` | `Optional[str]` | `None` | Salesforce password. Falls back to `SALESFORCE_PASSWORD` env var. |
+| `security_token` | `Optional[str]` | `None` | Salesforce security token. Falls back to `SALESFORCE_SECURITY_TOKEN` env var. |
+| `domain` | `Optional[str]` | `"login"` | Salesforce login domain. Falls back to `SALESFORCE_DOMAIN` env var. Use `"test"` for sandboxes. |
+| `instance_url` | `Optional[str]` | `None` | Salesforce instance URL for session-based auth. |
+| `session_id` | `Optional[str]` | `None` | Session ID for session-based auth. |
+| `max_records` | `int` | `200` | Maximum number of records to return from queries and listings. |
+| `max_fields` | `int` | `100` | Maximum number of fields to return from `describe_object`. |
+| `enable_list_objects` | `bool` | `True` | Enable the `list_objects` tool. |
+| `enable_describe_object` | `bool` | `True` | Enable the `describe_object` tool. |
+| `enable_get_record` | `bool` | `True` | Enable the `get_record` tool. |
+| `enable_query` | `bool` | `True` | Enable the `query` tool. |
+| `enable_search` | `bool` | `True` | Enable the `search` tool. |
+| `enable_create_record` | `bool` | `False` | Enable the `create_record` tool. Off by default for safety. |
+| `enable_update_record` | `bool` | `False` | Enable the `update_record` tool. Off by default for safety. |
+| `enable_delete_record` | `bool` | `False` | Enable the `delete_record` tool. Off by default for safety. |
+| `enable_get_report` | `bool` | `False` | Enable the `get_report` tool. |
+| `all` | `bool` | `False` | Enable all tools including write operations. |
+
+## Toolkit Functions
+
+| Function | Description |
+|----------|-------------|
+| `list_objects` | List all available Salesforce objects in the org with metadata (queryable, createable, etc). |
+| `describe_object` | Get the schema for a Salesforce object including field names, types, picklist values, and reference relationships. Use before creating records. |
+| `get_record` | Get a single record by its Salesforce ID. Optionally specify which fields to return. |
+| `query` | Execute a SOQL query against Salesforce. Supports relationship queries and aggregates. |
+| `search` | Execute a SOSL full-text search across Salesforce objects. Requires explicit `RETURNING` clause with object names and fields. |
+| `create_record` | Create a new Salesforce record. Accepts a JSON string of field name-value pairs. |
+| `update_record` | Update an existing Salesforce record by ID. Accepts a JSON string of fields to update. |
+| `delete_record` | Delete a Salesforce record by ID. |
+| `get_report` | Run a Salesforce report by report ID and return the results. |
+
+You can use `include_tools` or `exclude_tools` to modify the list of tools the agent has access to. See [selecting tools](/tools/selecting-tools).
+
+## Developer Resources
+
+- [Source](https://github.com/agno-agi/agno/blob/main/libs/agno/agno/tools/salesforce.py)
+- [Cookbook](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/salesforce_tools.py)
