@@ -38,7 +38,29 @@ Install the dependency: `uv pip install 'agno[telegram]'`
 Each Telegram chat gets its own session scope (e.g., `tg:Telegram Bot:123456789`), so conversations stay isolated across chats.
 </Note>
 
-## Setup and Configuration
+## Built-in Commands
+
+The Telegram interface registers three commands automatically:
+
+| Command | Default Behavior | Customization Parameter |
+|---------|-----------------|------------------------|
+| `/start` | Sends a welcome message | `start_message` |
+| `/help` | Lists supported input types | `help_message` |
+| `/new` | Starts a fresh conversation (requires a database) | `new_message` |
+
+Commands are registered with the Telegram Bot API on first message when `register_commands=True` (default).
+
+## Key Features
+
+| Feature | Details |
+|---------|---------|
+| Streaming | Edits the response message in real time as tokens arrive. Throttled to ~1 edit/sec for rate limits. Enable with `streaming=True` (default). |
+| Media input | Accepts photos, voice notes, audio, video, video notes, stickers, GIFs, and documents. Media is downloaded and passed to the agent automatically. |
+| Media output | Agent tools (e.g., DALL-E, ElevenLabs) can send photos, audio, video, documents, GIFs, and stickers as native Telegram media. |
+| Message chunking | Responses longer than 4096 characters are automatically split across multiple messages. |
+| Show reasoning | Set `show_reasoning=True` to surface the model's reasoning as a blockquote message. |
+
+## Local Development Setup
 
 <Steps>
 
@@ -97,9 +119,75 @@ curl "https://api.telegram.org/bot${TELEGRAM_TOKEN}/getWebhookInfo"
 
 </Steps>
 
-<Note>
-ngrok is used only for local development and testing. For production deployments, see the [deployment tutorials](/production/templates/overview).
-</Note>
+## Production Deployment
+
+In production, webhook secret validation is enforced. Telegram sends the secret in the `X-Telegram-Bot-Api-Secret-Token` header, and the interface rejects requests with an invalid or missing token with a `403`.
+
+<Steps>
+
+<Step title="Set the Webhook Secret">
+Generate a secret and set it as an environment variable:
+```bash
+export TELEGRAM_WEBHOOK_SECRET_TOKEN="your-random-secret-string"
+```
+</Step>
+
+<Step title="Register the Webhook with the Secret">
+Pass the `secret_token` parameter when registering your webhook:
+```bash
+curl "https://api.telegram.org/bot${TELEGRAM_TOKEN}/setWebhook?url=https://your-domain.com/telegram/webhook&secret_token=${TELEGRAM_WEBHOOK_SECRET_TOKEN}"
+```
+</Step>
+
+<Step title="Remove APP_ENV=development">
+Do **not** set `APP_ENV=development` in production. Without it, webhook secret validation is active.
+</Step>
+
+</Steps>
+
+## Group Chat Setup
+
+By default, Telegram bots in groups only receive commands (`/start`, etc.), @mentions, and replies to their own messages. To allow the bot to read all group messages:
+
+<Steps>
+
+<Step title="Disable Privacy Mode in BotFather">
+1. Open a chat with [@BotFather](https://t.me/BotFather)
+2. Send `/mybots` and select your bot
+3. Go to **Bot Settings** → **Group Privacy**
+4. Tap **Turn off**
+
+BotFather confirms: *"Privacy mode is disabled for YourBot."*
+</Step>
+
+<Step title="Re-add the Bot to Existing Groups">
+Privacy mode changes only apply to groups the bot joins **after** the change. Remove and re-add the bot to any existing groups. Alternatively, making the bot a group admin bypasses privacy mode entirely.
+</Step>
+
+<Step title="Configure Reply Behavior">
+Control whether the bot responds to every message or only mentions:
+
+```python
+Telegram(
+    agent=telegram_agent,
+    reply_to_mentions_only=True,   # True (default): respond to @mentions and direct replies only
+    reply_to_bot_messages=True,    # True (default): also respond when users reply to the bot's messages
+)
+```
+
+Set `reply_to_mentions_only=False` to respond to all messages in the group.
+</Step>
+
+</Steps>
+
+## Troubleshooting
+
+| Problem | Cause | Fix |
+|---------|-------|-----|
+| `403 Forbidden` on webhook | Missing or invalid webhook secret | Set `TELEGRAM_WEBHOOK_SECRET_TOKEN` and register the webhook with a matching `secret_token`, or set `APP_ENV=development` for local testing |
+| Bot doesn't respond in groups | Privacy mode enabled | Disable privacy mode in BotFather and re-add the bot to the group |
+| Bot doesn't respond at all | Webhook not registered or server not running | Verify with `getWebhookInfo` and check that your server is reachable |
+| Streaming not working | `streaming` set to `False` | Set `streaming=True` on the `Telegram` interface (this is the default) |
 
 ## Developer Resources
 
