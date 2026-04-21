@@ -146,6 +146,28 @@ RBAC uses a hierarchical scope format:
 | `evals:write` | Create and update evaluation runs |
 | `evals:delete` | Delete evaluation runs |
 
+### Trace Scopes
+
+| Scope | Description |
+|-------|-------------|
+| `traces:read` | View traces and trace sessions |
+
+### Schedule Scopes
+
+| Scope | Description |
+|-------|-------------|
+| `schedules:read` | List and view schedules and schedule runs |
+| `schedules:write` | Create, update, enable, disable, and trigger schedules |
+| `schedules:delete` | Delete schedules |
+
+### Approval Scopes
+
+| Scope | Description |
+|-------|-------------|
+| `approvals:read` | List and view approval requests |
+| `approvals:write` | Resolve approval requests |
+| `approvals:delete` | Delete approval requests |
+
 ## Default Scope Mappings
 
 AgentOS automatically maps endpoints to required scopes.
@@ -251,6 +273,40 @@ AgentOS automatically maps endpoints to required scopes.
     | `POST /eval-runs` | `evals:write` |
     | `PATCH /eval-runs/*` | `evals:write` |
     | `DELETE /eval-runs` | `evals:delete` |
+  </Tab>
+
+  <Tab title="Traces">
+    | Endpoint | Required Scope |
+    |----------|----------------|
+    | `GET /traces` | `traces:read` |
+    | `GET /traces/*` | `traces:read` |
+    | `GET /trace_session_stats` | `traces:read` |
+  </Tab>
+
+  <Tab title="Schedules">
+    | Endpoint | Required Scope |
+    |----------|----------------|
+    | `GET /schedules` | `schedules:read` |
+    | `GET /schedules/*` | `schedules:read` |
+    | `GET /schedules/*/runs` | `schedules:read` |
+    | `GET /schedules/*/runs/*` | `schedules:read` |
+    | `POST /schedules` | `schedules:write` |
+    | `PATCH /schedules/*` | `schedules:write` |
+    | `POST /schedules/*/enable` | `schedules:write` |
+    | `POST /schedules/*/disable` | `schedules:write` |
+    | `POST /schedules/*/trigger` | `schedules:write` |
+    | `DELETE /schedules/*` | `schedules:delete` |
+  </Tab>
+
+  <Tab title="Approvals">
+    | Endpoint | Required Scope |
+    |----------|----------------|
+    | `GET /approvals` | `approvals:read` |
+    | `GET /approvals/count` | `approvals:read` |
+    | `GET /approvals/*` | `approvals:read` |
+    | `GET /approvals/*/status` | `approvals:read` |
+    | `POST /approvals/*/resolve` | `approvals:write` |
+    | `DELETE /approvals/*` | `approvals:delete` |
   </Tab>
 </Tabs>
 
