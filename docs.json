@@ -77,8 +77,34 @@
     "tabs": [
       {
         "tab": "Home",
-        "pages": [
-          "index"
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "index",
+              {
+                "group": "Tutorial: Scout",
+                "pages": [
+                  "tutorials/scout/setup",
+                  "tutorials/scout/context-providers",
+                  "tutorials/scout/run-on-railway"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Production",
+            "pages": [
+              {
+                "group": "Demo OS",
+                "pages": [
+                  "features/demo-os/setup",
+                  "features/demo-os/feature-1",
+                  "features/demo-os/feature-2"
+                ]
+              }
+            ]
+          }
         ]
       },
       {
