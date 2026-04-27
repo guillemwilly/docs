@@ -11,33 +11,39 @@ AgentOS turns the `Agent(...)` into a FastAPI app with persistent sessions, JWT-
 
 The runtime covers the ground between your agent code and a shipped service:
 
-| Concern | How AgentOS handles it |
-|---------|--------|
-| **HTTP API** | Auto-generated endpoints for every registered agent, team, and workflow |
-| **State** | Sessions and memory persisted to your `db` |
-| **Streaming** | SSE on every run endpoint; tokens and tool calls stream as they happen |
-| **Auth** | JWT validation with RBAC scopes built-in |
-| **Scheduling** | In-process cron that polls the database and fires due jobs |
-| **Observability** | OpenTelemetry tracing into the same `db`, queryable with SQL |
-| **Interfaces** | Slack, Telegram, WhatsApp, Discord, A2A, AG-UI |
+| Concern               | How AgentOS handles it                                                  |
+| --------------------- | ----------------------------------------------------------------------- |
+| **HTTP API**          | Auto-generated endpoints for every registered agent, team, and workflow |
+| **State**             | Sessions and memory persisted to your `db`                              |
+| **Streaming**         | SSE on every run endpoint; tokens and tool calls stream as they happen  |
+| **Auth**              | JWT validation with RBAC scopes built-in                                |
+| **Scheduling**        | In-process cron that polls the database and fires due jobs              |
+| **Observability**     | OpenTelemetry tracing into the same `db`, queryable with SQL            |
+| **Interfaces**        | Slack, Telegram, WhatsApp, Discord, A2A, AG-UI                          |
 | **Human in the loop** | Pause runs for user confirmation, admin approval, or external execution |
 
 The same `Agent(...)` runs in a script, a test, or an AgentOS service. AgentOS itself is stateless: state lives in `db`, so you can scale horizontally to handle load.
 
+<Note>
+  AgentOS is not limited to just Agents. You can use it to build your own
+  products, teams, and workflows. See [Build a
+  Product](/runtime/build-a-product) for more information.
+</Note>
+
 ## What's in this section
 
-| Page | Covers |
-|------|--------|
-| [Serve as an API](/runtime/serve-as-api) | The HTTP endpoints AgentOS generates and how to add your own |
-| [Storage](/runtime/storage) | Database backends and what gets stored |
-| [Context](/runtime/context) | Knowledge, dependencies, and live context providers |
-| [Human Approval](/runtime/human-approval) | Pausing runs for confirmation, approval, or external systems |
-| [Observability](/runtime/observability) | Tracing, run history, audit logs |
-| [Security & Auth](/runtime/security-and-auth) | JWT, RBAC scopes, request isolation |
-| [Interfaces](/runtime/interfaces) | Slack, Telegram, WhatsApp, A2A, AG-UI |
-| [Scheduling](/runtime/scheduling) | Cron jobs and multi-step workflows |
-| [Deploy](/runtime/deploy) | Docker, Railway, AWS, GCP, scaling |
-| [Build a Product](/runtime/build-a-product) | From a working AgentOS to a shipped product |
+| Page                                          | Covers                                                       |
+| --------------------------------------------- | ------------------------------------------------------------ |
+| [Serve as an API](/runtime/serve-as-api)      | The HTTP endpoints AgentOS generates and how to add your own |
+| [Storage](/runtime/storage)                   | Database backends and what gets stored                       |
+| [Context](/runtime/context)                   | Knowledge, dependencies, and live context providers          |
+| [Human Approval](/runtime/human-approval)     | Pausing runs for confirmation, approval, or external systems |
+| [Observability](/runtime/observability)       | Tracing, run history, audit logs                             |
+| [Security & Auth](/runtime/security-and-auth) | JWT, RBAC scopes, request isolation                          |
+| [Interfaces](/runtime/interfaces)             | Slack, Telegram, WhatsApp, A2A, AG-UI                        |
+| [Scheduling](/runtime/scheduling)             | Cron jobs and multi-step workflows                           |
+| [Deploy](/runtime/deploy)                     | Docker, Railway, AWS, GCP, scaling                           |
+| [Build a Product](/runtime/build-a-product)   | From a working AgentOS to a shipped product                  |
 
 ## Next
 
