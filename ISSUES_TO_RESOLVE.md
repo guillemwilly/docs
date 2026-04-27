@@ -2,36 +2,33 @@
 
 Punch list to clear before merging to `main`. Update as work lands.
 
-## 1. Awaiting lock-in (work done, just commit)
+## 1. Sidebar restructure and lock-ins
 
-- [ ] **SDK introduction migration** — `sdk/introduction.mdx` (new) + `docs.json` (sidebar `"introduction"` → `"sdk/introduction"`, two redirects: `/introduction → /` and `/sdk → /sdk/introduction`) + delete `introduction.mdx`. One commit.
-- [ ] **Home tab sidebar restructure** — `docs.json` changes: rename "Get Started" → "Welcome", split tutorials into "Tutorials" group, drop "Tutorial:" prefix from sub-groups, wire in "Blank Canvas". One commit.
+- [x] SDK introduction migration — `5cc2b21c`
+- [x] Home tab sidebar restructure — `5cc2b21c`
+- [x] Runtime section polish — `3b11607a`
+- [x] Demo OS polish — `8aa9edeb`
 - [x] Dash tutorial polish — `75cd7fd6`
 - [x] Coda tutorial polish — `7f9814b0`
 - [x] Blank Canvas pages — `f7f71392`
+- [x] Homepage opener refinement — `930085b0`
+- [x] Scout tutorial tightening — `1c9d0807`
 
-## 2. In flight
+## 2. Cleanup
 
-- [ ] **Runtime polish** — 11 modified pages (`runtime/{overview,serve-as-api,storage,context,human-approval,observability,security-and-auth,interfaces,scheduling,deploy,build-a-product}.mdx`). Under review.
-- [ ] **Demo OS polish** — 12 modified pages (`demo-os/{overview,rag,knowledge,memory,learning,mcp,context-providers,session-state,human-in-the-loop,multi-agent-teams/text-to-sql,multi-agent-teams/investment}.mdx`). Quick cleanup pass.
+- [x] Drop `_legacy/production/*` and `TBD/2_6_remove/` orphans (46 files) — `7a6cc9b4`
+- [x] Refresh `connect-agent-os-ui` snippet — `07123216`
+- [x] Add `agentos-api-scroll` demo video — `43baf92a`
 
-## 3. Investigate before commit
+## 3. Open
 
-- [ ] `_snippets/connect-agent-os-ui.mdx` modified — verify intent or revert.
-- [ ] `tutorials/scout/{connect-slack,deploy-to-railway,setup}.mdx` have unstaged paragraph reorders — verify or revert.
-- [ ] `videos/agentos-api-scroll.mp4` untracked — commit or move.
+- [ ] `first-agent.mdx` references missing `/videos/agentos-connect-workbench.mp4` and `/videos/agentos-chat-workbench.mp4` — add files or remove embeds.
 
-## 4. Broken assets (referenced from committed pages)
+## 4. Pre-existing dead links (out of scope, not blocking)
 
-- [ ] `first-agent.mdx` references `/videos/agentos-connect-workbench.mp4` and `/videos/agentos-chat-workbench.mp4` — add files or remove embeds.
-- [ ] `runtime/serve-as-api.mdx` references `/images/runtime/agentos-openapi.png` — add or remove.
-
-## 5. Pre-existing dead links (out of scope, not blocking)
-
-These sit in `deploy/*` and `_legacy/production/*`. Not introduced by this branch.
+Sit in `deploy/*`, not introduced by this branch.
 
 | File | Dead target |
 |------|-------------|
 | `deploy/interfaces/{slack,discord,whatsapp,telegram}/overview.mdx` | `/production/templates/overview` (×7) |
 | `deploy/introduction.mdx` | `/production/applications/{text-to-sql,research-agent,knowledge-agent}` and `/production/applications` |
-| `_legacy/production/{overview,interfaces,templates}/*.mdx` | Various `/production/*` |
