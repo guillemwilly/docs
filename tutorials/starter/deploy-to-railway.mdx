@@ -1,13 +1,13 @@
 ---
 title: Deploy to Railway
-description: "Ship Blank Canvas to Railway with one script."
+description: "Ship Starter Template to Railway with one script."
 ---
 
-Blank Canvas ships one Railway script. It provisions Postgres, the app service, and a public domain. Any Docker-capable host works, but Railway is the fast path.
+Starter Template ships one Railway script. It provisions Postgres, the app service, and a public domain. Any Docker-capable host works, but Railway is the fast path.
 
 ## Prerequisites
 
-- A Blank Canvas repo set up locally ([setup](/tutorials/blank-canvas/setup))
+- A Starter Template repo set up locally ([setup](/tutorials/starter/setup))
 - A [Railway](https://railway.app) account
 - The [Railway CLI](https://docs.railway.app/guides/cli) installed and authenticated (`railway login`)
 - `OPENAI_API_KEY` exported in your shell (the script reads it from there)
@@ -76,24 +76,24 @@ The `-d` flag detaches so the CLI doesn't tail logs. Use `railway logs --service
 
 ## What you get
 
-| Resource | Purpose |
-|----------|---------|
-| `agent-os` service | The AgentOS app, FastAPI on port 8000 |
-| `pgvector` service | Postgres with the pgvector extension, used for sessions, memory, and the knowledge index |
-| Railway-issued domain | Public HTTPS endpoint |
+| Resource              | Purpose                                                                                  |
+| --------------------- | ---------------------------------------------------------------------------------------- |
+| `agent-os` service    | The AgentOS app, FastAPI on port 8000                                                    |
+| `pgvector` service    | Postgres with the pgvector extension, used for sessions, memory, and the knowledge index |
+| Railway-issued domain | Public HTTPS endpoint                                                                    |
 
 ## Operations
 
-| Task | Command |
-|------|---------|
-| Tail logs | `railway logs --service agent-os` |
-| Open the dashboard | `railway open` |
-| Run a command in the container | `railway run <command>` |
-| Stop the app | `railway down --service agent-os` |
-| Stop Postgres | `railway down --service pgvector` |
+| Task                           | Command                           |
+| ------------------------------ | --------------------------------- |
+| Tail logs                      | `railway logs --service agent-os` |
+| Open the dashboard             | `railway open`                    |
+| Run a command in the container | `railway run <command>`           |
+| Stop the app                   | `railway down --service agent-os` |
+| Stop Postgres                  | `railway down --service pgvector` |
 
 Adjust replicas, CPU, and memory in `railway.json`.
 
 ## Next
 
-[Next Steps →](/tutorials/blank-canvas/next-steps)
+[Next Steps →](/tutorials/starter/next-steps)
