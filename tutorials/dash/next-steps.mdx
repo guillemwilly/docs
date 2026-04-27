@@ -3,21 +3,17 @@ title: Next Steps
 description: "Teach Dash about your data and put it on a schedule."
 ---
 
-Dash starts useful and gets sharper. The work of going from "demo on synthetic SaaS data" to "production on your data" is mostly knowledge work and scheduling. Both are documented in the Dash repo.
+Dash starts useful on the synthetic SaaS data and gets sharper as you give it your own. Most of that work is curating knowledge and scheduling proactive runs.
 
 ## Point Dash at your own data
 
-The synthetic SaaS dataset is a starting point so you can play with Dash before swapping in real data. To use it on your own:
+The synthetic SaaS dataset is a starting point so you can play with Dash before swapping in real data. To use your own:
 
 1. **Replace the data loader.** Either rewrite [`scripts/generate_data.py`](https://github.com/agno-agi/dash/blob/main/scripts/generate_data.py) or `pg_restore` directly into the `public` schema.
 2. **Rewrite knowledge.** Update [`knowledge/tables/`](https://github.com/agno-agi/dash/tree/main/knowledge/tables) for your schemas, [`knowledge/queries/`](https://github.com/agno-agi/dash/tree/main/knowledge/queries) for proven SQL, [`knowledge/business/`](https://github.com/agno-agi/dash/tree/main/knowledge/business) for your definitions and gotchas.
 3. **Reload:** `docker exec -it dash-api python scripts/load_knowledge.py --recreate`.
 
-The Engineer agent will start building reusable views in the `dash` schema as it works (`dash.monthly_mrr`, `dash.customer_health_score`). The Analyst discovers and prefers those over re-querying raw tables.
-
-<Note>
-  🎥 **Add video:** Loading custom knowledge, asking a question, watching the Analyst retrieve the matching pattern.
-</Note>
+The Engineer will start building reusable views in the `dash` schema as it works (`dash.monthly_mrr`, `dash.customer_health_score`). The Analyst discovers and prefers those over re-querying raw tables.
 
 ## Add knowledge layers
 
@@ -36,13 +32,13 @@ docker exec -it dash-api python scripts/load_knowledge.py             # upsert
 docker exec -it dash-api python scripts/load_knowledge.py --recreate  # fresh start
 ```
 
-The fastest way to get Dash performing well: feed it the queries your team already trusts. Each one reduces the surface area where the model has to invent SQL.
+The fastest way to get Dash performing well is to feed it the queries your team already trusts. Each one reduces the surface area where the model has to invent SQL.
 
 ## Schedule proactive runs
 
-A useful data agent doesn't only respond. It posts the morning MRR digest. It alerts when churn drifts. It compiles a weekly summary into Slack.
+A useful data agent posts on its own. Morning MRR digest. Alerts when churn drifts. Weekly summary into Slack.
 
-AgentOS scheduler is one flag. See [Scheduling](/runtime/scheduling) for the patterns. The Coda template is the worked example to copy: it registers daily digest, issue triage, and repo sync schedules in `app/main.py`. Same pattern works for Dash.
+See [Scheduling](/runtime/scheduling) for the patterns. The [Coda template](/tutorials/coda/overview) is the working example to copy: it registers daily digest, issue triage, and repo sync schedules in `app/main.py`. The same pattern works for Dash.
 
 ## Run evals
 
