@@ -1,0 +1,66 @@
+---
+title: Next Steps
+description: "Connect more sources and extend Scout."
+---
+
+Every source in Scout is a `ContextProvider`. This page covers how to add more, whether by plugging in an MCP server or writing your own.
+
+Each new source follows the same pattern:
+
+1. Configure auth (env var, OAuth, service account, MCP token).
+2. Register the provider in [`scout/contexts.py`](https://github.com/agno-agi/scout/blob/main/scout/contexts.py).
+3. Restart Scout.
+4. Verify with `curl http://localhost:8000/contexts | jq`.
+
+Each provider becomes `query_<id>` (and optionally `update_<id>`) tools on Scout. The agent calls them like any other tool.
+
+## Connect Google Drive
+
+Scout reads Drive using **its own service-account identity**. You create the account once with the `./scripts/google_setup.sh` helper, share folders with the service account email, and set `GOOGLE_SERVICE_ACCOUNT_FILE` in `.env`.
+
+Why a service account? Borrowing your credentials would collapse the audit trail. Everything Scout does would show up as something *you* did. With its own identity, actions stay attributable.
+
+Full setup, including the manual path for orgs that block service-account keys: [GDRIVE_CONNECT.md](https://github.com/agno-agi/scout/blob/main/docs/GDRIVE_CONNECT.md).
+
+## Connect any MCP server
+
+Anything with an [MCP server](https://modelcontextprotocol.io) plugs in: Linear, GitHub, Notion, Postgres, Stripe. Add an `MCPContextProvider` entry to [`scout/contexts.py`](https://github.com/agno-agi/scout/blob/main/scout/contexts.py):
+
+```python
+MCPContextProvider(
+    server_name="linear",
+    transport="stdio",
+    command="npx",
+    args=["-y", "@linear/mcp"],
+    env={"LINEAR_API_KEY": getenv("LINEAR_API_KEY", "")},
+    model=default_model(),
+)
+```
+
+Add the secret to `.env`, restart, and Scout gets a `query_mcp_linear` tool.
+
+The full reference covers `mode=tools` vs `mode=default`, plus the gotcha around Node-based servers in Docker: [MCP_CONNECT.md](https://github.com/agno-agi/scout/blob/main/docs/MCP_CONNECT.md).
+
+## Build your own provider
+
+If your source isn't covered by an MCP server, write a `ContextProvider`. Four methods: `status`, `astatus`, `query`, `aquery`.
+
+The Scout README has the worked example in its [Add your own](https://github.com/agno-agi/scout#add-your-own) section. The [`agno.context.web.provider`](https://github.com/agno-agi/agno/blob/main/libs/agno/agno/context/web/provider.py) module is a complete reference implementation.
+
+## Other knobs
+
+| Task | Where |
+|------|-------|
+| Try Parallel's premium web backend | Set `PARALLEL_API_KEY` in `.env` |
+| Scope the filesystem to a different directory | Edit `FS_ROOT` in [`scout/contexts.py`](https://github.com/agno-agi/scout/blob/main/scout/contexts.py) |
+| Customize the CRM schema | Edit the `scout_*` table creation in [`db/`](https://github.com/agno-agi/scout/tree/main/db) |
+| Run evals | [EVALS.md](https://github.com/agno-agi/scout/blob/main/docs/EVALS.md) |
+
+## Going deeper
+
+| To learn | See |
+|----------|-----|
+| How context providers work in Agno generally | [Context](/runtime/context) |
+| The full demo OS reference | [Demo OS](/demo-os/overview) |
+| Comparable templates | [Dash](/tutorials/dash/overview), [Coda](/tutorials/coda/overview) |
+| Building a fully custom AgentOS app | [Build a Product](/runtime/build-a-product) |

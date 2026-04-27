@@ -1,0 +1,152 @@
+---
+title: Human Approval
+description: "Confirmation, user input, external execution, and approval flows in three demo agents."
+---
+
+Three demo agents exercise the HITL surface end-to-end, each showing a different combination of patterns over the same primitives.
+
+| Agent | What it shows |
+|-------|---------------|
+| [**Helpdesk**](https://github.com/agno-agi/demo-os/blob/main/agents/helpdesk/agent.py) | All three pause patterns + PII + injection guardrails + audit hook |
+| [**Approvals**](https://github.com/agno-agi/demo-os/blob/main/agents/approvals/agent.py) | The `@approval` decorator with audit trail |
+| [**Feedback**](https://github.com/agno-agi/demo-os/blob/main/agents/feedback/agent.py) | `UserFeedbackTools` and `UserControlFlowTools` for structured questions |
+
+## Helpdesk: the full HITL toolkit
+
+```python
+from agno.agent import Agent
+from agno.guardrails import OpenAIModerationGuardrail, PIIDetectionGuardrail, PromptInjectionGuardrail
+from agno.tools.user_feedback import UserFeedbackTools
+
+helpdesk = Agent(
+    id="helpdesk",
+    model=MODEL,
+    db=agent_db,
+    tools=[restart_service, create_support_ticket, run_diagnostic, UserFeedbackTools()],
+    pre_hooks=[
+        OpenAIModerationGuardrail(),
+        PIIDetectionGuardrail(),
+        PromptInjectionGuardrail(),
+    ],
+    post_hooks=[output_guardrail, audit_log],
+)
+```
+
+Where each pattern shows up:
+
+| Tool | HITL pattern | Why |
+|------|--------------|-----|
+| `restart_service` | `requires_confirmation=True` | Restarting prod is irreversible. Human approves first. |
+| `create_support_ticket` | `requires_user_input=True` | Need details from the user before creating. |
+| `run_diagnostic` | `external_execution=True` | Diagnostic runs in another system. The agent gets the result back. |
+| `UserFeedbackTools()` | Structured question to user mid-run | "Which service do you want to restart?" |
+
+Pre-hooks catch bad input before the model sees it (PII, injection, moderation), and post-hooks catch bad output and write the audit log. The agent never sees raw PII, and every run lands in the audit log.
+
+## Approvals: compliance gates
+
+```python
+from agno.tools import tool
+from agno.approval.decorator import approval
+
+@approval(type="required")
+@tool(requires_confirmation=True)
+def process_refund(customer_id: str, amount: float, reason: str) -> str:
+    return charge_refund(customer_id, amount)
+
+@approval(type="audit")
+@tool
+def export_customer_data(customer_id: str) -> str:
+    return get_customer_data(customer_id)
+```
+
+`@approval(type="required")` blocks the run until a human approves. Audit log captures both the request and the decision.
+
+`@approval(type="audit")` runs the tool but logs to the audit trail asynchronously. Used when policy says "this needs to be tracked, not gated."
+
+## Feedback: structured questions mid-run
+
+```python
+from agno.tools.user_feedback import UserFeedbackTools, UserControlFlowTools
+
+feedback = Agent(
+    id="feedback",
+    tools=[UserFeedbackTools(), UserControlFlowTools()],
+)
+```
+
+`UserFeedbackTools` lets the agent pause and ask a structured question:
+
+> Agent: I need to know your team size. Please pick one: [1-5, 6-20, 21-100, 100+]
+
+The user picks. The run resumes with the answer in scope. No prompt engineering, no hand-rolled flow control.
+
+`UserControlFlowTools` adds branching. The agent can offer choices and route based on the user's pick:
+
+> Agent: Want to (a) keep the current settings, (b) reset to defaults, or (c) customize?
+
+## Pre-hooks for input safety
+
+PII detection and prompt injection guardrails are pre-hooks that run before the model sees the user message:
+
+```python
+from agno.guardrails import PIIDetectionGuardrail, PromptInjectionGuardrail
+
+agent = Agent(
+    pre_hooks=[
+        PIIDetectionGuardrail(
+            mask_pii=True,
+            enable_ssn_check=True,
+            enable_credit_card_check=True,
+            enable_email_check=True,
+            enable_phone_check=True,
+        ),
+        PromptInjectionGuardrail(),
+    ],
+)
+```
+
+PII gets masked in place, injection attempts get blocked outright, and the two are commonly used together.
+
+## Post-hooks for output safety
+
+Output guardrails and audit logs run after the model produces output. The Helpdesk agent demonstrates both:
+
+```python
+def output_guardrail(run_output, agent):
+    """Block responses that accidentally leak sensitive patterns."""
+    import re
+    sensitive = [r"sk-[a-zA-Z0-9]{20,}", r"postgres://[^\s]+"]
+    for pattern in sensitive:
+        if re.search(pattern, run_output.content or ""):
+            run_output.content = "I'm unable to provide that information."
+            return
+
+def audit_log(run_output, agent):
+    """Audit trail for compliance."""
+    print(f"[AUDIT] Agent={agent.name} Status={run_output.event}")
+```
+
+For audit logs that shouldn't gate the response, use `@hook(run_in_background=True)`. See [Human-in-the-Loop](/runtime/human-approval) for the full pattern.
+
+## See it in action
+
+```
+# Helpdesk
+@Helpdesk restart the auth service       # confirmation pause
+@Helpdesk file a ticket for slow API     # user input pause
+@Helpdesk run a network diagnostic       # external execution pause
+
+# Approvals
+@Approvals refund customer ACME-123 for $500       # blocked until approved
+@Approvals export customer data for ACME-123       # runs, audit-logged
+
+# Feedback
+@Feedback help me pick a deployment region          # structured questions
+```
+
+Sources: [`agents/helpdesk/`](https://github.com/agno-agi/demo-os/tree/main/agents/helpdesk), [`agents/approvals/`](https://github.com/agno-agi/demo-os/tree/main/agents/approvals), [`agents/feedback/`](https://github.com/agno-agi/demo-os/tree/main/agents/feedback)
+
+## Next
+
+[Multi-Agent Teams →](/demo-os/multi-agent-teams/text-to-sql)

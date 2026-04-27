@@ -1,0 +1,32 @@
+---
+title: What is the Starter Template?
+description: "The minimal AgentOS Starter Template. Build any agent product on top."
+---
+
+Starter Template is the smallest amount of code that gets you a production AgentOS: FastAPI on port 8000, Postgres with pgvector, sessions, memory, scheduling, and RBAC, all in one Docker Compose. With two example Agents to get you started. One script ships it to Railway.
+
+Scout, Dash, and Coda each ship as a complete product. Starter Template gives you the scaffolding to build your own agents, teams, and workflows.
+
+## What you can build on top
+
+| Product                  | What you'd build                                                                                                                  |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| **Multi-agent product**  | A coordinated team of specialists, each with their own tools and charter. Scout, Dash, and Coda are all this pattern.             |
+| **Internal automations** | Scheduled jobs and background workers. Morning reports posted to Slack, on-call escalation, data syncs, alert classifiers.        |
+| **No-code agent studio** | A UI where your team configures agents by filling out forms. Multi-tenant, RBAC-isolated, with your custom agents as primitives.  |
+| **Agent platform**       | An internal AgentOS for your organization. Each team member gets their own sessions, data, and access to the agents you've built. |
+
+These four point in different directions. They share the same foundation: a FastAPI runtime with sessions, memory, scheduling, and JWT-based auth, on a single Postgres instance.
+
+## The example agents
+
+| Agent               | Pattern      | Default behavior                                                             |
+| ------------------- | ------------ | ---------------------------------------------------------------------------- |
+| **Knowledge Agent** | Agentic RAG  | Loads the Agno docs into pgvector. Answers questions by searching the index. |
+| **MCP Agent**       | MCP tool use | Connects to the Agno docs MCP server. Calls whatever tools it exposes.       |
+
+Replace them, extend them, or delete them. The scaffolding underneath is what you're keeping.
+
+## Next
+
+[Setup →](/tutorials/starter/setup) takes about five minutes.

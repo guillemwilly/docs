@@ -1,0 +1,144 @@
+---
+title: Observability
+description: "OpenTelemetry tracing, run history, and audit logs in your own database."
+---
+
+When an agent answers wrong, you need to know why: which tool it called, what it passed in, what the model actually saw. AgentOS captures all of it through OpenTelemetry-compatible tracing, persisted in your `db`.
+
+```python
+from agno.os import AgentOS
+
+agent_os = AgentOS(
+    agents=[agent],
+    db=db,
+    tracing=True,
+)
+```
+
+Every run produces a trace tree: spans for the LLM call, each tool, hook, retrieval, and team delegation. Stored in `agno_traces` and `agno_spans` in the same `db` you use for sessions.
+
+## Own your traces
+
+Traces are your training data. Every model call, every tool result, every retrieval, every step of every run — that's the corpus you'd use to fine-tune, evaluate, or build your next agent on. Send it to a third-party observability platform as the only store and you've handed over the most valuable data your product generates.
+
+AgentOS writes traces to your database by default. You own the schema, the retention, the access patterns. You can still ship a copy to Langfuse or Arize for their dashboards (we even make that easy, see below), but your primary store is yours.
+
+## What gets captured
+
+| Span | Attributes |
+|------|------------|
+| **Run** | `agent_id`, `user_id`, `session_id`, `model`, latency, status |
+| **LLM call** | Model, prompt tokens, completion tokens, temperature, tool calls returned |
+| **Tool** | Tool name, arguments, result, duration, exception (if any) |
+| **Pre/post hook** | Hook name, duration, modified input/output |
+| **Retrieval** | Query, vector store, k, returned docs, scores |
+| **Team delegation** | Member name, mode, sub-run trace |
+
+Traces follow OpenTelemetry semantic conventions where they exist. The data model is open, so you can query it directly:
+
+```sql
+-- Top-10 slowest tools last hour
+SELECT
+    span_name,
+    AVG(end_time - start_time) AS avg_duration,
+    COUNT(*) AS calls
+FROM agno_spans
+WHERE span_name LIKE 'tool.%'
+  AND start_time > NOW() - INTERVAL '1 hour'
+GROUP BY span_name
+ORDER BY avg_duration DESC
+LIMIT 10;
+```
+
+## In the AgentOS UI
+
+The [control plane](https://os.agno.com) renders the same traces visually. Click a run and see the full tree: LLM hops, tool calls with their inputs and outputs, hooks, sub-agent traces. Filter by user, session, time range.
+
+## Multi-database tracing
+
+Traces are high-volume and write-heavy. For production deployments, you'll often want them in a separate database from sessions and memory — different cost profile, different retention, different access patterns:
+
+```python
+from agno.db.postgres import PostgresDb
+
+primary_db = PostgresDb(db_url="postgresql://primary/...")
+trace_db = PostgresDb(db_url="postgresql://traces/...")
+
+agent_os = AgentOS(
+    agents=[agent],
+    db=primary_db,
+    tracing=True,
+    trace_db=trace_db,
+)
+```
+
+See [Multi-DB tracing](/agent-os/tracing/usage/tracing-with-multi-db-scenario) for the full setup.
+
+## External providers
+
+Send traces to Langfuse, Langsmith, Arize, or any OpenTelemetry endpoint by adding an exporter. AgentOS still writes to your database first; the exporter is a copy, not a redirect. The full list lives in the [Observability section](/observability/agentops): [Langfuse](/observability/langfuse), [Langsmith](/observability/langsmith), [Arize](/observability/arize), [Langtrace](/observability/langtrace), [Logfire](/observability/logfire), [MLflow](/observability/mlflow), [Maxim](/observability/maxim).
+
+## Run history
+
+Beyond traces, every run is a row in `agno_sessions`. Pull a user's last 100 runs, replay them, compare model versions, build dashboards:
+
+```sql
+SELECT id, agent_id, model, status, created_at, total_tokens
+FROM agno_sessions
+WHERE user_id = 'user-123'
+ORDER BY created_at DESC
+LIMIT 100;
+```
+
+Same shape works for teams (`agno_team_sessions`) and workflows (`agno_workflow_sessions`).
+
+## Traces are not audit logs
+
+Traces tell you *what happened*. Audit logs tell you *what was approved*. They have different retention, different access patterns, and different consumers — and conflating them gets expensive (keeping every trace forever) or risky (deleting audit data your compliance team needs).
+
+| | Traces | Audit logs |
+|---|--------|------------|
+| **What they capture** | Every step of every run | Approved actions and who approved them |
+| **Purpose** | Debugging, optimization, training data | Accountability, compliance |
+| **Retention** | 30-120 days typical | Lifetime of the product |
+| **Storage** | `agno_traces`, `agno_spans` | `agno_approvals` plus your own audit table |
+
+For approved actions, see [Human Approval](/runtime/human-approval). For custom audit shapes, use post-hooks (below).
+
+## Audit logs via post-hooks
+
+When you need an audit trail with custom shape (regulatory compliance, internal SOX-style logging), add a post-hook that writes to your own audit table:
+
+```python
+from agno.hooks import hook
+
+@hook(run_in_background=True)
+def audit_log(run_output, agent):
+    write_audit_event(
+        timestamp=run_output.created_at,
+        agent_id=agent.id,
+        user_id=run_output.user_id,
+        action="agent_run",
+        prompt=run_output.input,
+        response=run_output.content,
+        tools=[t.name for t in run_output.tool_calls],
+    )
+
+agent = Agent(..., post_hooks=[audit_log])
+```
+
+`run_in_background=True` keeps the audit write off the response path. See [Hooks](/runtime/human-approval#post-hooks-output) for the full pattern.
+
+## What to watch in production
+
+| Signal | Where |
+|--------|-------|
+| Run latency | `agno_spans` `end_time - start_time` per run |
+| Token spend by model | `agno_sessions` `total_tokens` grouped by `model` |
+| Tool failure rate | `agno_spans` where `status='error'` and `span_name LIKE 'tool.%'` |
+| User-level activity | `agno_sessions` group by `user_id`, `created_at::date` |
+| HITL queue depth | `agno_approvals` where `status='pending'` |
+
+## Next
+
+[Security & Auth →](/runtime/security-and-auth)

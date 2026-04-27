@@ -1,0 +1,129 @@
+---
+title: Investment Committee
+description: "Seven specialists across four team modes, sharing one knowledge base and one learning store."
+---
+
+The [Investment team](https://github.com/agno-agi/demo-os/tree/main/teams/investment) is the most ambitious multi-agent demo in the repo. Seven specialist agents collaborate across four distinct team configurations to evaluate stocks, weigh risk, and produce investment memos. All seven share one knowledge base and one learnings store.
+
+| Agent | Role | Tools |
+|-------|------|-------|
+| **Committee Chair** | Final decision-maker, capital allocator | none directly |
+| **Financial Analyst** | Fundamental valuation, balance sheet, earnings | `YFinanceTools` |
+| **Market Analyst** | Macro context, sector trends, breaking news | `YFinanceTools`, Exa MCP, optional `ParallelTools` |
+| **Technical Analyst** | Price action, momentum indicators, entry/exit timing | `YFinanceTools` |
+| **Risk Officer** | Downside scenarios, position sizing, mandate compliance | `YFinanceTools` |
+| **Knowledge Agent** | Research RAG and memo archive navigation | `FileTools` (read-only) |
+| **Memo Writer** | Synthesizes analyst inputs into formal memos | `FileTools` |
+
+## Why a team for this
+
+The single-agent failure mode for investment analysis is bullish bias: one model talks itself into a thesis. A multi-agent committee structurally avoids this. The Risk Officer is *required* to argue against, the Technical Analyst is *required* to look at chart-level evidence, and the Chair has to weigh both.
+
+This is "agents as roles" rather than "agents as task fanout". Each member has a distinct charter that the Chair must consider.
+
+## Four team modes, one set of agents
+
+The demo ships four distinct teams built from the same agent set. Each demonstrates a different multi-agent architecture:
+
+| Team | Mode | Right when | Try |
+|------|------|-----------|-----|
+| **Investment Coordinate** | `TeamMode.coordinate` | Open-ended question that benefits from multi-analyst discussion | *"Should we invest $2M in NVIDIA?"* |
+| **Investment Route** | `TeamMode.route` | Single-specialist question that should land with exactly one agent | *"What's AAPL's P/E ratio?"* (routes to Financial Analyst) |
+| **Investment Broadcast** | `TeamMode.broadcast` | High-stakes decision where you want independent analyst opinions in parallel | *"Full committee review: evaluate Tesla for $2M."* |
+| **Investment Tasks** | `TeamMode.tasks` | Multi-step task that needs decomposition and parallel work | *"Deploy $10M across the top 5 AI stocks, no position over 30%."* |
+
+Pick the team in the AgentOS UI based on the shape of the request. See [Team modes](/teams/overview) for the underlying mechanics.
+
+## Three-layer knowledge
+
+Every agent on the team draws from the same three-layer context:
+
+| Layer | What it holds | How it's accessed |
+|-------|---------------|-------------------|
+| **Static context** | Fund mandate, risk policy, evaluation process | Injected into every agent's system prompt |
+| **Research library** | Company profiles, sector analyses | PgVector hybrid search (RAG) |
+| **Memo archive** | Past investment memos and decisions | `FileTools` over the memos directory |
+
+Same "context is everything" pattern Dash uses, applied to financial decision-making instead of SQL.
+
+## Shared learnings
+
+Every agent writes to one `investment_learnings` knowledge store with `namespace="global"`:
+
+```python
+from agno.learn import LearnedKnowledgeConfig, LearningMachine, LearningMode
+
+investment_learnings = create_knowledge("Investment Learnings", "investment_learnings")
+
+_learning = LearningMachine(
+    knowledge=investment_learnings,
+    learned_knowledge=LearnedKnowledgeConfig(
+        mode=LearningMode.AGENTIC,
+        namespace="global",
+    ),
+)
+```
+
+After a few decisions the store accumulates patterns like:
+
+- "Tech stocks with negative free cash flow get downgraded"
+- "Avoid recommending positions during earnings week"
+- "Risk Officer's concerns weighted 1.5x for crypto exposure"
+
+The Chair retrieves these on every new evaluation. The committee gets sharper over time without anyone manually building the framework.
+
+## File output
+
+The Memo Writer uses `FileTools` to produce a markdown memo per evaluation:
+
+```
+teams/investment/memos/
+├── 2026-04-22_TSLA.md
+├── 2026-04-23_NVDA.md
+└── 2026-04-24_META.md
+```
+
+Each memo captures the committee's full reasoning, the dissents, and the final recommendation. Useful for retrospective analysis: which calls were right, which were wrong, and what the committee learned from each.
+
+## Mixing models
+
+The demo runs every agent on the same default model (`gpt-5.4` via `OpenAIResponses`). For real workloads, mixing models per role is a one-line change:
+
+```python
+from agno.models.anthropic import Claude
+from agno.models.google import Gemini
+
+committee_chair = Agent(
+    model=Claude(id="claude-opus-4-6"),   # Strong synthesis for the final decision
+    ...
+)
+
+market_analyst = Agent(
+    model=Gemini(id="gemini-2.5-pro"),    # Long context for filings
+    ...
+)
+```
+
+The team coordinates regardless of which model each member uses. The standalone [investment-committee](https://github.com/agno-agi/investment-committee) repo runs Claude Sonnet 4.6 across the analysts and Claude Opus 4.6 on the Chair, which is the production-grade configuration.
+
+## See it in action
+
+Try one prompt against each team:
+
+```
+# Route: single specialist
+@InvestmentRoute What's NVDA's current trend?
+
+# Coordinate: open-ended discussion
+@InvestmentCoordinate Should we invest $2M in NVIDIA?
+
+# Broadcast: parallel independent opinions
+@InvestmentBroadcast Full committee review: evaluate Tesla for $2M.
+
+# Tasks: multi-step decomposition
+@InvestmentTasks Deploy $10M across the top 5 AI stocks, no position over 30%.
+```
+
+Each prompt triggers the right shape of work. Expect 30-60 seconds for the parallel analyst teams, faster for route, longer for tasks.
+
+Source: [`teams/investment/`](https://github.com/agno-agi/demo-os/tree/main/teams/investment). For a standalone version with Claude across the team and a deterministic 5-step pipeline workflow, see the [investment-committee](https://github.com/agno-agi/investment-committee) repo.

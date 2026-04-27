@@ -1,0 +1,92 @@
+---
+title: Serve as an API
+description: "Everything you need to run agents as a service, behind one HTTP API."
+---
+
+To ship an agent you need a lot more than a `/run` endpoint. You need endpoints to:
+
+- Run agents in streaming mode and as background jobs
+- Manage the sessions, memory, and learnings your agents accumulate
+- Inspect runs, traces, and metrics
+- Schedule recurring work
+- Gate sensitive tool calls on human approval
+- Resume paused runs once that approval comes back
+
+AgentOS gives you all of this and more.
+
+<video
+  autoPlay
+  loop
+  muted
+  playsInline
+  className="w-full rounded-lg"
+  src="/videos/agentos-api-scroll.mp4"
+/>
+
+## The surface area
+
+| Group | What you can do |
+|-------|-----------------|
+| **Runs** | Create, list, cancel, continue paused runs, resume disconnected streams. Stream over SSE or run as background jobs. |
+| **Sessions** | Create, list, rename, update, delete. Pull every run in a session. Scoped per user. |
+| **Memory** | Create, update, delete user memories. Search content, filter by topic, view per-user stats. Run optimization to compact token usage. |
+| **Knowledge** | Upload files, text, URLs, or content from S3, GCS, SharePoint, GitHub. Search via vector, keyword, or hybrid. List sources, files in a source, content status. |
+| **Evals** | Run accuracy, agent-as-judge, performance, and reliability evals. List, update, delete eval runs. |
+| **Traces** | List, search with a filter DSL, view full span trees, group by session. Inspect individual LLM calls and tool invocations. |
+| **Metrics** | Daily aggregated runs, sessions, users, token usage, model breakdown. Refresh on demand. |
+| **Schedules** | CRUD, enable, disable, trigger now. List historical runs of a schedule. |
+| **Approvals** | List pending approvals, resolve them, count by user. |
+| **Components** | Version your agents, teams, and workflows. Manage drafts, publish, roll back to a previous version. |
+| **Database** | Migrate one or all database schemas to a target version. |
+
+Browse the live OpenAPI spec at the `/docs` endpoint of your AgentOS.
+
+## How a request looks
+
+Every run endpoint returns the same shape, whether it's an agent, a team, or a workflow:
+
+```bash
+curl -X POST http://localhost:8000/agents/my-agent/runs \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Hello","user_id":"alice","session_id":"thread-42"}'
+```
+
+```json
+{
+  "run_id": "run_abc123",
+  "session_id": "thread-42",
+  "user_id": "alice",
+  "agent_id": "my-agent",
+  "status": "completed",
+  "content": "Hi Alice!",
+  "created_at": "2026-04-24T20:15:00Z"
+}
+```
+
+Pass `stream=true` for Server-Sent Events. Pass `background=true` to run async and poll for completion. The contract doesn't change across surfaces.
+
+## Adding your own routes
+
+Under the hood, AgentOS is a FastAPI app. Register additional routes for webhooks, custom dashboards, integrations:
+
+```python
+app = agent_os.get_app()
+
+@app.post("/webhooks/stripe")
+async def handle_stripe(event: dict):
+    response = await agent.arun(
+        f"Process Stripe event: {event}",
+        user_id="system",
+    )
+    return {"ok": True, "agent_response": response.content}
+```
+
+The agent is a regular Python object. Call `agent.run(...)` or `await agent.arun(...)` from anywhere.
+
+## Auth
+
+When `authorization=True`, every endpoint except `/health` and `/openapi.json` requires a valid JWT in the `Authorization: Bearer ...` header. AgentOS validates the token, extracts claims, and applies RBAC scopes per request before any agent code runs. See [Security & Auth](/runtime/security-and-auth) for the full model.
+
+## Next
+
+[Storage →](/runtime/storage)

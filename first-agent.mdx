@@ -1,57 +1,37 @@
 ---
-title: Your First Agent
+title: Build Your First Agent
 description: "Build and run your first agent in 20 lines of code."
 keywords: [agno, agent, quickstart, tutorial]
-mode: "wide"
 ---
 
-In this guide, you'll build an agent that:
-
-- Connects to an MCP server
-- Stores and retrieves past conversations
-- Runs as a production API
-
-All in about 20 lines of code.
+An agent that works in your filesystem, remembers you across sessions, and runs as a production API with persistent sessions and state management out of the box.
 
 ## 1. Define the Agent
 
-Save the following code as `agno_assist.py`:
+Save the following code as `workbench.py`:
 
-```python agno_assist.py lines
+```python workbench.py lines
 from agno.agent import Agent
 from agno.db.sqlite import SqliteDb
-from agno.models.anthropic import Claude
 from agno.os import AgentOS
-from agno.tools.mcp import MCPTools
+from agno.tools.workspace import Workspace
 
-agno_assist = Agent(
-    name="Agno Assist",
-    model=Claude(id="claude-sonnet-4-5"),
-    db=SqliteDb(db_file="agno.db"),                     # session storage
-    tools=[MCPTools(url="https://docs.agno.com/mcp")],  # Agno docs via MCP
-    add_datetime_to_context=True,
-    add_history_to_context=True,                         # include past runs
-    num_history_runs=3,                                  # last 3 conversations
-    markdown=True,
+workbench = Agent(
+    name="Workbench",
+    model="openai:gpt-5.4",
+    db=SqliteDb(db_file="agno.db"), # one DB persists sessions and memories
+    tools=[Workspace(".")],         # read, write, edit, shell
+    enable_agentic_memory=True,     # remembers across sessions
+    add_history_to_context=True,    # last few turns flow into every run
+    num_history_runs=3,
 )
 
-# Serve via AgentOS → streaming, auth, session isolation, API endpoints
-agent_os = AgentOS(agents=[agno_assist], tracing=True)
+# Serve via AgentOS. Get streaming, auth, session isolation, API endpoints
+agent_os = AgentOS(agents=[workbench], tracing=True)
 app = agent_os.get_app()
 ```
 
-<Check>
-
-You now have:
-  - A stateful agent
-  - Streaming responses
-  - Per-user session isolation
-  - A production-ready API
-  - Tracing enabled out of the box
-
-No 3rd-party services required
-
-</Check>
+`Workspace(".")` scopes the agent to the current directory. `read`, `list`, and `search` run freely; `write`, `edit`, `move`, `delete`, and `shell` require human approval.
 
 ## 2. Run Your AgentOS
 
@@ -72,24 +52,26 @@ No 3rd-party services required
   </Step>
   <Step title="Install dependencies">
     ```bash
-    uv pip install -U 'agno[os]' anthropic mcp
+    uv pip install -U 'agno[os]' openai
     ```
   </Step>
-  <Step title="Export your Anthropic API key">
+  <Step title="Export your OpenAI API key">
+
+    Don't have one? [Get a key from platform.openai.com](https://platform.openai.com/api-keys).
 
     <CodeGroup>
     ```bash Mac
-    export ANTHROPIC_API_KEY=sk-***
+    export OPENAI_API_KEY=sk-***
     ```
     ```bash Windows
-    setx ANTHROPIC_API_KEY sk-***
+    setx OPENAI_API_KEY sk-***
     ```
     </CodeGroup>
 
   </Step>
   <Step title="Run your AgentOS">
     ```bash
-    fastapi dev agno_assist.py
+    fastapi dev workbench.py
     ```
     Your AgentOS is now running at:
 
@@ -102,20 +84,22 @@ No 3rd-party services required
   </Step>
 </Steps>
 
-You can add your own routes, middleware, or any FastAPI feature on top.
+Now you have:
+  - A stateful agent served as a production API.
+  - Tracing and session monitoring enabled out of the box.
+  - Per-session storage and isolation, with JWT-based RBAC available for multi-user isolation.
 
-## 3. Connect to the AgentOS UI
+No third-party services required.
 
-The [AgentOS UI](https://os.agno.com) connects directly from your browser to your runtime.
+## 3. Chat with your Agent
 
-It lets you test, monitor, and manage your agents in real time.
+The [AgentOS UI](https://os.agno.com) connects your browser to your runtime.
+
+Use it to test, monitor, and manage your agents in real time.
 
 1. Open [os.agno.com](https://os.agno.com) and sign in.
 2. Click **"Add new OS"** in the top navigation.
-3. Select **"Local"** to connect to a local AgentOS.
-4. Enter your endpoint URL (default: `http://localhost:8000`).
-5. Name it something like "Development OS".
-6. Click **"Connect"**.
+3. Select **"Local"**, enter your endpoint URL (default: `http://localhost:8000`), name it "Dev AgentOS", and click **"Connect"**.
 
 <Frame>
   <video
@@ -126,19 +110,17 @@ It lets you test, monitor, and manage your agents in real time.
     playsInline
     style={{ borderRadius: "0.5rem", width: "100%", height: "auto" }}
   >
-    <source src="/videos/agent-os-connect-1.mp4" type="video/mp4" />
+    <source src="/videos/agent-os-connect-os.mp4" type="video/mp4" />
   </video>
 </Frame>
 
-You’ll see your OS with a live status indicator once connected.
+**Click on Chat, and ask:**
 
-## Chat with your Agent
+> List the files here and tell me what kind of project this is.
 
-Open Chat, select your agent, and ask:
+The agent reads your workspace and answers grounded in what it actually finds.
 
-> What is Agno?
-
-The agent retrieves context from the Agno MCP server and responds with grounded answers.
+Try a follow-up like "summarize the README" or "create a NOTES.md with three bullet takeaways". The second one will pause for your approval before the file is written, since `write_file` is a confirm-required tool by default.
 
 <Frame>
   <video
@@ -149,31 +131,23 @@ The agent retrieves context from the Agno MCP server and responds with grounded 
     playsInline
     style={{ borderRadius: "0.5rem", width: "100%", height: "auto" }}
   >
-    <source src="/videos/agno-agent-chat.mp4" type="video/mp4" />
+    <source src="/videos/agentos-agent-chat.mp4" type="video/mp4" />
   </video>
 </Frame>
+
+Click Sessions or Traces in the sidebar to inspect stored conversations.
 
 <Tip>
-
-Click Sessions in the sidebar to inspect stored conversations.
-
-All session data is stored in your local database. No third-party tracing or hosted memory service is required.
-
+All session data is stored in your local database, no data leaves your system.
 </Tip>
-
-## What You Just Built
-
-In 20 lines, you built:
-- A stateful agent
-- Tool-augmented retrieval via MCP
-- A streaming API
-- Session isolation
-- A production-ready runtime
-
-You can use this exact same architecture for running multi-agent systems in production.
 
 ## Next
 
-- [Explore the SDK →](/agents/overview)
-- [Deploy AgentOS to your cloud →](/deploy/introduction)
-- [Browse 2000+ code examples →](/examples/introduction)
+<CardGroup cols={2}>
+  <Card title="Build a real product" icon="rocket-launch" iconType="duotone" href="/tutorials/pick-a-template">
+    Production templates (Scout, Dash, Coda) ready to clone and deploy.
+  </Card>
+  <Card title="Understand the runtime" icon="cubes" iconType="duotone" href="/runtime/overview">
+    Why AgentOS exists and the work it handles for you.
+  </Card>
+</CardGroup>

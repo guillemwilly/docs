@@ -1,0 +1,99 @@
+---
+title: Deploy to Railway
+description: "Ship Starter Template to Railway with one script."
+---
+
+Starter Template ships one Railway script. It provisions Postgres, the app service, and a public domain. Any Docker-capable host works, but Railway is the fast path.
+
+## Prerequisites
+
+- A Starter Template repo set up locally ([setup](/tutorials/starter/setup))
+- A [Railway](https://railway.app) account
+- The [Railway CLI](https://docs.railway.app/guides/cli) installed and authenticated (`railway login`)
+- `OPENAI_API_KEY` exported in your shell (the script reads it from there)
+
+## Step 1: Provision and deploy
+
+```bash
+./scripts/railway_up.sh
+```
+
+This script:
+
+1. Creates a Railway project called `agent-os`.
+2. Deploys a `pgvector` Postgres service from the public template.
+3. Creates the `agent-os` application service and forwards the database connection vars plus `OPENAI_API_KEY` and `PORT`.
+4. Builds and deploys the app from the current directory.
+5. Issues a public Railway domain.
+
+The script prints the assigned URL right away. The domain takes ~5 minutes to start resolving.
+
+## Step 2: Load the Knowledge Agent in production
+
+The local index doesn't carry over. Run the loader against the deployed service:
+
+```bash
+railway run python -m agents.knowledge_agent
+```
+
+This connects to the Railway Postgres via the project's env vars and seeds the pgvector index with the default documents.
+
+## Step 3: Verify
+
+Once the domain resolves:
+
+```bash
+curl https://your-agent-os.up.railway.app/health
+# {"status":"ok"}
+```
+
+Then connect the AgentOS UI:
+
+1. Open [os.agno.com](https://os.agno.com).
+2. Click **Add OS**, choose **Live**, paste your Railway URL.
+3. Click **Connect**.
+
+## Add more env vars
+
+The deploy script only forwards `OPENAI_API_KEY` and the database vars. To add more (Anthropic, Google, custom MCP secrets), set them on the service directly:
+
+```bash
+railway variables --service agent-os --set "ANTHROPIC_API_KEY=sk-ant-***"
+railway variables --service agent-os --set "GOOGLE_API_KEY=***"
+```
+
+Railway redeploys automatically when variables change.
+
+## Redeploys
+
+After code changes:
+
+```bash
+railway up --service agent-os -d
+```
+
+The `-d` flag detaches so the CLI doesn't tail logs. Use `railway logs --service agent-os` to follow them.
+
+## What you get
+
+| Resource              | Purpose                                                                                  |
+| --------------------- | ---------------------------------------------------------------------------------------- |
+| `agent-os` service    | The AgentOS app, FastAPI on port 8000                                                    |
+| `pgvector` service    | Postgres with the pgvector extension, used for sessions, memory, and the knowledge index |
+| Railway-issued domain | Public HTTPS endpoint                                                                    |
+
+## Operations
+
+| Task                           | Command                           |
+| ------------------------------ | --------------------------------- |
+| Tail logs                      | `railway logs --service agent-os` |
+| Open the dashboard             | `railway open`                    |
+| Run a command in the container | `railway run <command>`           |
+| Stop the app                   | `railway down --service agent-os` |
+| Stop Postgres                  | `railway down --service pgvector` |
+
+Adjust replicas, CPU, and memory in `railway.json`.
+
+## Next
+
+[Next Steps →](/tutorials/starter/next-steps)

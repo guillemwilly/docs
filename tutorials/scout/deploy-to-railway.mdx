@@ -1,0 +1,118 @@
+---
+title: Deploy to Railway
+description: "Ship Scout to Railway with JWT verification."
+---
+
+Scout ships with three Railway scripts. One provisions the project, one syncs env vars, one redeploys. Any cloud provider works, but Railway is the fastest path to get something running.
+
+## Prerequisites
+
+- A Scout repo set up locally ([setup](/tutorials/scout/setup))
+- A [Railway](https://railway.app) account
+- The [Railway CLI](https://docs.railway.app/guides/cli) installed and authenticated (`railway login`)
+
+## Step 1: Provision the project
+
+Use `.env.production` to keep production credentials separate from local dev. Copy your local `.env` as the starting point:
+
+```bash
+cp .env .env.production
+```
+
+Don't set `DB_*` in `.env.production`. The deploy script points Scout at the Railway Postgres service automatically. Setting `DB_HOST` here would break the deploy when env vars sync.
+
+Then run:
+
+```bash
+./scripts/railway/up.sh
+```
+
+This script:
+
+1. Creates a Railway project called `scout`.
+2. Adds a `pgvector` service with a persistent volume at `/var/lib/postgresql`.
+3. Creates the `scout` application service and forwards a starter set of env vars from your shell or `.env.production`.
+4. Deploys the app and assigns a public domain.
+
+The script prints the assigned URL right away. The domain takes ~5 minutes to start resolving.
+
+## Step 2: Sync the rest of your env vars
+
+The first deploy only forwards the variables in `up.sh`. To push everything in `.env.production` (Slack credentials, MCP secrets, anything you've added):
+
+```bash
+./scripts/railway/env.sh
+```
+
+The script reads `.env.production` by default. Pass a path to use a different file:
+
+```bash
+./scripts/railway/env.sh .env.staging
+```
+
+It handles multiline values like PEM keys correctly. Railway auto-redeploys when values change.
+
+## Step 3: Verify
+
+Once the domain resolves:
+
+```bash
+curl https://your-scout.up.railway.app/health
+# {"status":"ok"}
+
+curl https://your-scout.up.railway.app/contexts | jq
+# Lists every registered context with its current status.
+```
+
+Then connect the AgentOS UI:
+
+1. Open [os.agno.com](https://os.agno.com).
+2. Click **Add OS**, choose **Live**, paste your Railway URL.
+3. Click **Connect**.
+
+## Update Slack to point at production
+
+If you set up [Slack](/tutorials/scout/connect-slack) against an ngrok URL, swap it for your Railway domain:
+
+1. Open your Slack app at [api.slack.com/apps](https://api.slack.com/apps).
+2. Go to **Event Subscriptions**.
+3. Update the Request URL to `https://your-scout.up.railway.app/slack/events`.
+4. Wait for the green **Verified** check, then **Save Changes**.
+
+You can stop ngrok now. Slack delivers all events to Railway.
+
+## Redeploys
+
+Code changes:
+
+```bash
+./scripts/railway/redeploy.sh
+```
+
+Env var changes:
+
+```bash
+./scripts/railway/env.sh
+```
+
+## What you get
+
+| Resource | Purpose |
+|----------|---------|
+| `scout` service | The Scout app, FastAPI on port 8000 |
+| `pgvector` service | Postgres with the pgvector extension, used for the CRM context and learnings |
+| `/var/lib/postgresql` volume | Persistent database storage |
+| Railway-issued domain | Public HTTPS endpoint |
+
+## Operations
+
+| Task | Command |
+|------|---------|
+| Tail logs | `railway logs --service scout` |
+| Open the dashboard | `railway open` |
+| Run a command in the container | `railway ssh --service scout` |
+| Scale CPU, memory, replicas | Edit `railway.json` |
+
+## Next
+
+[Add more sources →](/tutorials/scout/next-steps)

@@ -79,9 +79,107 @@
         "tab": "Home",
         "groups": [
           {
-            "group": "Overview",
+            "group": "Welcome",
             "pages": [
-              "index"
+              "index",
+              "first-agent"
+            ]
+          },
+          {
+            "group": "Tutorials",
+            "pages": [
+              "tutorials/pick-a-template",
+              {
+                "group": "Scout",
+                "pages": [
+                  "tutorials/scout/overview",
+                  "tutorials/scout/setup",
+                  "tutorials/scout/connect-slack",
+                  "tutorials/scout/deploy-to-railway",
+                  "tutorials/scout/next-steps"
+                ]
+              },
+              {
+                "group": "Dash",
+                "pages": [
+                  "tutorials/dash/overview",
+                  "tutorials/dash/setup",
+                  "tutorials/dash/connect-slack",
+                  "tutorials/dash/deploy-to-railway",
+                  "tutorials/dash/next-steps"
+                ]
+              },
+              {
+                "group": "Coda",
+                "pages": [
+                  "tutorials/coda/overview",
+                  "tutorials/coda/setup",
+                  "tutorials/coda/connect-slack",
+                  "tutorials/coda/deploy-to-railway",
+                  "tutorials/coda/next-steps"
+                ]
+              },
+              {
+                "group": "Starter",
+                "pages": [
+                  "tutorials/starter/overview",
+                  "tutorials/starter/setup",
+                  "tutorials/starter/deploy-to-railway",
+                  "tutorials/starter/next-steps"
+                ]
+              }
+            ]
+          },
+          {
+            "group": "Runtime",
+            "pages": [
+              "runtime/overview",
+              "runtime/serve-as-api",
+              "runtime/storage",
+              "runtime/context",
+              "runtime/human-approval",
+              "runtime/observability",
+              "runtime/security-and-auth",
+              "runtime/interfaces",
+              "runtime/scheduling",
+              "runtime/deploy",
+              "runtime/build-a-product"
+            ]
+          },
+          {
+            "group": "Demo OS",
+            "pages": [
+              "demo-os/overview",
+              {
+                "group": "Knowledge & Memory",
+                "pages": [
+                  "demo-os/rag",
+                  "demo-os/knowledge",
+                  "demo-os/memory",
+                  "demo-os/learning"
+                ]
+              },
+              {
+                "group": "Tools & Integrations",
+                "pages": [
+                  "demo-os/mcp",
+                  "demo-os/context-providers"
+                ]
+              },
+              {
+                "group": "State & Patterns",
+                "pages": [
+                  "demo-os/session-state",
+                  "demo-os/human-in-the-loop"
+                ]
+              },
+              {
+                "group": "Multi-Agent Teams",
+                "pages": [
+                  "demo-os/multi-agent-teams/text-to-sql",
+                  "demo-os/multi-agent-teams/investment"
+                ]
+              }
             ]
           }
         ]
@@ -92,8 +190,7 @@
           {
             "group": "Get Started",
             "pages": [
-              "introduction",
-              "first-agent"
+              "sdk/introduction"
             ]
           },
           {
@@ -7743,6 +7840,14 @@
     {
       "source": "/home",
       "destination": "/"
+    },
+    {
+      "source": "/introduction",
+      "destination": "/"
+    },
+    {
+      "source": "/sdk",
+      "destination": "/sdk/introduction"
     },
     {
       "source": "/get-started",
@@ -15515,6 +15620,266 @@
     {
       "source": "/deploy/templates/aws/customize/ssh-access",
       "destination": "/deploy/templates/aws/configure/ssh-access"
+    },
+    {
+      "source": "/introduction/agents",
+      "destination": "/agents/overview"
+    },
+    {
+      "source": "/introduction/quickstart",
+      "destination": "/first-agent"
+    },
+    {
+      "source": "/introduction/multi-agent-systems",
+      "destination": "/teams/overview"
+    },
+    {
+      "source": "/introduction/performance",
+      "destination": "/sdk/introduction"
+    },
+    {
+      "source": "/tools/toolkits/toolkits",
+      "destination": "/tools/overview"
+    },
+    {
+      "source": "/tools/toolkits/duckduckgo",
+      "destination": "/tools/toolkits/search/duckduckgo"
+    },
+    {
+      "source": "/tools/toolkits/linear",
+      "destination": "/tools/toolkits/others/linear"
+    },
+    {
+      "source": "/tools/toolkits/openbb",
+      "destination": "/tools/toolkits/others/openbb"
+    },
+    {
+      "source": "/tools/toolkits/composio",
+      "destination": "/tools/toolkits/others/composio"
+    },
+    {
+      "source": "/tools/toolkits/email",
+      "destination": "/tools/toolkits/social/email"
+    },
+    {
+      "source": "/tools/toolkits/file",
+      "destination": "/tools/toolkits/local/file"
+    },
+    {
+      "source": "/tools/toolkits/googlecalendar",
+      "destination": "/tools/toolkits/others/googlecalendar"
+    },
+    {
+      "source": "/tools/toolkits/googlemaps",
+      "destination": "/tools/toolkits/others/google-maps"
+    },
+    {
+      "source": "/tools/toolkits/googlesearch",
+      "destination": "/tools/toolkits/search/duckduckgo"
+    },
+    {
+      "source": "/tools/toolkits/newspaper",
+      "destination": "/tools/toolkits/web-scrape/newspaper4k"
+    },
+    {
+      "source": "/tools/toolkits/python",
+      "destination": "/tools/toolkits/local/python"
+    },
+    {
+      "source": "/tools/toolkits/shell",
+      "destination": "/tools/toolkits/local/shell"
+    },
+    {
+      "source": "/tools/toolkits/sleep",
+      "destination": "/tools/toolkits/local/sleep"
+    },
+    {
+      "source": "/tools/toolkits/website",
+      "destination": "/tools/toolkits/web-scrape/website"
+    },
+    {
+      "source": "/tools/toolkits/yfinance",
+      "destination": "/tools/toolkits/others/yfinance"
+    },
+    {
+      "source": "/tools/mcp/mcp",
+      "destination": "/tools/mcp/overview"
+    },
+    {
+      "source": "/tools/custom-toolkits",
+      "destination": "/tools/creating-tools/overview"
+    },
+    {
+      "source": "/tools/functions",
+      "destination": "/tools/creating-tools/overview"
+    },
+    {
+      "source": "/tools/tool-decorator",
+      "destination": "/tools/creating-tools/overview"
+    },
+    {
+      "source": "/models/introduction",
+      "destination": "/models/overview"
+    },
+    {
+      "source": "/models/anthropic",
+      "destination": "/models/providers/native/anthropic/overview"
+    },
+    {
+      "source": "/models/google",
+      "destination": "/models/providers/native/google/overview"
+    },
+    {
+      "source": "/models/groq",
+      "destination": "/models/providers/gateways/groq/overview"
+    },
+    {
+      "source": "/models/nebius",
+      "destination": "/models/providers/gateways/nebius/overview"
+    },
+    {
+      "source": "/models/openai-like",
+      "destination": "/models/providers/openai-like"
+    },
+    {
+      "source": "/teams/introduction",
+      "destination": "/teams/overview"
+    },
+    {
+      "source": "/teams/run",
+      "destination": "/teams/running-teams"
+    },
+    {
+      "source": "/teams/shared-state",
+      "destination": "/state/team/overview"
+    },
+    {
+      "source": "/workflows/introduction",
+      "destination": "/workflows/overview"
+    },
+    {
+      "source": "/agents/prompts",
+      "destination": "/agents/building-agents"
+    },
+    {
+      "source": "/agents/run",
+      "destination": "/agents/running-agents"
+    },
+    {
+      "source": "/agents/metrics",
+      "destination": "/observability/overview"
+    },
+    {
+      "source": "/reasoning/introduction",
+      "destination": "/reasoning/overview"
+    },
+    {
+      "source": "/knowledge/introduction",
+      "destination": "/knowledge/overview"
+    },
+    {
+      "source": "/storage/introduction",
+      "destination": "/database/overview"
+    },
+    {
+      "source": "/storage/vector-dbs",
+      "destination": "/knowledge/vector-stores/pgvector/overview"
+    },
+    {
+      "source": "/agent-os/creating-your-first-os",
+      "destination": "/agent-os/introduction"
+    },
+    {
+      "source": "/get-started/playground",
+      "destination": "/agent-os/introduction"
+    },
+    {
+      "source": "/how-to/authentication",
+      "destination": "/agent-os/api/authentication"
+    },
+    {
+      "source": "/filters/manual-filters",
+      "destination": "/knowledge/concepts/filters/manual-filters"
+    },
+    {
+      "source": "/concepts/vectordb/surrealdb",
+      "destination": "/knowledge/vector-stores/surrealdb/overview"
+    },
+    {
+      "source": "/concepts/knowledge/vectordb/couchbase",
+      "destination": "/knowledge/vector-stores/couchbase/overview"
+    },
+    {
+      "source": "/concepts/models/cometapi",
+      "destination": "/models/overview"
+    },
+    {
+      "source": "/concepts/models/openai-like",
+      "destination": "/models/providers/openai-like"
+    },
+    {
+      "source": "/concepts/teams/introduction",
+      "destination": "/teams/overview"
+    },
+    {
+      "source": "/concepts/agents/guardrails/overview",
+      "destination": "/guardrails/overview"
+    },
+    {
+      "source": "/concepts/tools/overview",
+      "destination": "/tools/overview"
+    },
+    {
+      "source": "/vectordb/surrealdb",
+      "destination": "/knowledge/vector-stores/surrealdb/overview"
+    },
+    {
+      "source": "/examples/concepts/tools/mcp/pipedream_auth",
+      "destination": "/tools/mcp/overview"
+    },
+    {
+      "source": "/examples/applications/ag-ui/agent_with_tools",
+      "destination": "/agent-os/interfaces/ag-ui/introduction"
+    },
+    {
+      "source": "/examples/agents/finance-agent",
+      "destination": "/cookbook/agents/overview"
+    },
+    {
+      "source": "/examples/getting-started/human-in-the-loop",
+      "destination": "/examples/agents/human-in-the-loop/overview"
+    },
+    {
+      "source": "/examples/models/anthropic/prompt_caching",
+      "destination": "/examples/models/anthropic/overview"
+    },
+    {
+      "source": "/examples/teams/coordinate/autonomous_startup_team",
+      "destination": "/examples/teams/overview"
+    },
+    {
+      "source": "/examples/workflows/startup-idea-validator",
+      "destination": "/examples/workflows/overview"
+    },
+    {
+      "source": "/workspaces/workspace-management/development-app",
+      "destination": "/deploy/templates/aws/configure/development-app"
+    },
+    {
+      "source": "/basics/:slug*",
+      "destination": "/:slug*"
+    },
+    {
+      "source": "/concepts/:slug*",
+      "destination": "/knowledge/concepts/:slug*"
+    },
+    {
+      "source": "/examples/use-cases/:slug*",
+      "destination": "/cookbook/:slug*"
+    },
+    {
+      "source": "/examples/concepts/:slug*",
+      "destination": "/examples/:slug*"
     }
   ]
 }

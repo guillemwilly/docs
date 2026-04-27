@@ -1,0 +1,95 @@
+---
+title: Setup
+description: "Run Scout locally using Docker."
+---
+
+This page gets Scout running on your machine with three context providers: the web, the filesystem (the Scout repo itself), and a CRM (people, projects, notes) backed by Postgres.
+
+## Prerequisites
+
+- Docker Desktop ([install](https://docs.docker.com/desktop/))
+- OpenAI API key ([get one](https://platform.openai.com/api-keys))
+
+<Tabs>
+  <Tab title="Manual">
+    <Steps>
+      <Step title="Clone and configure">
+        ```bash
+        git clone https://github.com/agno-agi/scout && cd scout
+        cp example.env .env
+        ```
+
+        Open `.env` and set `OPENAI_API_KEY`. Everything else has sensible defaults.
+      </Step>
+
+      <Step title="Start Scout">
+        ```bash
+        docker compose up -d --build
+        ```
+
+        First run pulls the base image and builds the Scout container. Takes a minute or two. Subsequent starts come up in seconds.
+      </Step>
+
+      <Step title="Verify it's running">
+        ```bash
+        curl http://localhost:8000/health
+        ```
+
+        Expect `{"status":"ok"}`. Connection refused means the container is still starting. Check `docker compose logs -f scout-api` and wait for the Agno banner.
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Agentic">
+    If you have a coding agent like [Claude Code](https://claude.com/product/claude-code) or [Codex](https://openai.com/index/introducing-codex/), paste this prompt into a fresh session in an empty directory. The agent clones the repo, starts Scout, and verifies it's running.
+
+    The prompt below never asks the agent to read or transmit your API key. The agent opens `.env` for you to edit, then waits for you to confirm before continuing.
+
+    ````
+    Set up Scout locally for me.
+
+    Steps:
+    1. Clone https://github.com/agno-agi/scout into the current directory and cd into it.
+    2. Copy example.env to .env. Open .env in the user's editor (or print the path and tell them to open it). Tell the user: "Set OPENAI_API_KEY in .env, save the file, then tell me to continue." Wait for confirmation before proceeding. Do not ask the user to paste the key into this chat. Do not read the key from .env or print its value at any point.
+    3. Check that Docker Desktop is running (`docker info`). If not, tell me to start it and stop.
+    4. Run `docker compose up -d --build`. Stream the output so I can see progress.
+    5. Poll `curl -s http://localhost:8000/health` every 3 seconds for up to 60 seconds. Proceed once it returns `{"status":"ok"}`.
+    6. Run `curl -s http://localhost:8000/contexts | jq` and show me the output so I can see which contexts registered.
+    7. Print next steps: open os.agno.com, Add OS → Local → http://localhost:8000.
+
+    If any step fails, stop and show me the error. Don't try to fix it on your own.
+    ````
+  </Tab>
+</Tabs>
+
+## Connect to AgentOS UI
+
+<Snippet file="connect-agent-os-ui.mdx" />
+
+Try the pre-configured prompt: *"Which contexts are you connected to?"*
+
+Scout reports back web, filesystem, and CRM.
+
+## What you have now
+
+Scout is running with three context providers. Each surfaces as a `query_<id>` tool (plus `update_<id>` where writes are allowed):
+
+| Provider | Tool(s) | Backed by |
+|----------|---------|-----------|
+| **Web** | `query_web` | Parallel's public MCP (keyless). Set `PARALLEL_API_KEY` to upgrade to the Parallel SDK. |
+| **Filesystem** | `query_fs` | The Scout repo itself, read-only. |
+| **CRM** | `query_crm`, `update_crm` | Your own contacts, projects, and notes in the local Postgres. |
+
+## Try it
+
+Ask Scout to put each provider to work:
+
+> *"Look up the latest pricing for Anthropic's models."* hits the web.
+
+> *"Search the repo for where context providers get registered."* navigates the filesystem.
+
+> *"Save Sarah Chen as a contact, she's the head of platform at Acme."* writes to the CRM.
+
+## Next
+
+[Connect to Slack →](/tutorials/scout/connect-slack)

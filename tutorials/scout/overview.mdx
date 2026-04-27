@@ -1,0 +1,58 @@
+---
+title: What is Scout?
+description: "A context agent that navigates information sources to assemble answers."
+---
+
+Every team battles context sprawl. Knowledge ends up scattered across chat, drives, repos, and wikis, and no one person holds it all in their head. Scout is the teammate who does.
+
+**Scout looks up information across Slack, Google Drive, your codebase, the web, and any MCP server you point it at.** It follows the "navigation over search" pattern that makes coding agents so effective. Scout navigates live sources the same way a human would.
+
+Ask Scout: "Who owns the payments integration?"
+
+Scout searches Linear, finds the project, surfaces the assigned engineer, and pulls the Slack thread where they answered design questions last week. The answer comes back with links to the ticket and the thread.
+
+## Navigation over search
+
+Most knowledge agents embed everything into a vector index, search the index at query time, and return chunks. This works for a frozen corpus. It breaks when the corpus is alive.
+
+Scout navigates sources at query time. List folders, search for files, read full documents, follow links. No ingest. No embeddings. No stale index.
+
+The downside: each query costs more LLM calls. The benefits:
+
+- Answers reflect the live state of every source.
+- Citations include exact paths back to the source.
+- Adding a new source means registering one provider, no ingest pipeline.
+
+## How Scout works
+
+Scout runs on AgentOS. Every question goes through the same loop:
+
+1. **Plan.** Scout interprets the question and picks a starting source based on what it knows about your workspace and what it has learned before.
+2. **Navigate.** It fetches what's relevant from that source the way a person would: opening threads, following links, jumping into linked docs.
+3. **Assemble.** When enough context is in hand, Scout composes an answer with citations back to the original sources.
+4. **Learn.** When Scout finds where an answer lives, it remembers, so the next retrieval skips the exploration.
+
+The learning loop is what makes Scout get faster over time. Scout remembers which provider answered which kind of question, and skips the exploratory hops on the next ask.
+
+## Context Providers
+
+Scout works because of an abstraction called **Context Providers**. Each provider exposes `query_<id>` (and optionally `update_<id>`) tools on Scout. The agent calls them like any other tool. The provider handles auth, navigation, and pagination on the way to the source.
+
+This keeps two things clean. Scout doesn't carry every source's schema in its context. The know-how for navigating each source lives with the provider.
+
+### Providers that ship with Scout
+
+| Provider | What it exposes | Default |
+|----------|-----------------|---------|
+| **Web** | `web_search`, `web_fetch` | Always on (hosted web search MCP) |
+| **Filesystem** | `list_files`, `search_files`, `search_content`, `read_file` | Always on (the Scout codebase, so Scout can answer questions about itself) |
+| **Database** | `query_crm`, `update_crm` | Always on (local Postgres for people, projects, notes) |
+| **Slack** | `search_workspace`, `get_channel_history`, `get_thread`, `list_users` | When `SLACK_BOT_TOKEN` is set |
+| **Google Drive** | `search_files`, `list_files`, `read_file` | When `GOOGLE_SERVICE_ACCOUNT_FILE` is set |
+| **MCP servers** | `query_mcp_<slug>` per server | Wired in `scout/contexts.py` |
+
+Linear, Notion, GitHub, and any other MCP server plug in through the **MCP servers** row. Add the URL and credentials in `scout/contexts.py` and Scout exposes a `query_mcp_<slug>` tool for it.
+
+## Next
+
+Follow the [Setup →](/tutorials/scout/setup) guide to get Scout working.

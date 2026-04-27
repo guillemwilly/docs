@@ -1,0 +1,149 @@
+---
+title: Introduction
+description: "**Build agents, teams, and workflows in pure python.**"
+---
+
+The Agno SDK gives you three primitives: Agent, Team, Workflow, and a host of capabilities to turn them into production systems.
+
+<CodeGroup>
+
+```python Agent
+from agno.agent import Agent
+from agno.tools.yfinance import YFinanceTools
+
+agent = Agent(
+    name="Finance Agent",
+    model="openai:gpt-5.4",
+    tools=[YFinanceTools()],
+    instructions="Fetch market data and produce a one-line take.",
+)
+
+agent.print_response("What's NVDA trading at today?")
+```
+
+```python Team
+from agno.agent import Agent
+from agno.team import Team
+from agno.tools.yfinance import YFinanceTools
+
+bull = Agent(
+    name="Bull",
+    model="openai:gpt-5.4",
+    role="Make the case FOR investing.",
+    tools=[YFinanceTools()],
+)
+bear = Agent(
+    name="Bear",
+    model="openai:gpt-5.4",
+    role="Make the case AGAINST investing.",
+    tools=[YFinanceTools()],
+)
+
+team = Team(
+    name="Investment Committee",
+    members=[bull, bear],
+    instructions="Hear both sides, then synthesize a balanced recommendation.",
+)
+
+team.print_response("Should I invest in NVIDIA?")
+```
+
+```python Workflow
+from agno.agent import Agent
+from agno.team import Team
+from agno.tools.yfinance import YFinanceTools
+from agno.workflow import Step, Workflow
+
+researcher = Agent(
+    model="openai:gpt-5.4",
+    tools=[YFinanceTools()],
+    instructions="Gather raw market data.",
+)
+
+bull = Agent(model="openai:gpt-5.4", role="Make the case FOR investing.")
+bear = Agent(model="openai:gpt-5.4", role="Make the case AGAINST investing.")
+committee = Team(
+    name="Investment Committee",
+    members=[bull, bear],
+    instructions="Debate the position.",
+)
+
+writer = Agent(
+    model="openai:gpt-5.4",
+    instructions="Write a 200-word investment brief.",
+)
+
+workflow = Workflow(
+    name="Stock Research",
+    steps=[
+        Step(name="Research", agent=researcher),
+        Step(name="Debate", team=committee),
+        Step(name="Report", agent=writer),
+    ],
+)
+
+workflow.print_response("Analyze NVIDIA for investment.")
+```
+
+</CodeGroup>
+
+## Three primitives
+
+| Primitive                       | Use it to                                                        |
+| ------------------------------- | ---------------------------------------------------------------- |
+| [Agent](/agents/overview)       | Build autonomous programs with a model, tools, and instructions. |
+| [Team](/teams/overview)         | Coordinate multiple agents to achieve complex tasks.             |
+| [Workflow](/workflows/overview) | Achieve deterministic output using step-based execution.         |
+
+## Why the Agno SDK
+
+- **Just Python.** No DSL, no YAML, no custom language to learn.
+- **Fast.** Agents instantiate in microseconds with a minimal memory footprint. You'll spin up one per request for isolation and permission scoping. Extreme performance is mandatory.
+- **Agnostic.** 30+ model providers, 100+ integrations, 20+ vector dbs, 10+ databases. Use any model provider, any database, any cloud provider.
+- **Production-ready on day one.** Sessions, memory, knowledge, tracing, evals, and human-in-the-loop come built in. The same agent you prototype in a python script serves real users behind [AgentOS](/runtime/overview).
+- **Three primitives.** Agents for autonomy, teams for coordination, workflows for deterministic control. Compose them for your use case. Same SDK.
+
+## Capabilities
+
+Turn Agents, Teams, and Workflows into production software.
+
+| Capability                                | What it adds                                          |
+| ----------------------------------------- | ----------------------------------------------------- |
+| [Models](/models/overview)                | 30+ providers behind one API                          |
+| [Tools](/tools/overview)                  | 100+ integrations and the ability to write your own   |
+| [Memory](/memory/overview)                | Per-user and per-session memory                       |
+| [Knowledge](/knowledge/concepts/overview) | RAG over documents, URLs, and databases               |
+| [Learning](/learning/overview)            | Self-learning agents that improve over time           |
+| [Reasoning](/reasoning/overview)          | Built-in chain-of-thought and reasoning agents        |
+| [Multimodal](/multimodal/overview)        | Image, audio, and video input and output              |
+| [Input & Output](/input-output/overview)  | Pydantic-typed structured input and output            |
+| [Context](/context/overview)              | Add live context to every run                         |
+| [State](/state/overview)                  | Per-agent, per-team, per-workflow state               |
+| [Dependencies](/dependencies/overview)    | Inject runtime values into prompts                    |
+| [Skills](/skills/overview)                | Reusable agent capabilities                           |
+| [Hooks](/hooks/overview)                  | Pre-run and post-run callbacks                        |
+| [Guardrails](/guardrails/overview)        | Validate input and output                             |
+| [Human-in-the-Loop](/hitl/overview)       | Pause runs for approval, input, or external execution |
+| [Database](/database/overview)            | Persist sessions, memory, knowledge, and traces       |
+| [Sessions](/sessions/overview)            | Session lifecycle and metrics                         |
+| [Evals](/evals/overview)                  | Test agent quality at scale                           |
+| [Tracing](/tracing/overview)              | OpenTelemetry tracing for every run                   |
+
+## Where to start
+
+<CardGroup cols={3}>
+  <Card title="Agents" icon="robot" iconType="duotone" href="/agents/overview">
+    Single autonomous programs with a model, tools, and instructions.
+  </Card>
+  <Card title="Teams" icon="users" iconType="duotone" href="/teams/overview">
+    Coordinate multiple agents to achieve complex tasks.
+  </Card>
+  <Card
+    title="Workflows"
+    icon="diagram-project"
+    iconType="duotone"
+    href="/workflows/overview"
+  >
+    Achieve deterministic output using step-based execution.
+  </Card>
+</CardGroup>

@@ -1,0 +1,137 @@
+---
+title: Scheduling
+description: "In-process cron and multi-step workflows. No separate worker fleet."
+---
+
+A useful agent doesn't only respond. It shows up on its own — morning briefings, daily triage, weekly digests, hourly health checks. AgentOS gives you a cron-style scheduler in-process, so you don't run a separate worker fleet for any of it. No Celery, no separate cron container, no leader-election service to operate. Schedules live in your `db` and fire from the same FastAPI process that serves your agents.
+
+```python
+from agno.os import AgentOS
+
+agent_os = AgentOS(
+    agents=[agent],
+    db=db,
+    scheduler=True,
+    scheduler_poll_interval=15,    # check for due jobs every N seconds
+)
+```
+
+The scheduler polls `agno_schedules` every `scheduler_poll_interval` seconds, fires due jobs, retries failures, and persists state.
+
+## Two ways to create schedules
+
+| Pattern | When | Lives in |
+|---------|------|----------|
+| **Agent-driven** | Users ask the agent to schedule things in chat | The agent's own tool calls |
+| **Startup-registered** | Schedules that should always exist, regardless of who's chatting | Your app's lifespan |
+
+### Agent-driven
+
+Give an agent `SchedulerTools` and it can schedule its own work via chat:
+
+```python
+from agno.tools.scheduler import SchedulerTools
+
+agent = Agent(
+    model="openai:gpt-5.4",
+    tools=[
+        SchedulerTools(
+            db=db,
+            default_endpoint="/agents/my-agent/runs",
+            default_method="POST",
+            default_timezone="UTC",
+        ),
+    ],
+)
+
+# In Slack: "@MyAgent post a daily digest of open PRs at 9am ET"
+# The agent calls SchedulerTools.create_schedule() with a cron expr.
+```
+
+The Demo OS ships a [Scheduler agent](https://github.com/agno-agi/demo-os/blob/main/agents/scheduler/agent.py) that does exactly this. Talk to it in plain English, it manages cron expressions for you.
+
+### Startup-registered
+
+For schedules that should always exist (the daily digest, the hourly sync, the nightly cleanup), register them in your app's lifespan:
+
+```python
+from contextlib import asynccontextmanager
+from agno.scheduler import register_schedule
+
+@asynccontextmanager
+async def lifespan(app):
+    register_schedule(
+        name="daily_digest",
+        cron="0 9 * * 1-5",       # weekdays 9am
+        endpoint="/workflows/daily-digest/runs",
+    )
+    yield
+
+agent_os = AgentOS(..., scheduler=True, lifespan=lifespan)
+```
+
+Idempotent. Re-registering with the same name updates the existing schedule. Restarts don't duplicate. This is the pattern Coda uses for [daily digest, issue triage, and repo sync](/tutorials/coda/next-steps#turn-on-scheduled-tasks).
+
+## Workflows for multi-step jobs
+
+Schedules fire single endpoints. When the work is multi-step — research, then outline, then draft, then review — you reach for a workflow. Workflows aren't strictly a scheduling feature, but they're the most common thing a schedule fires.
+
+A workflow is a typed pipeline. Steps run in order. `Parallel` runs them concurrently. `Loop` repeats until a condition holds. `Router` picks one branch.
+
+```python
+from agno.workflow import Workflow, Step, Parallel, Loop, Router, Condition
+
+workflow = Workflow(
+    name="content_pipeline",
+    steps=[
+        Step(name="research", agent=researcher),
+        Step(name="outline", agent=outliner),
+        Loop(
+            name="draft_review",
+            step=Step(name="draft_then_review", agent=writer_then_editor),
+            until=Condition(expr="quality_score >= 8"),
+            max_iterations=3,
+        ),
+    ],
+)
+```
+
+Workflows are first-class AgentOS citizens: `/workflows/<id>/runs` POST endpoint, schedulable, traced, persisted in the same `db`.
+
+| Pattern | Use when |
+|---------|----------|
+| **Sequential** | Steps depend on each other |
+| **Parallel** | Steps are independent and you want fanout |
+| **Loop with condition** | Quality threshold or max iterations |
+| **Router + Condition** | Dynamic branching on input |
+| **Cross-modal chaining** | Output of one agent is input to a different modality (text → speech, code → narration) |
+
+For worked examples, see [Demo OS](/demo-os/overview).
+
+## Schedule runs and observability
+
+When a schedule fires, AgentOS:
+
+1. Looks up the schedule in `agno_schedules`.
+2. Hits the configured endpoint (`POST /agents/<id>/runs` or `POST /workflows/<id>/runs`) inside the same process.
+3. Records the result in `agno_schedule_runs` (status, duration, error if any) and the underlying run in `agno_sessions` and `agno_traces` like any other run.
+
+That means scheduled work shows up in the same UI, the same SQL queries, and the same trace tree as ad-hoc work. To see what fired in the last 24 hours:
+
+```sql
+SELECT s.name, sr.status, sr.created_at, sr.duration_ms
+FROM agno_schedule_runs sr
+JOIN agno_schedules s ON s.id = sr.schedule_id
+WHERE sr.created_at > NOW() - INTERVAL '24 hours'
+ORDER BY sr.created_at DESC;
+```
+
+For the trace of a specific scheduled run, follow the `run_id` from `agno_schedule_runs` back to `agno_traces`. See [Observability](/runtime/observability) for the full data model.
+
+## Scheduler in HA
+
+When you scale to multiple replicas, you don't want every replica firing the same scheduled job. Use leader election (one replica owns scheduling) or pin the scheduler to a single replica via deployment config. See [Scheduler](/agent-os/scheduler/overview) for the HA pattern.
+
+## Next
+
+[Deploy →](/runtime/deploy)

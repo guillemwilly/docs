@@ -1,0 +1,108 @@
+---
+title: Text-to-SQL
+description: "Two-agent SQL team with read-only Analyst, schema-managing Engineer, and a self-learning loop."
+---
+
+The [Dash team](https://github.com/agno-agi/demo-os/tree/main/agents/dash) is a working text-to-SQL system with a structural separation between the agent that reads data and the agent that builds reusable views.
+
+```python
+from agno.team import Team, TeamMode
+
+dash = Team(
+    id="dash",
+    name="Dash",
+    mode=TeamMode.coordinate,
+    model=MODEL,
+    members=[analyst, engineer],
+    db=agent_db,
+    learning=dash_learning,
+    add_learnings_to_context=True,
+    share_member_interactions=True,
+)
+```
+
+Two members and one leader, sharing a single learning store.
+
+## The split
+
+| Agent | Schema access | Tools |
+|-------|---------------|-------|
+| **Analyst** | `public` (read-only via `default_transaction_read_only=on`) | `SQLTools(read_only=True)`, `introspect_schema`, `save_validated_query`, `ReasoningTools` |
+| **Engineer** | `public` (read), `dash` (read+write, blocked from `public` writes via SQLAlchemy event listener) | `SQLTools` (full), `introspect_schema`, `update_knowledge`, `ReasoningTools` |
+| **Leader** | None directly | Routes the request, optional `SlackTools` for posting back |
+
+The boundary is enforced at the database engine, not in the prompt. The Analyst's connection physically cannot write, and the Engineer's writes physically cannot touch `public`. These hold even if the model goes off-script.
+
+## How a question flows
+
+1. User: "What's our MRR trend by plan?"
+2. **Leader** retrieves shared learnings (error patterns, gotchas) and routes to **Analyst**.
+3. **Analyst** retrieves table metadata + matching query patterns from knowledge.
+4. **Analyst** writes SQL grounded in the retrieved patterns.
+5. **Analyst** executes against `public` (read-only).
+6. **Analyst** interprets results, returns insight.
+7. **Leader** synthesizes and replies.
+
+If the Analyst hits a recurring need (a query the Engineer should turn into a view), it asks the **Engineer**. The Engineer creates `dash.monthly_mrr_by_plan` as a view, records it in knowledge, the Analyst prefers it next time.
+
+## The self-learning loop
+
+When the Analyst hits a SQL error and finds a fix, it saves the pattern via `LearningMachine`:
+
+```
+Error: "active subscription detection wrong"
+Diagnosis: filtered on status='active', but trials had status='active' too
+Fix: filter on ended_at IS NULL instead
+Saved as learning: "active means ended_at IS NULL, not status='active'"
+```
+
+Next time the same shape of question hits, the learning gets retrieved before the Analyst writes SQL. Same error doesn't happen twice.
+
+After a few weeks of use:
+
+- **Knowledge** holds the validated query library, table descriptions, business rules.
+- **Learnings** holds the error patterns and fixes the team has discovered.
+- The Analyst writes correct SQL faster because both are in context.
+
+## Why coordinate mode
+
+`TeamMode.coordinate` means the leader decides who handles each request. Other modes:
+
+| Mode | Behavior |
+|------|----------|
+| `coordinate` | Leader routes to one specialist per turn |
+| `route` | Same, but with explicit routing rules |
+| `broadcast` | Leader sends to all specialists, gathers responses |
+| `tasks` | Leader breaks the request into tasks, fans out, synthesizes |
+
+For text-to-SQL, `coordinate` is the right shape. One question maps to one specialist (Analyst for queries, Engineer for schema work). The leader picks based on the user's intent.
+
+## What runs where
+
+| File | Purpose |
+|------|---------|
+| [`agents/dash/team.py`](https://github.com/agno-agi/demo-os/blob/main/agents/dash/team.py) | Team definition, leader instructions |
+| [`agents/dash/agents/analyst.py`](https://github.com/agno-agi/demo-os/blob/main/agents/dash/agents/analyst.py) | Read-only Analyst |
+| [`agents/dash/agents/engineer.py`](https://github.com/agno-agi/demo-os/blob/main/agents/dash/agents/engineer.py) | Schema-managing Engineer |
+| [`agents/dash/knowledge/`](https://github.com/agno-agi/demo-os/tree/main/agents/dash/knowledge) | Loaded at boot via `load_knowledge.py` |
+| [`agents/dash/scripts/load_data.py`](https://github.com/agno-agi/demo-os/blob/main/agents/dash/scripts/load_data.py) | Generates the synthetic SaaS dataset |
+
+## See it in action
+
+```
+@Dash what's our current MRR?
+@Dash which plan has the highest churn rate?
+@Dash show me revenue trends by plan over the last 6 months
+@Dash which customers are at risk of churning?
+@Dash build me a view for monthly recurring revenue by plan
+```
+
+The first four go to the Analyst. The fifth goes to the Engineer.
+
+For a from-scratch tutorial that builds a Dash-style agent on your own data, see [Tutorial: Dash](/tutorials/dash/setup).
+
+Source: [`agents/dash/`](https://github.com/agno-agi/demo-os/tree/main/agents/dash)
+
+## Next
+
+[Investment Team →](/demo-os/multi-agent-teams/investment)
