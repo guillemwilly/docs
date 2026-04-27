@@ -1,9 +1,9 @@
 ---
 title: Setup
-description: "Run Blank Canvas locally in five minutes."
+description: "Run Starter Template locally in five minutes."
 ---
 
-This page gets Blank Canvas running on your machine with a local Postgres, the Knowledge Agent loaded with the Agno docs, and the MCP Agent connected to the Agno docs MCP.
+This page gets Starter Template running on your machine with a local Postgres, the Knowledge Agent loaded with the Agno docs, and the MCP Agent connected to the Agno docs MCP.
 
 ## Prerequisites
 
@@ -47,6 +47,7 @@ This page gets Blank Canvas running on your machine with a local Postgres, the K
         Expect `{"status":"ok"}`. Connection refused means the container is still starting. Check `docker compose logs -f agentos-api` and wait for the Agno banner.
       </Step>
     </Steps>
+
   </Tab>
 
   <Tab title="Agentic">
@@ -55,7 +56,7 @@ This page gets Blank Canvas running on your machine with a local Postgres, the K
     The prompt below never asks the agent to read or transmit your API key. The agent opens `.env` for you to edit, then waits for you to confirm before continuing.
 
     ````
-    Set up the Agno Blank Canvas template locally for me.
+    Set up the Agno Starter template locally for me.
 
     Steps:
     1. Clone https://github.com/agno-agi/agentos-railway-template.git into the current directory as agentos-railway and cd into it.
@@ -68,6 +69,7 @@ This page gets Blank Canvas running on your machine with a local Postgres, the K
 
     If any step fails, stop and show me the error. Don't try to fix it on your own.
     ````
+
   </Tab>
 </Tabs>
 
@@ -77,20 +79,20 @@ This page gets Blank Canvas running on your machine with a local Postgres, the K
 
 Try one prompt against each agent:
 
-> *"What is Agno?"* → Knowledge Agent answers from the loaded RAG corpus.
+> _"What is Agno?"_ → Knowledge Agent answers from the loaded RAG corpus.
 
-> *"How do I create my first agent?"* → Knowledge Agent cites the First Agent doc.
+> _"How do I create my first agent?"_ → Knowledge Agent cites the First Agent doc.
 
-> *"Search the Agno docs for how to use LearningMachine."* → MCP Agent calls the docs MCP.
+> _"Search the Agno docs for how to use LearningMachine."_ → MCP Agent calls the docs MCP.
 
-> *"What tools do you have access to?"* → MCP Agent lists every tool the docs MCP exposes.
+> _"What tools do you have access to?"_ → MCP Agent lists every tool the docs MCP exposes.
 
 ## What you have now
 
-| Agent | Tools | Backed by |
-|-------|-------|-----------|
+| Agent               | Tools                                   | Backed by                                                                                                       |
+| ------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | **Knowledge Agent** | `search_knowledge_base`, agentic memory | `pgvector` index seeded with `https://docs.agno.com/introduction.md` and `https://docs.agno.com/first-agent.md` |
-| **MCP Agent** | Whatever the docs MCP exposes | `MCPTools(url="https://docs.agno.com/mcp")` |
+| **MCP Agent**       | Whatever the docs MCP exposes           | `MCPTools(url="https://docs.agno.com/mcp")`                                                                     |
 
 Both agents share the same Postgres for sessions and memory.
 
@@ -117,4 +119,4 @@ The new documents land in the same pgvector index. `skip_if_exists=True` makes t
 
 ## Next
 
-[Deploy to Railway →](/tutorials/blank-canvas/deploy-to-railway)
+[Deploy to Railway →](/tutorials/starter/deploy-to-railway)

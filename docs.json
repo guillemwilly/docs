@@ -120,12 +120,12 @@
                 ]
               },
               {
-                "group": "Blank Canvas",
+                "group": "Starter",
                 "pages": [
-                  "tutorials/blank-canvas/overview",
-                  "tutorials/blank-canvas/setup",
-                  "tutorials/blank-canvas/deploy-to-railway",
-                  "tutorials/blank-canvas/next-steps"
+                  "tutorials/starter/overview",
+                  "tutorials/starter/setup",
+                  "tutorials/starter/deploy-to-railway",
+                  "tutorials/starter/next-steps"
                 ]
               }
             ]

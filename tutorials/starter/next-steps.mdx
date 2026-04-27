@@ -1,9 +1,9 @@
 ---
 title: Next Steps
-description: "Extend Blank Canvas into your own product."
+description: "Extend the Starter template into your own product."
 ---
 
-Blank Canvas gives you AgentOS, Postgres, Docker, and Railway as scaffolding. The sections below cover the most common moves for turning it into your own product: adding agents, swapping models, wiring up tools and knowledge, exposing it through Slack.
+The Starter template gives you AgentOS, Postgres, Docker, and Railway as scaffolding. The sections below cover the most common moves for turning it into your own product: adding agents, swapping models, wiring up tools and knowledge, exposing it through Slack.
 
 ## Add your own agent
 
@@ -85,7 +85,7 @@ The same pattern works for Google (`google-genai`), Mistral (`mistralai`), and t
 
 ## Add a Slack interface
 
-Blank Canvas doesn't ship a Slack manifest, but Agno does ship a Slack interface. Wire it up by setting `SLACK_BOT_TOKEN` and `SLACK_SIGNING_SECRET`, then:
+The Starter template doesn't ship a Slack manifest, but Agno does ship a Slack interface. Wire it up by setting `SLACK_BOT_TOKEN` and `SLACK_SIGNING_SECRET`, then:
 
 ```python
 from agno.os.interfaces.slack import Slack
