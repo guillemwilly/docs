@@ -1,13 +1,13 @@
 ---
 title: Build a Product
-description: "From a working AgentOS to a shipped product."
+description: "From a working AgentOS to a shipped product, plus the operating loop that keeps it good."
 ---
 
 You have an agent, AgentOS running it, and a Postgres holding state. What's left to ship a product?
 
-The honest answer is: less than you think. Most of the gap between "AgentOS works" and "users can pay" is product work, not infrastructure. This page is the punch list.
+Less than you think. Most of the gap between "AgentOS works" and "users can pay" is product work, not infrastructure. This page covers two things the rest of the section doesn't: picking your starting point, and the operating loop that keeps your agent working once real users hit it.
 
-## Step 1: Pick the right starting point
+## Pick the right starting point
 
 Don't build AgentOS from scratch. Start from a template that's closest to what you want to ship.
 
@@ -21,149 +21,82 @@ Don't build AgentOS from scratch. Start from a template that's closest to what y
 
 All four templates ship with Docker Compose, Railway scripts, Slack manifest, JWT setup, and a `.env.production` flow. You're 90% of the way to deploy on day one.
 
-## Step 2: Replace the demo data with yours
+## Replace the demo data
 
 Templates ship with synthetic data so the first run works. Replace it with your own:
 
-| If you're building on... | Swap |
-|--------------------------|------|
+| Template | Swap |
+|----------|------|
 | Scout | Configure context providers in [`scout/contexts.py`](https://github.com/agno-agi/scout/blob/main/scout/contexts.py). Point at your S3 buckets, your Drive folders, your MCP servers. |
-| Dash | Replace [`scripts/generate_data.py`](https://github.com/agno-agi/dash/blob/main/scripts/generate_data.py) with a loader for your dataset, or `pg_restore` directly into `public`. Then rewrite [`knowledge/`](https://github.com/agno-agi/dash/tree/main/knowledge) for your tables. |
+| Dash | Replace [`scripts/generate_data.py`](https://github.com/agno-agi/dash/blob/main/scripts/generate_data.py) with a loader for your dataset. Then rewrite [`knowledge/`](https://github.com/agno-agi/dash/tree/main/knowledge) for your tables. |
 | Coda | Edit [`repos.yaml`](https://github.com/agno-agi/coda/blob/main/repos.yaml) to point at your repos. Make sure your `GITHUB_ACCESS_TOKEN` has the right scopes. |
 | Demo OS | Fork the agent that's closest to yours. Modify its instructions, knowledge, tools. Remove the agents you don't need. |
 
-The goal is a single agent that does *one useful thing* on real data. Then iterate.
+The goal is a single agent that does one useful thing on real data. Then iterate.
 
-## Step 3: Pick your interfaces
+## The shipping checklist
 
-Your users aren't going to curl your API. Pick the surfaces they actually use:
+Each row maps to a page in this section. Don't re-read them here; this is the punch list.
 
-| Surface | When |
-|---------|------|
-| [Slack](/agent-os/interfaces/slack/introduction) | Internal tools, B2B teams, async work |
-| [Telegram](/agent-os/interfaces/telegram/introduction) | Personal assistants, mobile-first, consumer |
-| [WhatsApp](/agent-os/interfaces/whatsapp/introduction) | Customer support, mobile, international |
-| [AG-UI](/agent-os/interfaces/ag-ui/introduction) | Custom web apps, embedded chat widgets |
-| [A2A](/agent-os/interfaces/a2a/introduction) | Other agents calling yours |
-| Custom HTTP | Webhooks, integrations, anything else |
+| Step | Do | Where |
+|------|-----|-------|
+| **Pick interfaces** | Slack for B2B, Telegram for personal, WhatsApp for support, AG-UI for browser, custom HTTP for everything else. Start with one. | [Interfaces](/runtime/interfaces) |
+| **Wire auth** | `RUNTIME_ENV=prd` and `JWT_VERIFICATION_KEY`. Control plane issues tokens, your service verifies. | [Security & Auth](/runtime/security-and-auth) |
+| **Turn on tracing** | `tracing=True` from day one. The first time a user reports a bad answer, you'll have the trace tree to debug from. | [Observability](/runtime/observability) |
+| **Gate irreversible actions** | `requires_confirmation=True` for user approval, `@approval` for admin approval. Don't add approval everywhere — friction kills adoption. | [Human Approval](/runtime/human-approval) |
+| **Schedule proactive work** | Register recurring jobs in the app lifespan so they survive restarts. | [Scheduling](/runtime/scheduling) |
+| **Deploy** | Railway via template scripts, AWS/GCP/Azure via container + managed Postgres + secrets, or self-hosted Docker Compose. | [Deploy](/runtime/deploy) |
 
-Most products start with one and add more later. Start with the one your users are already on.
+## Iterate from real usage
 
-## Step 4: Wire auth
+The first version is wrong about things, and that's expected. The interesting question is *how fast can you find what's wrong and fix it.*
 
-Production demands authentication. AgentOS does this with JWT and RBAC scopes. The flow:
+The loop:
 
-1. Set `RUNTIME_ENV=prd` (or `authorization=True` directly).
-2. Set `JWT_VERIFICATION_KEY` from [os.agno.com](https://os.agno.com).
-3. Mint user tokens with appropriate scopes.
+1. A user reports a bad answer (Slack, support ticket, your own dogfooding).
+2. Find the run. Filter `agno_sessions` by `user_id` and `created_at` to narrow it down. The session ID gives you the full thread.
+3. Pull the trace from `agno_traces` and `agno_spans`. Look at what tools were called, what the model saw, what came back.
+4. Replay it locally. Run the same input through the same agent in a script. Reproduce.
+5. Patch the prompt, swap the tool, add a learning, fix the knowledge. Re-run.
+6. Add the case to your eval suite so the regression can't come back.
+7. Ship.
 
-For most products, the [AgentOS control plane](https://os.agno.com) issues tokens for you. For custom auth (your own user database), implement the [authorization config](/runtime/security-and-auth) with your own verification keys.
-
-Test it: hit any endpoint without a token, get 401. Hit it with a valid token, get the response.
-
-## Step 5: Set up observability before you need it
-
-Tracing is one flag (`tracing=True`). Turn it on day one. The first time a user reports a wrong answer, you'll have the trace tree to debug from.
-
-| Concern | Action |
-|---------|--------|
-| Internal debugging | `tracing=True`, query `agno_traces` directly with SQL |
-| Production monitoring | Send traces to [Langfuse, Arize, Langsmith, etc.](/runtime/observability#external-providers) |
-| Eval-driven iteration | Run eval suites against your agent on a schedule, alert on regressions |
-| Audit logs for compliance | Add `post_hooks=[audit_log]` with `run_in_background=True` |
-
-The [observability page](/runtime/observability) has the SQL queries to start with.
-
-## Step 6: Add HITL where it matters
-
-If your agent does anything irreversible, gate it:
-
-```python
-@tool(requires_confirmation=True)
-def send_customer_email(to: str, subject: str, body: str) -> str:
-    return mail.send(to, subject, body)
-
-@approval(type="required")
-@tool
-def issue_credit(customer_id: str, amount: float) -> str:
-    return billing.credit(customer_id, amount)
-```
-
-Resist the urge to add approval everywhere. Approval friction kills adoption. Pick the few actions that genuinely need a human and gate just those.
-
-## Step 7: Schedule the proactive work
-
-Most useful agents do something on a schedule, not just on demand:
-
-- A daily digest your team wakes up to
-- Background processing of a queue
-- Periodic health checks or summaries
-- Weekly reports
-
-Use the scheduler. Register schedules in your app's lifespan so they survive restarts:
-
-```python
-@asynccontextmanager
-async def lifespan(app):
-    register_schedule(name="daily_digest", cron="0 9 * * 1-5",
-                      endpoint="/workflows/daily-digest/runs")
-    yield
-```
-
-## Step 8: Deploy
-
-Pick a host. Set env vars. Push.
-
-| Host | Path |
-|------|------|
-| Railway | Use the template's `scripts/railway_*.sh` |
-| AWS / GCP / Azure | Container service + managed Postgres + secret manager |
-| Self-hosted | Docker Compose on a VM |
-
-The [deploy page](/runtime/deploy) has the per-host details. The shape is the same: container, Postgres, secret store, public hostname, JWT key.
-
-## Step 9: Iterate from real usage
-
-The first version is wrong about things, and that's expected. The interesting question is *how fast can you find what's wrong*.
+Steps 1-3 should take five minutes once you know your data model. The signals that matter:
 
 | Signal | Where |
 |--------|-------|
-| Wrong answers users complained about | `agno_sessions` joined with feedback table you build |
+| Wrong answers users complained about | `agno_sessions` joined with the feedback table you build |
 | Tools failing in production | `agno_spans` filtered by `status='error'` |
 | Slow runs | `agno_spans` `end_time - start_time` per agent |
 | Cost spikes | `agno_sessions.total_tokens` grouped by `agent_id` and day |
 | Regression after a change | Run [evals](/evals/overview) before deploying |
 
-The fastest improvement loop: a user complains, you find the run, you replay it locally, you fix the prompt or add a learning, you ship.
+## Keep the agent learning
 
-## Step 10: Keep the agent learning
+The agents that get better over time have feedback loops baked in. The agents that get worse are the ones nobody is watching.
 
-The agents that get better over time are the ones with feedback loops. Three patterns the templates use:
+Three patterns the templates use:
 
-| Pattern | Where |
-|---------|-------|
-| **LearningMachine** | Agent stores discovered patterns and retrieves them next time. See [Learning](/learning/overview). |
-| **Knowledge updates** | When you find a wrong-answer pattern, add the right answer to knowledge. The next user gets it. |
-| **Eval-gated deploys** | Every deploy runs an eval suite. Regressions block the merge. |
+**LearningMachine.** Agno's built-in pattern for agents that store discovered facts and retrieve them on the next run. When the agent figures out that the `revenue_v2` table replaced `revenue` last March, it writes that to a learnings table; the next time someone asks a revenue question, that learning is in the prompt. Dash uses this end-to-end. See [Learning](/learning/overview).
 
-The agents that get *worse* over time are the ones nobody is watching. Don't let yours be one of them.
+**Knowledge updates as a feedback loop.** When you find a wrong-answer pattern, add the right answer to knowledge. The user who asked the question gets a fix; every subsequent user gets the right answer the first time. Pal and Scout both lean on this.
+
+**Eval-gated deploys.** Every deploy runs an eval suite. Regressions block the merge. The eval suite grows with the bugs you find — every postmortem ends with a new eval case. Over time the suite becomes the institutional memory of what your agent should and shouldn't do.
 
 ## What's left
 
-You shipped. Now:
+You shipped. The rest is normal product work that AgentOS doesn't try to solve:
 
 | Concern | Where |
 |---------|-------|
-| Pricing, billing, rate limits | Layer in front of AgentOS. Stripe, your own metering, your own limits. |
+| Pricing, billing, rate limits | A layer in front of AgentOS. Stripe, your own metering, your own limits. |
 | Multi-tenant isolation | Per-tenant `db` instances or schema-per-tenant within one db |
 | Compliance (SOC 2, HIPAA, etc.) | RBAC + audit logs + data residency choices in your storage backend |
 | Custom UIs | AG-UI for the chat surface; build the rest as a normal web app calling AgentOS |
 
-These are normal product concerns. AgentOS gives you the runtime, and the product is yours to ship.
+AgentOS gives you the runtime. The product is yours to ship.
 
 ## See it work end-to-end
-
-Each template walks through this whole flow with a specific product in mind:
 
 | Template | Product |
 |----------|---------|

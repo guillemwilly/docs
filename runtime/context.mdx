@@ -1,40 +1,23 @@
 ---
 title: Context
-description: "Knowledge, dependencies, and live context providers feed your agent on every run."
+description: "Three ways to give your agent the right context on every run."
 ---
 
-Context is what the model sees when it generates the next response. The user's message is the obvious part, but the interesting part is everything else: the documentation it can cite, the runtime config it should respect, and the live systems it can pull from.
+An agent is only as good as the context it has access to. You can write the perfect system prompt, but without the right context, the agent will not deliver good results.
 
-AgentOS gives you three primitives for non-message context:
+AgentOS gives you three primitives for getting context to the agent:
 
 | Primitive | Shape | When it loads |
 |-----------|-------|---------------|
 | **Knowledge** | Indexed content (RAG) | Auto-searched before each run, or via tool |
-| **Dependencies** | A dict you pass in | Injected into the prompt and into tools |
-| **Context providers** | Live external systems | Tools the agent calls when it needs them |
+| **Dependencies** | A dict you pass in | Injected into the prompt and available to tools |
+| **Context providers** | Live external systems | A clean tool surface backed by source-scoped sub-agents |
 
-```python
-from agno.agent import Agent
-from agno.context.web.parallel_mcp import ParallelMCPBackend
-from agno.context.web.provider import WebContextProvider
-from agno.knowledge import Knowledge
-
-agent = Agent(
-    model="openai:gpt-5.4",
-    db=db,
-    knowledge=Knowledge(vector_db=...),       # static content (RAG)
-    add_knowledge_to_context=True,
-    dependencies={"tenant": "acme"},           # per-request config
-    add_dependencies_to_context=True,
-    context_providers=[                        # live systems
-        WebContextProvider(backend=ParallelMCPBackend()),
-    ],
-)
-```
+Knowledge is durable and pre-loaded. Dependencies are ephemeral and request-scoped. Context providers are dynamic and authenticated, and they're the primary architectural move for any agent that touches more than one external system. Most production agents use some combination of the three.
 
 ## Knowledge
 
-Knowledge is what the agent looks up. Documentation, policies, code conventions, table schemas. It lives in your database with embeddings and surfaces via similarity search.
+Knowledge is what the agent looks up: documentation, policies, code conventions, table schemas. It lives in your database with embeddings and surfaces via similarity search.
 
 ```python
 from agno.knowledge import Knowledge
@@ -46,8 +29,8 @@ agent = Agent(
     knowledge=Knowledge(
         vector_db=PgVector(table_name="my_kb", db_url="postgresql://..."),
     ),
-    add_knowledge_to_context=True,      # auto-search before each run
-    search_knowledge=True,              # also expose as a callable tool
+    search_knowledge=True,              # recommended: expose as a callable tool
+    add_knowledge_to_context=True,      # traditional RAG: auto-search before each run
 )
 
 agent.knowledge.add_content_from_path("docs/")
@@ -56,14 +39,14 @@ agent.knowledge.add_content_from_url("https://example.com/policies")
 
 | Flag | Behavior |
 |------|----------|
+| `search_knowledge=True` | The agent gets a `search_knowledge_base(query)` tool. Known as Agentic RAG. |
 | `add_knowledge_to_context=True` | AgentOS runs `knowledge.search(message)` before each turn and injects the top-k chunks into the prompt. |
-| `search_knowledge=True` | The agent gets a `search_knowledge_base(query)` tool. Useful for follow-up retrieval mid-run. |
 
-Knowledge supports hybrid search (semantic + keyword), reranking, and chunking. The [Pal](/demo-os/rag) and [Dash](/demo-os/multi-agent-teams/text-to-sql) agents in the demo use it heavily. For the full surface, see [Knowledge](/knowledge/overview).
+Knowledge supports hybrid search, reranking, and chunking.
 
 ## Dependencies
 
-Sometimes an agent needs runtime values that aren't in knowledge: a feature flag, a tenant ID, a per-request DB connection, an API key scoped to the caller. Pass them as `dependencies`:
+Sometimes an agent needs runtime values that aren't in knowledge: a feature flag, a tenant ID, a per-request DB connection, an API key scoped to the caller.
 
 ```python
 from agno.agent import Agent
@@ -102,58 +85,165 @@ For a worked example, see the [Injector agent](/demo-os/context-providers).
 
 ## Context providers
 
-Sometimes the context isn't in your database. It's in Slack. In Drive. In an MCP server. In the user's CRM. AgentOS exposes these through the `ContextProvider` abstraction.
+If you've built an agent with a real number of tools, you've hit three walls:
+
+1. **Context pollution.** Every tool description, schema, and example lands in the system prompt. Slack alone is 8 to 12 tools. Add Drive, GitHub, your CRM, and you're at 50 tools before adding anything custom. Past 20, models start hallucinating tools, calling them with the wrong shape, or skipping the right one.
+2. **Scope collisions.** `search` in one toolkit collides with `search` in another. `send_message` could be Slack, email, or your CRM. The agent picks wrong half the time, and no naming convention fixes it.
+3. **System-prompt sprawl.** Using Slack well requires Slack-specific guidance: look up user IDs before DMing, resolve channel names, prefer `conversations.history` for channels and `conversations.replies` for threads. Multiply by every API. The system prompt becomes the union of every source's quirks.
+
+A `ContextProvider` is a thin layer between the agent and the tools that fixes all three:
+
+<div className="text-center text-2xl font-mono my-10">
+  <span className="text-zinc-400">Agent</span>
+  <span className="mx-3 text-orange-500">↔</span>
+  <span className="text-zinc-200">ContextProvider</span>
+  <span className="mx-3 text-orange-500">↔</span>
+  <span className="text-zinc-400">Tools</span>
+</div>
+
+To the calling agent, each provider exposes exactly two tools: `query_<id>` for natural-language reads, and `update_<id>` for writes (or a clean read-only error). Behind the tool is a sub-agent scoped to that one source. The sub-agent owns the source's tools, the source's quirks, the lookup-before-write patterns, the pagination weirdness. It runs in its own context, returns an answer, and the calling agent gets a clean result.
 
 ```python
+from agno.agent import Agent
 from agno.context.slack import SlackContextProvider
 from agno.context.gdrive import GDriveContextProvider
-from agno.context.mcp import MCPContextProvider
-from agno.context.web.parallel_mcp import ParallelMCPBackend
-from agno.context.web.provider import WebContextProvider
+from agno.context.database import DatabaseContextProvider
+
+slack = SlackContextProvider(id="slack")
+drive = GDriveContextProvider(id="drive")
+crm = DatabaseContextProvider(id="crm", sql_engine=engine, readonly_engine=ro_engine)
 
 agent = Agent(
     model=...,
-    db=db,
-    context_providers=[
-        WebContextProvider(backend=ParallelMCPBackend()),
-        SlackContextProvider(),
-        GDriveContextProvider(),
-        MCPContextProvider(server_name="linear", transport="stdio",
-                           command="npx", args=["-y", "@linear/mcp"]),
-    ],
+    tools=[*slack.get_tools(), *drive.get_tools(), *crm.get_tools()],
 )
 ```
 
-Each provider exposes `query_<id>` (and optionally `update_<id>`) tools on the agent. The agent calls them like any other tool. The provider handles auth, navigation, and pagination on the way to the source.
+The agent sees four tools: `query_slack`, `query_drive`, `query_crm`, `update_crm`. Add ten more sources and the surface stays linear at 2N. The agent's prompt doesn't grow with the number of integrations.
 
-Built-in providers:
+### Built-in providers
 
-| Provider | Tool surface | Source |
-|----------|--------------|--------|
-| `WebContextProvider` | `web_search`, `web_fetch` | Parallel SDK or Parallel's keyless MCP |
-| `FilesystemContextProvider` | `list_files`, `search_files`, `search_content`, `read_file` | A directory you scope at construction |
-| `SlackContextProvider` | `search_workspace`, `get_channel_history`, `get_thread`, `list_users` | Slack workspace via bot token |
-| `GDriveContextProvider` | `search_files`, `list_files`, `read_file` | Google Drive via service account |
-| `DatabaseContextProvider` | `query_<id>`, `update_<id>` | A SQL database (read engine + write sub-agent) |
-| `MCPContextProvider` | `query_mcp_<slug>` | Any MCP server (stdio, SSE, streamable-HTTP) |
+| Provider | Source | Read | Write |
+|----------|--------|------|-------|
+| `FilesystemContextProvider` | A scoped local directory | `query_<id>` | — |
+| `WebContextProvider` | Web search and fetch (Exa or Parallel; SDK or MCP) | `query_<id>` | — |
+| `DatabaseContextProvider` | Any SQL database via SQLAlchemy | `query_<id>` | `update_<id>` |
+| `SlackContextProvider` | A Slack workspace | `query_<id>` | `update_<id>` |
+| `GDriveContextProvider` | Google Drive via service account; all-drives aware | `query_<id>` | — |
+| `GitHubContextProvider` | A cloned GitHub repo | `query_<id>` | `update_<id>` (PR-scoped) |
+| `MCPContextProvider` | Any MCP server (stdio, SSE, streamable-HTTP) | `query_<id>` | — |
 
-The [Scout tutorial](/tutorials/scout/setup) is built end-to-end on context providers. Read it for a worked example of registering, scoping, and querying providers.
+### Web has multiple backends
 
-## Picking the right primitive
+`WebContextProvider` takes a backend, so you can swap providers without touching the agent:
 
-| You want | Use |
-|----------|-----|
-| Static content the agent should retrieve and cite | `knowledge` |
-| Per-request config (feature flags, tenant ID, request scope) | `dependencies` |
-| Live access to an external system (Slack, Drive, MCP) | `context_providers` |
+| Backend | What | When |
+|---------|------|------|
+| `ExaBackend` | Exa direct SDK. `web_search` + `web_extract`. | You have an `EXA_API_KEY` and want full extraction payloads. |
+| `ExaMCPBackend` | Exa public MCP server. Keyless, rate-limited. | First experiment with no signup. Keyed for higher throughput. |
+| `ParallelBackend` | Parallel direct SDK. `web_search` + `web_extract`. | You prefer Parallel's ranking and excerpt shape. Needs `PARALLEL_API_KEY`. |
+| `ParallelMCPBackend` | Parallel public MCP. `web_search` + `web_fetch` (compressed markdown). | Token-efficient output. Keyless for trial; keyed for higher limits. |
 
-The lines blur, but the rule of thumb:
+```python
+from agno.context.web import WebContextProvider, ExaBackend
 
-- **Knowledge** is durable and pre-loaded. You add content once and the agent searches it forever.
-- **Dependencies** are ephemeral and request-scoped. They never persist.
-- **Context providers** are dynamic and authenticated. They fetch on demand against a live source.
+web = WebContextProvider(backend=ExaBackend(), id="web")
+```
 
-A Scout-style agent leans on context providers, a Dash-style SQL agent leans on knowledge, and a multi-tenant SaaS agent leans on dependencies. Most production agents use all three.
+### Read/write separation
+
+Writable providers (Database, Slack, GitHub) run two sub-agents under the hood with minimum privilege per role:
+
+- **Database**: read sub-agent uses the readonly engine; write sub-agent uses the writable engine. The read path can't mutate even if the model tries.
+- **Slack**: read sub-agent gets `search_workspace`, `get_channel_history`, `get_thread`, lookup tools. Write sub-agent gets `send_message` and the lookup tools it needs to resolve names. The reader never sees `send_message`. The writer never sees search.
+- **GitHub**: read sub-agent operates on a clone with read-only Workspace + git tools. Write sub-agent operates on a per-session worktree on a `<prefix>/<task>` branch and ends in a PR. The agent cannot push to the default branch.
+
+These are infrastructure-level guarantees, not prompt instructions. They hold even if the model goes off-script.
+
+### Lifecycle
+
+Some providers hold async resources: MCP sessions, watched inboxes, cloned repos. They implement `asetup()` and `aclose()`. Bracket their use so the resource is owned by a single task:
+
+```python
+await provider.asetup()
+try:
+    # provider.get_tools() is now ready
+    ...
+finally:
+    await provider.aclose()
+```
+
+In an AgentOS app, register providers with the runtime and they're set up and torn down on the FastAPI lifespan automatically. Manual bracketing is for scripts and tests.
+
+Providers without async resources (`FilesystemContextProvider`, `DatabaseContextProvider` with sync engines, the SDK-based web backends) work without `asetup` / `aclose`.
+
+### Multi-provider in one agent
+
+Three providers on one agent compose cleanly because each provider has its own namespace:
+
+```python
+fs = FilesystemContextProvider(id="cookbooks", root="./docs")
+web = WebContextProvider(backend=ExaMCPBackend(), id="web")
+db = DatabaseContextProvider(id="releases", sql_engine=engine, readonly_engine=engine)
+
+agent = Agent(
+    model=...,
+    tools=[*fs.get_tools(), *web.get_tools(), *db.get_tools()],
+    instructions="\n".join([fs.instructions(), web.instructions(), db.instructions()]),
+)
+```
+
+The agent sees `query_cookbooks`, `query_web`, `query_releases` and picks the right one per question. The compositional payoff lands when one provider's output feeds another's query: pull a topic from Slack, run a web search on it, synthesize the briefing in one turn.
+
+### Custom providers
+
+When the built-ins don't fit, subclass `ContextProvider`. The base class handles tool wrapping, name derivation, and error shaping. You implement `aquery` and `astatus`:
+
+```python
+from agno.context import Answer, ContextProvider, Status
+
+class FAQContextProvider(ContextProvider):
+    async def astatus(self) -> Status:
+        return Status(ok=True, detail=f"{len(FAQ)} entries")
+
+    async def aquery(self, question: str) -> Answer:
+        key = next((k for k in FAQ if k in question.lower()), None)
+        return Answer(text=FAQ[key] if key else "No FAQ entry matches that.")
+
+faq = FAQContextProvider(id="faq")
+agent = Agent(model=..., tools=faq.get_tools())
+```
+
+The agent now has a `query_faq` tool. Same shape as every built-in provider.
+
+### Configurable sub-agent model
+
+Every provider runs its own sub-agent on a configurable model. Default to a cheap one for the source-specific work and let the calling agent use a stronger model for synthesis:
+
+```python
+from agno.models.openai import OpenAIResponses
+
+slack = SlackContextProvider(id="slack", model=OpenAIResponses(id="gpt-5.4-mini"))
+
+agent = Agent(model=OpenAIResponses(id="gpt-5.4"), tools=slack.get_tools())
+```
+
+The sub-agent does the tool work; the calling agent does the reasoning. On most workloads this is cheaper *and* faster than putting every source's tools on one big agent.
+
+### Worked examples
+
+The full cookbook set is in [`cookbook/12_context`](https://github.com/agno-agi/agno/tree/main/cookbook/12_context). Notable examples:
+
+| Cookbook | What it shows |
+|----------|---------------|
+| [`00_filesystem.py`](https://github.com/agno-agi/agno/blob/main/cookbook/12_context/00_filesystem.py) | Browse local files via `FilesystemContextProvider` |
+| [`04_database_read_write.py`](https://github.com/agno-agi/agno/blob/main/cookbook/12_context/04_database_read_write.py) | End-to-end SQLite round trip: write through `update_<id>`, read through `query_<id>`, verify via direct SQL |
+| [`08_multi_provider.py`](https://github.com/agno-agi/agno/blob/main/cookbook/12_context/08_multi_provider.py) | Three providers on one agent, no name collisions |
+| [`09_web_plus_slack.py`](https://github.com/agno-agi/agno/blob/main/cookbook/12_context/09_web_plus_slack.py) | Compositional: Slack topics feed per-topic web searches, agent synthesizes |
+| [`10_custom_provider.py`](https://github.com/agno-agi/agno/blob/main/cookbook/12_context/10_custom_provider.py) | Subclass `ContextProvider` for your own source |
+| [`12_github.py`](https://github.com/agno-agi/agno/blob/main/cookbook/12_context/12_github.py) | GitHub: read public repo + edit-via-PR with branch-prefix safety |
+
+The [Scout tutorial](/tutorials/scout/setup) is a full agent built on context providers from the ground up.
 
 ## Next
 

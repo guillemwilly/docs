@@ -1,9 +1,9 @@
 ---
 title: Deploy
-description: "Ship your AgentOS to Docker, Railway, AWS, or any container host."
+description: "Ship AgentOS as a normal Python service. Container, Postgres, public hostname."
 ---
 
-AgentOS is a FastAPI app. If you can deploy a Dockerfile, you can deploy AgentOS.
+AgentOS is a FastAPI app. Deploy it like any normal Python service: a container, a Postgres database, a public hostname, and a few env vars.
 
 ```python
 from agno.os import AgentOS
@@ -15,22 +15,19 @@ if __name__ == "__main__":
     agent_os.serve(app="my_app:app", reload=False)
 ```
 
-That's the entrypoint. Anything that can run `uvicorn my_app:app` can run AgentOS.
-
 ## What you need to ship
 
 | Resource | Why |
 |----------|-----|
 | **Container host** | Runs the FastAPI process |
 | **PostgreSQL** | Sessions, memory, knowledge, traces, schedules |
-| **Public hostname** | Required for Slack/Telegram/WhatsApp interfaces |
+| **Public hostname** | Required for Slack, Telegram, WhatsApp interfaces |
+| **HTTPS** | Required for every webhook interface; terminate at your load balancer or reverse proxy |
 | **Env vars** | At minimum `OPENAI_API_KEY` and `JWT_VERIFICATION_KEY` (in prod) |
 
-That's it. AgentOS handles queues, worker pools, the scheduler, and JWT auth in-process, so there's no separate worker fleet or auth server to operate.
+AgentOS handles queues, worker pools, the scheduler, and JWT auth in-process. No separate worker fleet, no separate auth server, no separate cron container.
 
 ## Local with Docker Compose
-
-The fastest local setup:
 
 ```yaml
 services:
@@ -55,7 +52,7 @@ volumes:
   pgdata:
 ```
 
-`agnohq/pgvector` is Postgres 18 with the pgvector extension preinstalled, which knowledge needs.
+`agnohq/pgvector` is Postgres 18 with the pgvector extension preinstalled — needed for knowledge embeddings.
 
 ```bash
 docker compose up -d --build
@@ -66,7 +63,7 @@ The [Scout](/tutorials/scout/setup), [Dash](/tutorials/dash/setup), and [Coda](/
 
 ## Railway
 
-Railway is the fastest one-command deploy. Each tutorial template ships with `scripts/railway_*.sh`:
+Each tutorial template ships with Railway scripts for one-command deploys:
 
 ```bash
 railway login
@@ -75,22 +72,19 @@ railway login
 ./scripts/railway_redeploy.sh  # push code updates
 ```
 
-`up.sh` provisions the project, adds `pgvector` with a persistent volume, creates the app service with env vars, and assigns a public domain. The whole thing takes under five minutes (the domain takes ~5 more to resolve).
+`up.sh` provisions the project, adds `pgvector` with a persistent volume, creates the app service with env vars, and assigns a public domain.
 
-Walkthroughs:
-- [Scout deploy](/tutorials/scout/deploy-to-railway)
-- [Dash deploy](/tutorials/dash/deploy-to-railway) (includes JWT key setup)
-- [Coda deploy](/tutorials/coda/deploy-to-railway) (includes JWT key setup)
+Walkthroughs: [Scout deploy](/tutorials/scout/deploy-to-railway), [Dash deploy](/tutorials/dash/deploy-to-railway), [Coda deploy](/tutorials/coda/deploy-to-railway).
 
-## AWS, GCP, Azure
+## AWS, GCP, and Azure
 
 Any container platform works. The shape:
 
-| Service | What it is | What runs in it |
-|---------|-----------|-----------------|
+| Component | Service options | What runs in it |
+|-----------|-----------------|-----------------|
 | **App service** | ECS Fargate, Cloud Run, App Service | The AgentOS container, port 8000 |
 | **Postgres** | RDS, Cloud SQL, Postgres Flexible Server | Sessions, memory, knowledge, traces |
-| **Load balancer / ingress** | ALB, Cloud Load Balancing, Application Gateway | Public HTTPS |
+| **Load balancer / ingress** | ALB, Cloud Load Balancing, Application Gateway | Public HTTPS termination |
 | **Secret manager** | Secrets Manager, Secret Manager, Key Vault | `OPENAI_API_KEY`, `JWT_VERIFICATION_KEY` |
 
 Health check the `/health` endpoint. AgentOS responds `{"status":"ok"}` when the app is ready.
@@ -103,42 +97,34 @@ AgentOS is stateless. State lives in `db`. Scale horizontally:
 |---------|----------|
 | Throughput | Add app replicas behind a load balancer |
 | LLM rate limits | Use a queue or rate limiter in front of the model client |
-| Long-running runs | Run as background hooks (`run_in_background=True`) so the response returns immediately |
-| Schedule fan-out | The scheduler polls a single replica's lifespan; for HA, use leader election or pin scheduling to one replica |
+| Long-running runs | Use `background=true` on the run endpoint, then poll for completion (see [Serve as an API](/runtime/serve-as-api)) |
+| Side effects without blocking the response | Background hooks with `run_in_background=True` |
+| Schedule fan-out | The scheduler runs on a single replica's lifespan; for HA, use leader election or pin scheduling to one replica |
 | Trace volume | Use a separate `trace_db` to keep the primary lean (see [Observability](/runtime/observability)) |
 
 For the leader-election pattern with multiple replicas, see [Scheduler HA](/agent-os/scheduler/overview).
 
 ## Production checklist
 
-- [ ] `RUNTIME_ENV=prd`. Enables JWT auth.
-- [ ] `JWT_VERIFICATION_KEY` set. See [Security & Auth](/runtime/security-and-auth).
-- [ ] `OPENAI_API_KEY` (or other model keys) in a secret manager, not in source
-- [ ] Postgres has a persistent volume / managed backup
-- [ ] Health check pointed at `/health`
-- [ ] Tracing on (`tracing=True`) so you can debug bad runs
-- [ ] At least one [interface](/runtime/interfaces) wired up (Slack, custom HTTP, etc.)
-- [ ] [Pre-hooks](/runtime/human-approval) for PII / injection guarding if you handle untrusted input
-- [ ] `requires_confirmation` on irreversible tools
+**Auth and secrets**
+- `RUNTIME_ENV=prd` enables JWT auth
+- `JWT_VERIFICATION_KEY` set (see [Security & Auth](/runtime/security-and-auth))
+- `OPENAI_API_KEY` and other model keys in a secret manager, not in source
+
+**Infrastructure**
+- Postgres has a persistent volume or managed backup
+- HTTPS terminating at your load balancer or reverse proxy
+- Health check pointed at `/health`
+
+**Operational**
+- Tracing on (`tracing=True`) so you can debug bad runs
+- At least one [interface](/runtime/interfaces) wired up
+- [Pre-hooks](/runtime/human-approval) for PII or injection guarding if you handle untrusted input
+- `requires_confirmation=True` on irreversible tools
 
 ## Updating your deployment
 
-Code change:
-
-```bash
-git push                       # if your CI auto-deploys
-# or
-./scripts/railway_redeploy.sh
-```
-
-Env var change:
-
-```bash
-./scripts/railway_env.sh
-# Railway auto-redeploys when env values change.
-```
-
-Database migration: AgentOS creates the tables it needs on first boot. Schema changes are additive (new columns, new tables) and forward-compatible, so no migration tool is required for stock AgentOS tables. Your own tables you migrate however you like.
+Code changes: `git push` if CI auto-deploys, or `./scripts/railway_redeploy.sh`. Env changes: `./scripts/railway_env.sh` (Railway auto-redeploys when env values change). Database changes: AgentOS handles its own tables — schema changes are additive and forward-compatible, so no migration tool is required for stock AgentOS tables. Application tables you migrate however you like (Alembic, raw SQL, dbt, your call).
 
 ## Next
 

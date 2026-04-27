@@ -1,46 +1,21 @@
 ---
 title: Human Approval
-description: "Pause runs for user confirmation, admin approval, or external execution."
+description: "Three tiers of approval, with audit trails for everything that needs a human."
 ---
 
-Some agent actions shouldn't run unattended: sending a refund, restarting a production service, deleting a customer record, posting to a public Slack channel. AgentOS lets you mark a tool as needing human approval, and the run pauses until that human responds.
+Every agent action falls into one of three buckets:
 
-Approval can come from three places:
+| Tier | Who decides | Examples |
+|------|-------------|----------|
+| **No approval** | Nobody. The agent just runs. | Reading files, searching knowledge, querying a database, summarizing a doc |
+| **User approval** | The person asking the agent | Sending an email, writing to a file, running a shell command, modifying a record |
+| **Admin approval** | A designated approver, not the user | Issuing a refund, granting permissions, deploying to prod, deleting customer data |
 
-| Approver | Pattern | Example |
-|----------|---------|---------|
-| **The user** asking the agent | `requires_confirmation=True` | "Approve this refund I just asked for?" |
-| **An admin** with policy authority | `@approval(type="required")` | "Refunds over $500 need a finance lead's sign-off" |
-| **An external system** with its own approval flow | `external_execution=True` | "Submit to our existing change-management tool" |
-
-```python
-from agno.tools import tool
-from agno.approval.decorator import approval
-
-@approval(type="required")
-@tool(requires_confirmation=True)
-def issue_refund(customer_id: str, amount: float, reason: str) -> str:
-    return charge_refund(customer_id, amount)
-
-agent = Agent(model="openai:gpt-5.4", tools=[issue_refund])
-```
-
-When the agent decides to call `issue_refund`, the run pauses. The API surfaces a pending approval. A human approves or rejects. The run resumes with the answer.
-
-## The four pause patterns
-
-| Pattern | Decorator / param | Behavior |
-|---------|-------------------|----------|
-| **User confirmation** | `@tool(requires_confirmation=True)` | "Do you approve this exact tool call?" Yes/No. |
-| **User input** | `@tool(requires_user_input=True)` | "I need more info to proceed." Free-form answer. |
-| **External execution** | `@tool(external_execution=True)` | "Run this externally and tell me the result." For systems with their own approval flows. |
-| **Admin approval** | `@approval(type="required" \| "audit")` | Policy gate independent of the user. `required` blocks. `audit` logs without blocking. |
-
-`@approval` and `requires_confirmation` compose. The audit trail captures both the tool call and every human decision along the way.
+Most agent actions belong in the first bucket. Putting approval gates on reads slows you down for no reason. The interesting work is getting the second and third tiers right.
 
 ## User confirmation
 
-The user asking the agent to do something gets to confirm the actual tool call before it fires:
+The user asking the agent to do something gets to confirm the actual tool call before it fires. This is what Claude Code does when it asks "Can I run this command?" — and what your agent should do for any tool that changes state.
 
 ```python
 from agno.tools import tool
@@ -50,27 +25,27 @@ def restart_service(service_name: str) -> str:
     return ops_client.restart(service_name)
 ```
 
-In Slack, the agent posts an inline confirmation prompt. In the AgentOS UI, the run shows up as **Awaiting approval** with Approve / Reject buttons. The user clicks. The run resumes.
+When the agent decides to call `restart_service`, the run pauses. In Slack, the agent posts an inline confirmation prompt. In the AgentOS UI, the run shows up as **Awaiting approval** with Approve / Reject buttons. The user clicks. The run resumes.
 
-This is the right pattern for "this exact action, yes or no?" cases. Reversibility doesn't matter. Even reversible actions benefit from "are you sure?" before executing.
+This covers shell commands, sends, writes, API calls with side effects, anything that changes state in the real world. Even reversible actions benefit from "are you sure?" before executing.
 
 ## Admin approval
 
-Some actions need approval from someone with *policy authority*, not just the user asking. Refunds over a threshold. Data exports for compliance review. Production deploys.
+Some actions need approval from someone with policy authority, not just the user asking. A user can ask the agent to issue a $10K refund. The user shouldn't be the one approving it. Admin approval routes the action to a designated approver pool with the right role permissions.
 
 ```python
-from agno.approval.decorator import approval
 from agno.tools import tool
+from agno.approval.decorator import approval
 
 @approval(type="required")
 @tool
-def export_customer_data(customer_id: str) -> str:
-    return get_customer_data(customer_id)
+def issue_refund(customer_id: str, amount: float) -> str:
+    return charge_refund(customer_id, amount)
 
 @approval(type="audit")
 @tool
-def generate_compliance_report(month: str) -> str:
-    return build_report(month)
+def export_customer_data(customer_id: str) -> str:
+    return get_customer_data(customer_id)
 ```
 
 | `@approval(type=...)` | Behavior |
@@ -78,34 +53,62 @@ def generate_compliance_report(month: str) -> str:
 | `"required"` | Run blocks until a designated approver signs off. The audit trail captures the approver's identity. |
 | `"audit"` | Run continues. Tool call gets logged to the audit trail asynchronously. Used when policy says "track but don't gate." |
 
-Admin approval routes to the configured approver pool, not the user asking. See [Approvals](/agent-os/approvals/overview) for routing setup.
+This is the tier most frameworks don't have, and the one that matters most for production agents in enterprises. When an admin approves a $10K refund triggered by an agent, the approval, who approved it, when, and the full context of the request all need to be retained for the life of your product.
 
-## User input mid-run
+`@approval` and `requires_confirmation` compose. A refund tool can require both — the user confirms they want it, the admin signs off on the amount. The audit trail captures every decision along the way.
 
-Sometimes the agent needs more info from the user before it can finish. `requires_user_input=True` pauses and asks:
+```python
+@approval(type="required")
+@tool(requires_confirmation=True)
+def issue_refund(customer_id: str, amount: float, reason: str) -> str:
+    return charge_refund(customer_id, amount)
+```
+
+See [Approvals](/agent-os/approvals/overview) for routing setup.
+
+## Traces vs audit logs
+
+These are different things, and they need different storage:
+
+| | Traces | Audit logs |
+|---|--------|------------|
+| **What they capture** | Every step of every run: model calls, tool calls, latency, tokens | Approved actions: who approved, when, what context |
+| **Purpose** | Debugging and optimization | Accountability and compliance |
+| **Retention** | 30-120 days typical | Lifetime of the product |
+| **Access pattern** | High volume, infrequent reads | Low volume, audited reads |
+| **Storage** | `agno_traces`, `agno_spans` | `agno_approvals` plus your own audit table |
+
+If you treat them as one thing, you'll either delete audit logs too early (compliance risk) or pay to keep traces forever. AgentOS keeps them in separate tables for this reason. For high-volume deployments, traces can also live in a [separate database](/runtime/storage#splitting-concerns-across-databases) so audit storage stays cheap and durable.
+
+For custom audit shapes (regulatory, internal SOX-style), add a post-hook that writes to your own audit table. See [Observability](/runtime/observability#audit-logs-via-post-hooks).
+
+## Two related primitives
+
+Not every pause is an approval. Two adjacent patterns let the run wait on a human or another system without the binary approve/reject shape.
+
+### User input mid-run
+
+The agent needs more info from the user before it can finish:
 
 ```python
 @tool(requires_user_input=True)
 def file_support_ticket(summary: str) -> str:
-    # The agent is told it must collect a description from the user
+    # The agent must collect a description from the user
     # before this tool can complete.
     ...
 ```
 
 The agent prompts the user with the structured request. The user responds. The run resumes with the response in scope.
 
-For more elaborate forms (multi-question, branching), use `UserFeedbackTools` and `UserControlFlowTools`. See the [Feedback agent demo](/demo-os/human-in-the-loop).
+For multi-question or branching forms, use `UserFeedbackTools` and `UserControlFlowTools`. See the [Feedback agent demo](/demo-os/human-in-the-loop).
 
-## External execution
+### External execution
 
-Some tools route through systems that have their own approval flows. A change-management tool. A Jira workflow. A CI pipeline that requires manual promotion.
+The tool routes through a system with its own approval flow: a change-management tool, a Jira workflow, a CI pipeline that requires manual promotion.
 
 ```python
 @tool(external_execution=True)
 def submit_to_change_management(payload: dict) -> str:
-    # AgentOS marks the run as awaiting external execution.
-    # Your external system processes it, then calls back to AgentOS
-    # with the result.
     return submit(payload)
 ```
 
@@ -128,7 +131,11 @@ result = agent.continue_run(run_id=run.run_id, requirements=run.requirements)
 
 In the AgentOS UI and Slack, this happens via buttons. The same `continue_run` endpoint is what those surfaces call.
 
-## Guardrails for inputs
+## Automated guardrails
+
+Some checks shouldn't wait on a human. PII masking, prompt injection detection, content moderation, audit logging — these run inline as hooks.
+
+### Pre-hooks (input)
 
 Pre-hooks run before the model sees the user's message. Use them to mask PII, block prompt injections, or moderate content:
 
@@ -150,9 +157,9 @@ agent = Agent(
 )
 ```
 
-The user's input gets sanitized before it reaches the model: PII is masked and injection attempts are blocked. The agent never sees the raw input if a guardrail rejects it.
+The user's input gets sanitized before it reaches the model. The agent never sees the raw input if a guardrail rejects it.
 
-## Hooks for outputs
+### Post-hooks (output)
 
 Post-hooks run after the model produces output. Use them for output guardrails, audit logs, notifications:
 
@@ -172,18 +179,6 @@ agent = Agent(model=..., post_hooks=[audit_log])
 ```
 
 `run_in_background=True` makes the hook run as a FastAPI background task so the user gets the response without waiting on the audit write.
-
-## Picking the right pattern
-
-| Situation | Use |
-|-----------|-----|
-| Tool call is irreversible (refund, delete, deploy) | `requires_confirmation=True` |
-| Action needs sign-off from someone other than the user | `@approval(type="required")` |
-| Action needs to be logged for compliance, not gated | `@approval(type="audit")` |
-| Agent needs more info from the user mid-run | `requires_user_input=True` |
-| Tool runs in another system with its own approval flow | `external_execution=True` |
-| Block PII / prompt injection before the model sees it | `pre_hooks=[PIIDetectionGuardrail(), PromptInjectionGuardrail()]` |
-| Audit every run | `post_hooks=[audit_hook]` with `run_in_background=True` |
 
 ## Worked examples
 

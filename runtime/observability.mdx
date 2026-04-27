@@ -1,9 +1,9 @@
 ---
 title: Observability
-description: "OpenTelemetry tracing, run history, and audit logs out of the box."
+description: "OpenTelemetry tracing, run history, and audit logs in your own database."
 ---
 
-When an agent answers wrong, you need to know why: which tool it called, what it passed in, and what the model actually saw. AgentOS captures all of it through OpenTelemetry-compatible tracing, persisted in your `db`.
+When an agent answers wrong, you need to know why: which tool it called, what it passed in, what the model actually saw. AgentOS captures all of it through OpenTelemetry-compatible tracing, persisted in your `db`.
 
 ```python
 from agno.os import AgentOS
@@ -11,11 +11,17 @@ from agno.os import AgentOS
 agent_os = AgentOS(
     agents=[agent],
     db=db,
-    tracing=True,                # turn it on
+    tracing=True,
 )
 ```
 
-That's it. Every run produces a trace tree: spans for the LLM call, each tool, hook, retrieval, and team delegation. Stored in `agno_traces` and `agno_spans` in the same `db` you use for sessions.
+Every run produces a trace tree: spans for the LLM call, each tool, hook, retrieval, and team delegation. Stored in `agno_traces` and `agno_spans` in the same `db` you use for sessions.
+
+## Own your traces
+
+Traces are your training data. Every model call, every tool result, every retrieval, every step of every run — that's the corpus you'd use to fine-tune, evaluate, or build your next agent on. Send it to a third-party observability platform as the only store and you've handed over the most valuable data your product generates.
+
+AgentOS writes traces to your database by default. You own the schema, the retention, the access patterns. You can still ship a copy to Langfuse or Arize for their dashboards (we even make that easy, see below), but your primary store is yours.
 
 ## What gets captured
 
@@ -48,13 +54,9 @@ LIMIT 10;
 
 The [control plane](https://os.agno.com) renders the same traces visually. Click a run and see the full tree: LLM hops, tool calls with their inputs and outputs, hooks, sub-agent traces. Filter by user, session, time range.
 
-<Frame caption="AgentOS UI traces view showing a run tree with LLM calls, tool calls, and team delegation.">
-  <img src="/images/traces-in-os.png" alt="AgentOS traces view" />
-</Frame>
-
 ## Multi-database tracing
 
-If you want traces in a different database than your sessions/memory (common in production for cost or retention reasons), pass a separate `db`:
+Traces are high-volume and write-heavy. For production deployments, you'll often want them in a separate database from sessions and memory — different cost profile, different retention, different access patterns:
 
 ```python
 from agno.db.postgres import PostgresDb
@@ -74,19 +76,7 @@ See [Multi-DB tracing](/agent-os/tracing/usage/tracing-with-multi-db-scenario) f
 
 ## External providers
 
-Send traces to Langfuse, Langsmith, Arize, or any OpenTelemetry endpoint by adding an exporter:
-
-| Provider | Doc |
-|----------|-----|
-| Langfuse | [Langfuse](/observability/langfuse) |
-| Langsmith | [Langsmith](/observability/langsmith) |
-| Arize | [Arize](/observability/arize) |
-| Langtrace | [Langtrace](/observability/langtrace) |
-| Logfire | [Logfire](/observability/logfire) |
-| MLflow | [MLflow](/observability/mlflow) |
-| Maxim | [Maxim](/observability/maxim) |
-
-The full list is in the [Observability section](/observability/agentops).
+Send traces to Langfuse, Langsmith, Arize, or any OpenTelemetry endpoint by adding an exporter. AgentOS still writes to your database first; the exporter is a copy, not a redirect. The full list lives in the [Observability section](/observability/agentops): [Langfuse](/observability/langfuse), [Langsmith](/observability/langsmith), [Arize](/observability/arize), [Langtrace](/observability/langtrace), [Logfire](/observability/logfire), [MLflow](/observability/mlflow), [Maxim](/observability/maxim).
 
 ## Run history
 
@@ -102,9 +92,22 @@ LIMIT 100;
 
 Same shape works for teams (`agno_team_sessions`) and workflows (`agno_workflow_sessions`).
 
+## Traces are not audit logs
+
+Traces tell you *what happened*. Audit logs tell you *what was approved*. They have different retention, different access patterns, and different consumers — and conflating them gets expensive (keeping every trace forever) or risky (deleting audit data your compliance team needs).
+
+| | Traces | Audit logs |
+|---|--------|------------|
+| **What they capture** | Every step of every run | Approved actions and who approved them |
+| **Purpose** | Debugging, optimization, training data | Accountability, compliance |
+| **Retention** | 30-120 days typical | Lifetime of the product |
+| **Storage** | `agno_traces`, `agno_spans` | `agno_approvals` plus your own audit table |
+
+For approved actions, see [Human Approval](/runtime/human-approval). For custom audit shapes, use post-hooks (below).
+
 ## Audit logs via post-hooks
 
-When you need an audit trail with custom shape (regulatory compliance, internal SOX-style logging), add a post-hook that writes to your audit table:
+When you need an audit trail with custom shape (regulatory compliance, internal SOX-style logging), add a post-hook that writes to your own audit table:
 
 ```python
 from agno.hooks import hook
@@ -124,7 +127,7 @@ def audit_log(run_output, agent):
 agent = Agent(..., post_hooks=[audit_log])
 ```
 
-`run_in_background=True` keeps the audit write off the response path. See [Hooks](/runtime/human-approval) for the full pattern.
+`run_in_background=True` keeps the audit write off the response path. See [Hooks](/runtime/human-approval#post-hooks-output) for the full pattern.
 
 ## What to watch in production
 
