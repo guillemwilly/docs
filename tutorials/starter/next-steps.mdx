@@ -1,0 +1,165 @@
+---
+title: Next Steps
+description: "Extend the Starter template into your own product."
+---
+
+The Starter template gives you AgentOS, Postgres, Docker, and Railway as scaffolding. The sections below cover the most common moves for turning it into your own product: adding agents, swapping models, wiring up tools and knowledge, exposing it through Slack.
+
+## Add your own agent
+
+Create `agents/my_agent.py`:
+
+```python
+from agno.agent import Agent
+from agno.models.openai import OpenAIResponses
+
+from db import get_postgres_db
+
+my_agent = Agent(
+    id="my-agent",
+    name="My Agent",
+    model=OpenAIResponses(id="gpt-5.2"),
+    db=get_postgres_db(),
+    instructions="You are a helpful assistant.",
+)
+```
+
+Register it in `app/main.py`:
+
+```python
+from agents.my_agent import my_agent
+
+agent_os = AgentOS(
+    name="AgentOS",
+    agents=[knowledge_agent, mcp_agent, my_agent],
+    ...
+)
+```
+
+Restart:
+
+```bash
+docker compose restart
+```
+
+The agent shows up in the AgentOS UI and at `/agents/my-agent` in the API.
+
+## Add tools to an agent
+
+Agno ships 100+ tool integrations. See the [full toolkit reference](/tools/toolkits/overview).
+
+```python
+from agno.tools.slack import SlackTools
+from agno.tools.googlesheets import GoogleSheetsTools
+
+my_agent = Agent(
+    ...
+    tools=[
+        SlackTools(),
+        GoogleSheetsTools(),
+    ],
+)
+```
+
+Each toolkit reads its credentials from environment variables. Add them to `.env` for local dev and to the Railway service for production.
+
+## Use a different model provider
+
+To switch to Anthropic:
+
+1. Set `ANTHROPIC_API_KEY` in `.env`.
+2. Add `anthropic` to `pyproject.toml`.
+3. Update the agent's `model=` to use Claude.
+4. Run `./scripts/generate_requirements.sh && docker compose up -d --build`.
+
+```python
+from agno.models.anthropic import Claude
+
+my_agent = Agent(
+    ...
+    model=Claude(id="claude-sonnet-4-5"),
+)
+```
+
+The same pattern works for Google (`google-genai`), Mistral (`mistralai`), and the other [supported providers](/models/overview).
+
+## Add a Slack interface
+
+The Starter template doesn't ship a Slack manifest, but Agno does ship a Slack interface. Wire it up by setting `SLACK_BOT_TOKEN` and `SLACK_SIGNING_SECRET`, then:
+
+```python
+from agno.os.interfaces.slack import Slack
+
+agent_os = AgentOS(
+    ...
+    interfaces=[Slack(agent=my_agent)],
+)
+```
+
+Full setup, including the manifest, scopes, and tunnel-vs-Railway choice: [Slack interface](/agent-os/interfaces/slack/introduction).
+
+## Add more knowledge sources
+
+Edit `load_default_documents()` in `agents/knowledge_agent.py`:
+
+```python
+def load_default_documents() -> None:
+    knowledge.insert(
+        name="Engineering Handbook",
+        url="https://internal.example.com/handbook.md",
+        skip_if_exists=True,
+    )
+    knowledge.insert(
+        name="Onboarding Doc",
+        path="./docs/onboarding.pdf",
+        skip_if_exists=True,
+    )
+```
+
+Reload:
+
+```bash
+# Local
+docker exec -it agentos-api python -m agents.knowledge_agent
+
+# Railway
+railway run python -m agents.knowledge_agent
+```
+
+`skip_if_exists=True` makes the loader idempotent across reruns.
+
+## Schedule background work
+
+AgentOS includes a scheduler. Register a function in `app/main.py` and it runs on the cadence you set:
+
+```python
+from app.tasks import morning_digest
+
+agent_os = AgentOS(
+    ...
+    scheduled_tasks=[
+        ("0 9 * * *", morning_digest),
+    ],
+)
+```
+
+The Coda template uses this pattern for daily digests, issue triage, and repo sync. See [Scheduling](/runtime/scheduling) for the API and [Coda's `tasks/`](https://github.com/agno-agi/coda/tree/main/tasks) for a worked example.
+
+## Other knobs
+
+| Task | Where |
+|------|-------|
+| Add a new Python dependency | Edit `pyproject.toml`, run `./scripts/generate_requirements.sh`, rebuild |
+| Change the database password | Edit `.env`, restart `docker compose` |
+| Run without Docker | `./scripts/venv_setup.sh` then `python -m app.main` |
+| Customize AgentOS config | Edit `app/config.yaml` |
+
+## Going deeper
+
+| To learn | See |
+|----------|-----|
+| The full AgentOS feature set | [Demo OS](/demo-os/overview) |
+| How knowledge and Agentic RAG work | [Knowledge](/knowledge/overview) |
+| How MCP integrates with Agno | [MCP](/agent-os/mcp/mcp) |
+| Comparable templates | [Scout](/tutorials/scout/overview), [Dash](/tutorials/dash/overview), [Coda](/tutorials/coda/overview) |
+| Building a fully custom AgentOS app | [Build a Product](/runtime/build-a-product) |

@@ -1,0 +1,120 @@
+---
+title: Storage
+description: "One database for sessions, memory, knowledge, traces, schedules, and approvals."
+---
+
+Everything an agent persists lives in a `db` object: sessions, memory, knowledge, traces, schedules, approvals. The interface is identical across backends. Pick from JSON files (local or cloud), embedded (SQLite), relational (Postgres, MySQL), document (MongoDB), key-value (Redis, DynamoDB, Firestore), or distributed (SingleStore).
+
+```python
+from agno.db.postgres import PostgresDb
+from agno.os import AgentOS
+
+db = PostgresDb(db_url="postgresql://user:pass@host:5432/agno")
+
+agent_os = AgentOS(agents=[agent], db=db)
+```
+
+That single line brings up every table AgentOS needs on first boot. No schema to declare.
+
+## What gets stored
+
+| Table | Holds |
+|-------|-------|
+| `agno_sessions` | Conversation history per `(user_id, session_id)` |
+| `agno_memories` | User memories the agent decides to keep |
+| `agno_knowledge` | Embeddings |
+| `agno_traces`, `agno_spans` | OpenTelemetry traces |
+| `agno_approvals` | Pending and resolved HITL requests |
+| `agno_schedules`, `agno_schedule_runs` | Cron jobs |
+| `agno_metrics`, `agno_evals` | Metrics and eval results |
+
+Backend-specific names may vary, but the conceptual layout holds. Schema changes are additive and forward-compatible.
+
+## Pick a backend
+
+`PostgresDb` is the default for every tutorial template and the recommended production database. It pairs with `PgVector` to keep relational data and embeddings on the same engine.
+
+| Backend | When to use |
+|---------|-------------|
+| [`PostgresDb`](/database/postgres) | Production. Vector + relational on one box. |
+| [`SqliteDb`](/database/sqlite) | Local dev, single-user demos, edge deployments |
+| [`MongoDb`](/database/mongodb) | Already on Mongo |
+| [`MysqlDb`](/database/mysql) | Already on MySQL |
+| [`SinglestoreDb`](/database/singlestore) | Vector + analytics on one engine, high-throughput |
+| [`RedisDb`](/database/redis) | Cache-friendly, ephemeral sessions |
+| [`DynamoDb`](/database/dynamodb) | AWS-native, serverless |
+| [`FirestoreDb`](/database/firestore) | GCP-native, serverless |
+| [`GCSJsonDb`](/database/gcs) | Cheap cold storage, knowledge as JSON in Cloud Storage |
+| [`InMemoryDb`](/database/in-memory) | Tests, ephemeral demos |
+
+Managed-service variants ([Neon](/database/neon), [Supabase](/database/supabase)) and async drivers ([async-postgres](/database/async-postgres), [async-sqlite](/database/async-sqlite), [async-mongo](/database/async-mongo)) can be explored under the main [Database](/database/overview) documentation.
+
+## Vector storage
+
+Knowledge needs a vector store and agno supports every vector database out of the box.
+
+```python
+from agno.knowledge import Knowledge
+from agno.vector_db.pgvector import PgVector
+
+agent = Agent(
+    db=db,
+    knowledge=Knowledge(
+        vector_db=PgVector(
+            table_name="my_kb",
+            db_url=DB_URL,
+            search_type="hybrid",   # vector + BM25
+        ),
+    ),
+)
+```
+
+Other options: LanceDB, Qdrant, Weaviate, Pinecone, Chroma, MongoDB Atlas, Cosmos, Cassandra, ClickHouse, SurrealDB, Milvus. See [Vector Stores](/knowledge/vector-stores/index).
+
+For most production AgentOS deployments, **PgVector + PostgresDb on the same Postgres** is the right default. One database, hybrid search, transactional reads, no extra service to operate.
+
+## Splitting concerns across databases
+
+For larger deployments, pass dedicated databases per role:
+
+```python
+agent_os = AgentOS(
+    agents=[agent],
+    db=PostgresDb(db_url="postgresql://primary/..."),       # sessions, memory, knowledge
+    trace_db=PostgresDb(db_url="postgresql://traces/..."),  # high-volume traces
+    eval_db=PostgresDb(db_url="postgresql://evals/..."),    # eval results
+)
+```
+
+Common splits: a separate trace DB to keep high-volume writes off the primary read path; a separate eval DB for different access patterns and retention; per-tenant DBs for strict isolation. See [Multi-DB tracing](/agent-os/tracing/overview).
+
+## When `db` isn't enough
+
+Some agents need direct database connections in tools (SQL agents, BI agents, agents that update CRM tables). Pass them via `dependencies`:
+
+```python
+agent = Agent(
+    model=...,
+    db=db,                    # AgentOS state
+    dependencies={
+        "user_db": user_engine,   # the application database
+    },
+    add_dependencies_to_context=True,
+)
+```
+
+This is how [Dash](/demo-os/multi-agent-teams/text-to-sql) keeps the AgentOS database separate from the metrics database it queries. AgentOS state in one place, application data in another, no leakage.
+
+## File and blob storage
+
+For media that doesn't belong in the relational store (generated images, audio, large PDFs), store them in object storage and reference paths in `agno_knowledge` or `agno_sessions`. Agno doesn't ship a built-in blob abstraction. Use S3, GCS, or whatever your platform provides.
+
+## Migrations
+
+AgentOS handles its own tables. Your application tables (data the agent reads via SQL tools, schemas the Engineer agent builds, your own data) you migrate however you like. Alembic, raw SQL, dbt, your call.
+
+The [Dash deploy tutorial](/tutorials/dash/deploy-to-railway) shows the pattern: AgentOS comes up, runs its DDL automatically, then a one-time `python scripts/generate_data.py` loads application tables.
+
+## Next
+
+[Context →](/runtime/context)

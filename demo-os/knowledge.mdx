@@ -1,0 +1,145 @@
+---
+title: Knowledge
+description: "Hybrid search with embeddings, chunking, and metadata in the Dash team."
+---
+
+`Knowledge` is the retrieval primitive: a vector index with an optional keyword index and optional reranker. Dash uses it heavily for grounding text-to-SQL.
+
+```python
+from agno.knowledge import Knowledge
+from agno.vector_db.pgvector import PgVector
+
+dash_knowledge = Knowledge(
+    vector_db=PgVector(
+        table_name="dash_knowledge",
+        db_url=DB_URL,
+        search_type="hybrid",       # vector + BM25
+    ),
+)
+
+dash = Agent(
+    knowledge=dash_knowledge,
+    add_knowledge_to_context=True,  # auto-search before each run
+    search_knowledge=True,          # also expose as a tool
+)
+```
+
+## Loading content
+
+Three ways to put content in:
+
+```python
+# From a directory
+dash_knowledge.add_content_from_path("knowledge/tables/")
+
+# From a URL
+dash_knowledge.add_content_from_url("https://example.com/article")
+
+# Programmatically
+dash_knowledge.add_content(
+    name="MRR definition",
+    content="MRR is sum of active subscriptions excluding trials.",
+    metadata={"category": "business_rules"},
+)
+```
+
+Demo OS loads via scripts:
+
+```bash
+python -m agents.dash.scripts.load_knowledge
+```
+
+Re-run with `--recreate` to rebuild from scratch. Without it, content is upserted by primary key.
+
+## Chunking and embedding
+
+By default, `Knowledge` chunks long content into ~500-token segments and embeds each chunk with `text-embedding-3-small`. Override with:
+
+```python
+from agno.embedder.openai import OpenAIEmbedder
+from agno.knowledge.chunking.text import TextChunkingStrategy
+
+dash_knowledge = Knowledge(
+    vector_db=PgVector(...),
+    embedder=OpenAIEmbedder(id="text-embedding-3-large"),
+    chunking_strategy=TextChunkingStrategy(chunk_size=1000, overlap=100),
+)
+```
+
+Other chunking strategies live under `agno.knowledge.chunking.*`: by markdown headers, by code structure, by recursive token count, by semantic boundaries.
+
+## Hybrid search
+
+`search_type="hybrid"` runs both:
+
+| Index | Catches |
+|-------|---------|
+| Vector (semantic) | "different words for the same idea" |
+| BM25 (keyword) | "find the doc that mentions this exact term" |
+
+Results from both get merged with reciprocal rank fusion. Hybrid almost always beats either alone.
+
+## Metadata filtering
+
+Metadata attached at ingest time becomes a filter at query time:
+
+```python
+# Ingest
+dash_knowledge.add_content(
+    name="MRR definition",
+    content="...",
+    metadata={"category": "business_rules", "team": "finance"},
+)
+
+# Retrieve only finance team rules
+dash_knowledge.search(
+    query="how do we calculate MRR?",
+    filters={"team": "finance"},
+)
+```
+
+Useful for multi-tenant agents (filter by `tenant_id`) or topic scoping (filter by `category`).
+
+## When the model gets the chunks
+
+With `add_knowledge_to_context=True`:
+
+1. User message arrives.
+2. AgentOS runs `knowledge.search(message)` automatically.
+3. Top-k chunks get inserted into the system prompt.
+4. The model answers with the chunks visible.
+
+With `search_knowledge=True`:
+
+The agent gets a `search_knowledge_base(query)` tool. The model decides when to call it. Useful for follow-up retrieval mid-run.
+
+Both flags are common to set together. Auto-search hits first, the tool catches "I need to look up something else" cases.
+
+## Reranking
+
+For larger knowledge bases, add a reranker:
+
+```python
+from agno.rerank.cohere import CohereReranker
+
+dash_knowledge = Knowledge(
+    vector_db=PgVector(...),
+    reranker=CohereReranker(model="rerank-3.5"),
+)
+```
+
+The vector DB returns the top-50, the reranker scores them, and the top-10 reach the model. This two-stage retrieval (cast wide, rerank tight) is the standard production setup.
+
+## See it in action
+
+```
+@Dash what's the right way to count active subscriptions?
+@Dash show me a query for MRR by plan
+@Dash which tables track customer lifecycle events?
+```
+
+Source: [`agents/dash/`](https://github.com/agno-agi/demo-os/tree/main/agents/dash), [Knowledge docs](/knowledge/overview)
+
+## Next
+
+[Memory →](/demo-os/memory)

@@ -1,0 +1,141 @@
+---
+title: Security & Auth
+description: "Layered security: auth at the edge, RBAC for roles, isolation between users, schema enforcement, and sandboxes for tools."
+---
+
+Securing an agent isn't one thing. It's layers: auth at the edge to keep strangers out, RBAC to scope what each caller can run, request isolation so users can't see each other's data, schema enforcement so even a misbehaving agent can't write where it shouldn't, sandboxes for tools that touch the outside world, and human approval for actions that should never run unsupervised.
+
+| Layer | What it stops | Mechanism |
+|-------|---------------|-----------|
+| **Authentication** | Unauthenticated requests | JWT validation at the middleware |
+| **Authorization** | Authorized but out-of-scope requests | RBAC scopes on every endpoint |
+| **Request isolation** | Cross-user and cross-session leakage | Sessions and memory scoped per `user_id` |
+| **Schema enforcement** | The agent writing where it shouldn't | Read-only roles, schema-scoped engines |
+| **Tool sandboxing** | Tools doing damage outside their lane | Sandboxes, allowlists, path scoping |
+| **Human approval** | Irreversible actions running unsupervised | `requires_confirmation`, `@approval` (see [Human Approval](/runtime/human-approval)) |
+
+AgentOS gives you defaults at every layer. The rest of this page covers each one and where you'd want to override the default.
+
+Network-layer controls (rate limiting, WAF, IP allowlists, mTLS) live at your reverse proxy or API gateway, not here.
+
+## Authentication
+
+A production AgentOS sits behind JWT-validating middleware. Every request carries a token signed by the [control plane](https://os.agno.com); your service verifies it with a public key.
+
+```python
+from agno.os import AgentOS
+
+agent_os = AgentOS(
+    agents=[agent],
+    db=db,
+    authorization=True,
+)
+# Or set RUNTIME_ENV=prd and JWT_VERIFICATION_KEY=...
+```
+
+When `authorization=True`, every endpoint except `/health` and `/openapi.json` requires a valid JWT.
+
+### Setup flow
+
+1. Deploy AgentOS with `authorization=True` and `JWT_VERIFICATION_KEY` set. The app crash-loops until the key is valid. That's expected.
+2. Open [os.agno.com](https://os.agno.com) → **Add OS** → **Live** → paste your URL.
+3. Go to **Settings** → **Generate key pair**.
+4. Copy the public key. Paste into your env (`JWT_VERIFICATION_KEY`).
+5. Redeploy.
+
+The control plane keeps the private key. Your service only ever sees the public key. JWTs are signed by the control plane and verified by your service.
+
+This is the flow [Dash](/tutorials/dash/deploy-to-railway) and [Coda](/tutorials/coda/deploy-to-railway) walk through end-to-end.
+
+### Custom JWT configuration
+
+If you're issuing JWTs from your own auth provider, pass an `AuthorizationConfig`:
+
+```python
+from agno.os import AgentOS, AuthorizationConfig
+
+agent_os = AgentOS(
+    agents=[agent],
+    db=db,
+    authorization=True,
+    authorization_config=AuthorizationConfig(
+        verification_keys=["public-key-1", "public-key-2"],   # rotation
+        algorithm="RS256",
+        scopes_claim="scopes",
+        user_id_claim="sub",
+    ),
+)
+```
+
+`verification_keys` is a list, so you can rotate keys without downtime. Old tokens validate against the old key, new tokens against the new one. Drop the old key once tokens have aged out.
+
+## Authorization (RBAC scopes)
+
+Every JWT carries a `scopes` claim. Endpoints are gated on scopes.
+
+| Scope | Grants |
+|-------|--------|
+| `agents:read` | List agents and read their config |
+| `agents:<id>:run` | Run a specific agent |
+| `agents:*:run` | Run any agent |
+| `teams:<id>:run` | Run a specific team |
+| `teams:*:run` | Run any team |
+| `workflows:<id>:run` | Run a specific workflow |
+| `workflows:*:run` | Run any workflow |
+| `agent_os:admin` | Full access including session, memory, and trace queries |
+
+A typical end-user gets `agents:my-agent:run`. An internal service gets `agent_os:admin`. The control plane mints both with appropriate scopes. See [RBAC](/agent-os/security/rbac) for the full setup.
+
+## Request isolation
+
+Every request runs in its own context. State doesn't bleed between users, agents, or sessions.
+
+| Guarantee | How |
+|-----------|-----|
+| **No cross-user state** | Sessions and memory are scoped per `user_id`. The JWT's `user_id_claim` decides who's asking. |
+| **No cross-session state** | History is scoped per `(user_id, session_id)`. Two open sessions for the same user stay independent. |
+| **No tool side-effect leakage** | Tool calls run in-process within a single request's lifecycle. No shared mutable state. |
+| **No model-level mixing** | Each LLM call carries only the messages for the current run. No global prompt caching across users. |
+
+This is the baseline for multi-tenant deployments. Combined with `agent_os:admin` for service-level callers, it gives you per-user data isolation without a separate per-tenant runtime.
+
+## Schema enforcement
+
+For agents that touch databases, API-level auth isn't enough. A model can decide to write `DROP TABLE users` regardless of what its instructions say. Stop it at the engine, not the prompt.
+
+- **Read-only roles.** PostgreSQL connections opened with `default_transaction_read_only=on` reject any write attempt no matter what SQL the model generates. This is what [Dash](/tutorials/dash/setup) uses on the Analyst agent.
+- **Schema-scoped writes.** A SQLAlchemy event listener that blocks DDL/DML targeting forbidden schemas. Dash uses this on the Engineer agent: writes go to the `dash` schema, never `public`.
+
+These are infrastructure guardrails, not prompt instructions. They hold even if the model goes off-script.
+
+## Tool sandboxing
+
+Most tools are pure functions. The ones that aren't (HTTP calls, shell commands, code execution, file I/O) need their own guardrails.
+
+| Tool category | Recommended guard |
+|---------------|-------------------|
+| **Database queries** | Read-only role, schema scoping |
+| **HTTP requests** | Allowlist of hosts, no localhost |
+| **Shell or code execution** | Sandbox (subprocess in container, separate worktree, strict ulimits) |
+| **File I/O** | Path scoping (one root directory, no `..`) |
+| **Money or irreversible actions** | `requires_confirmation=True` + `@approval(type="required")` (see [Human Approval](/runtime/human-approval)) |
+
+[Coda](/tutorials/coda/next-steps) uses a git worktree sandbox for code-writing tools. The Coder agent can write anything it likes, but only inside an isolated worktree. Main is never touched.
+
+## Human approval
+
+The last layer. Some actions should never run unsupervised — refunds, deletes, prod deploys, anything irreversible. AgentOS pauses the run, surfaces the pending approval, resumes when a human signs off. Two patterns: `requires_confirmation` for the user asking the agent, `@approval` for a designated admin with policy authority. Full details on the [Human Approval](/runtime/human-approval) page.
+
+## Defaults
+
+| Concern | Default behavior |
+|---------|------------------|
+| Auth in production | `RUNTIME_ENV=prd` enables JWT validation |
+| Auth in dev | `RUNTIME_ENV=dev` skips JWT validation so you can iterate |
+| User isolation | Sessions and memory keyed on `user_id` from the JWT |
+| Trace tampering | Traces are append-only; no API to mutate past spans |
+| Schedule abuse | Scheduler tools require `agent_os:admin` scope to create system-level schedules |
+
+## Next
+
+[Interfaces →](/runtime/interfaces)

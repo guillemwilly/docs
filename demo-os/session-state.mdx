@@ -1,0 +1,100 @@
+---
+title: Session State
+description: "Mutable per-session state with agentic updates, demonstrated by Taskboard."
+---
+
+The [Taskboard agent](https://github.com/agno-agi/demo-os/blob/main/agents/taskboard/agent.py) is a working task list that lives in one session. State persists across messages in the session. The agent updates it directly.
+
+```python
+from agno.agent import Agent
+
+taskboard = Agent(
+    id="taskboard",
+    model=MODEL,
+    db=agent_db,
+    tools=[add_task, update_task_status, list_tasks, remove_task, get_summary],
+    session_state={
+        "tasks": [],
+        "categories": ["general", "work", "personal"],
+    },
+    enable_agentic_state=True,         # agent can mutate session_state
+    add_session_state_to_context=True, # state is visible in the prompt
+)
+```
+
+Three flags do the work:
+
+| Flag | Behavior |
+|------|----------|
+| `session_state={...}` | Initial state. Persisted to `agno_sessions` per `(user_id, session_id)`. |
+| `enable_agentic_state=True` | Agent gets `update_session_state` tool. Can mutate the dict directly. |
+| `add_session_state_to_context=True` | State gets injected into the system prompt every turn. |
+
+## Session state vs memory vs dependencies
+
+| Type | Scope | Mutability | Persistence |
+|------|-------|------------|-------------|
+| `session_state` | One `(user_id, session_id)` | Mutable, agent updates | Yes, in `agno_sessions` |
+| Memory | Per `user_id` across sessions | Mutable, agent or extractor updates | Yes, in `agno_memories` |
+| Knowledge | Global (filterable) | Mutable, you load/upsert | Yes, in `agno_knowledge` |
+| Dependencies | One run | Read-only | No, ephemeral |
+
+Session state holds what the user is working on right now. Memory holds what's true about the user across sessions. Dependencies carry config for the current request.
+
+## CRUD via tools
+
+The Taskboard agent ships its own CRUD tools instead of relying on `update_session_state` directly. This gives the model cleaner intent labels and lets you validate updates:
+
+```python
+from agno.tools import tool
+
+@tool
+def add_task(session_state: dict, title: str, category: str = "general") -> str:
+    """Add a task to the board."""
+    if category not in session_state["categories"]:
+        return f"Unknown category: {category}"
+    task = {"id": len(session_state["tasks"]) + 1, "title": title, "status": "open"}
+    session_state["tasks"].append(task)
+    return f"Added task #{task['id']}"
+
+@tool
+def update_task_status(session_state: dict, task_id: int, status: str) -> str:
+    """Mark a task as open, in_progress, or done."""
+    for t in session_state["tasks"]:
+        if t["id"] == task_id:
+            t["status"] = status
+            return f"Task #{task_id} → {status}"
+    return f"Task #{task_id} not found"
+```
+
+`session_state` gets injected into tool functions automatically (same way `RunContext` does for [Injector](/demo-os/context-providers)). Mutations persist.
+
+## When to use session state
+
+| Use case | Use |
+|----------|-----|
+| Working list the user is editing (tasks, items, choices) | `session_state` |
+| Multi-turn form filling | `session_state` |
+| Per-conversation scratchpad | `session_state` |
+| Cross-session preferences | Memory or user profile |
+| Per-request config (tenant, flags) | Dependencies |
+
+If state should survive the user closing the chat and coming back next week, it belongs in memory or a database table the agent reads from, not in session state.
+
+## See it in action
+
+```
+@Taskboard add a task: review the Q2 roadmap, category: work
+@Taskboard add a task: book dentist appointment, category: personal
+@Taskboard show me my tasks
+@Taskboard mark task #1 as in_progress
+@Taskboard summarize what I've got open
+```
+
+Each turn updates `session_state`. The next turn sees the updated state in context. Refreshing the chat page reloads the state from `agno_sessions`.
+
+Source: [`agents/taskboard/agent.py`](https://github.com/agno-agi/demo-os/blob/main/agents/taskboard/agent.py)
+
+## Next
+
+[Human-in-the-Loop →](/demo-os/human-in-the-loop)

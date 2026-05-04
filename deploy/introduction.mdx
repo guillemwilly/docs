@@ -4,26 +4,26 @@ sidebarTitle: "Introduction"
 description: "Deploy AgentOS to your cloud platform of choice."
 ---
 
-1. Start with a **template**: a blank canvas or a pre-built solution.
+1. Start with a **template**: a starter or a pre-built solution.
 2. Add **apps**: agents, teams, or workflows for your use case.
 3. Expose through **interfaces**: Slack, Discord, Telegram, MCP, or a custom UI.
 
 <Steps>
   <Step title="Start from a template">
-    Pick a **blank canvas** or a **pre-built solution**.
+    Pick a **starter** or a **pre-built solution**.
 
     <Tabs>
-      <Tab title="Black Canvas">
+      <Tab title="Starter">
         Deploy a clean installation of AgentOS to your infrastructure.
 
         <CardGroup cols={3}>
-          <Card title="Docker" icon="docker" href="/deploy/templates/docker">
+          <Card title="Docker" icon="docker" href="/deploy/templates/docker/deploy">
             Run AgentOS locally using Docker.
           </Card>
-          <Card title="Railway" icon="train" href="/deploy/templates/railway">
+          <Card title="Railway" icon="train" href="/deploy/templates/railway/deploy">
             Deploy AgentOS to Railway.
           </Card>
-          <Card title="AWS" icon="aws" href="/deploy/templates/aws">
+          <Card title="AWS" icon="aws" href="/deploy/templates/aws/deploy">
             Deploy AgentOS to ECS.
           </Card>
         </CardGroup>
@@ -33,13 +33,13 @@ description: "Deploy AgentOS to your cloud platform of choice."
         wired up.
 
         <CardGroup cols={3}>
-          <Card title="Dash" icon="chart-mixed" href="/deploy/templates/dash">
+          <Card title="Dash" icon="chart-mixed" href="/deploy/templates/dash/overview">
             Self-learning data agent.
           </Card>
-          <Card title="Scout" icon="radar" href="/deploy/templates/scout">
+          <Card title="Scout" icon="radar" href="/deploy/templates/scout/overview">
             Self-managing context agent.
           </Card>
-          <Card title="Gcode" icon="code" href="/deploy/templates/gcode">
+          <Card title="Gcode" icon="code" href="/deploy/templates/gcode/overview">
             Lightweight coding agent.
           </Card>
         </CardGroup>
@@ -57,40 +57,40 @@ description: "Deploy AgentOS to your cloud platform of choice."
       <Card
         title="Text-to-SQL Agent"
         icon="database"
-        href="/production/applications/text-to-sql"
+        href="/deploy/apps/agents/text-to-sql"
       >
         Query databases with natural language.
       </Card>
       <Card
         title="Research Agent"
         icon="magnifying-glass"
-        href="/production/applications/research-agent"
+        href="/deploy/apps/agents/research-agent"
       >
         Deep research with citations.
       </Card>
       <Card
         title="Knowledge Agent"
         icon="book"
-        href="/production/applications/knowledge-agent"
+        href="/deploy/apps/agents/knowledge-agent"
       >
         Answer questions from your knowledge base.
       </Card>
     </CardGroup>
 
-    [Browse all apps →](/production/applications)
+    [Browse all apps →](/deploy/apps)
 
   </Step>
   <Step title="Connect interfaces">
     Expose your apps on the platforms your users already use.
 
     <CardGroup cols={3}>
-      <Card title="Slack" icon="slack" href="/deploy/interfaces/slack">
+      <Card title="Slack" icon="slack" href="/agent-os/interfaces/slack/introduction">
         Expose agents as Slack apps.
       </Card>
-      <Card title="Discord" icon="discord" href="/deploy/interfaces/discord">
+      <Card title="Discord" icon="discord" href="/agent-os/interfaces/overview">
         Expose agents as Discord bots.
       </Card>
-      <Card title="MCP" icon="plug" href="/deploy/interfaces/mcp">
+      <Card title="MCP" icon="plug" href="/agent-os/mcp/mcp">
         Expose agents as an MCP server.
       </Card>
     </CardGroup>

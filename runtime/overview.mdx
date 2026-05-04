@@ -1,0 +1,55 @@
+---
+title: What is a Runtime?
+description: "A runtime turns your agent into production service."
+---
+
+<div className="text-center text-3xl font-mono my-10">
+  <span>Runtime</span>
+  <span className="mx-3 text-orange-500">=</span>
+  <span>Agent Server</span>
+</div>
+
+To build agentic products or an agent platform, you need to run your system as a horizontally scalable, durable service that is reachable over an API. That's what a runtime gives you.
+
+AgentOS turns the `Agent(...)` into a FastAPI app with persistent sessions, JWT-based authentication, observability, and interfaces for Slack, Telegram, and more.
+
+## What the runtime gives you
+
+The runtime covers the ground between your agent code and a shipped service:
+
+| Concern               | How AgentOS handles it                                                  |
+| --------------------- | ----------------------------------------------------------------------- |
+| **HTTP API**          | Auto-generated endpoints for every registered agent, team, and workflow |
+| **State**             | Sessions and memory persisted to your `db`                              |
+| **Streaming**         | SSE on every run endpoint; tokens and tool calls stream as they happen  |
+| **Auth**              | JWT validation with RBAC scopes built-in                                |
+| **Scheduling**        | In-process cron that polls the database and fires due jobs              |
+| **Observability**     | OpenTelemetry tracing into the same `db`, queryable with SQL            |
+| **Interfaces**        | Slack, Telegram, WhatsApp, Discord, A2A, AG-UI                          |
+| **Human in the loop** | Pause runs for user confirmation, admin approval, or external execution |
+
+The same `Agent(...)` runs in a script, a test, or an AgentOS service. AgentOS itself is stateless: state lives in `db`, so you can scale horizontally to handle load.
+
+<Note>
+  AgentOS also runs teams and workflows, not only single agents. See [Build a
+  Product](/runtime/build-a-product).
+</Note>
+
+## What's in this section
+
+| Page                                          | Covers                                                       |
+| --------------------------------------------- | ------------------------------------------------------------ |
+| [Serve as an API](/runtime/serve-as-api)      | The HTTP endpoints AgentOS generates and how to add your own |
+| [Storage](/runtime/storage)                   | Database backends and what gets stored                       |
+| [Context](/runtime/context)                   | Knowledge, dependencies, and live context providers          |
+| [Human Approval](/runtime/human-approval)     | Pausing runs for confirmation, approval, or external systems |
+| [Observability](/runtime/observability)       | Tracing, run history, audit logs                             |
+| [Security & Auth](/runtime/security-and-auth) | JWT, RBAC scopes, request isolation                          |
+| [Interfaces](/runtime/interfaces)             | Slack, Telegram, WhatsApp, A2A, AG-UI                        |
+| [Scheduling](/runtime/scheduling)             | Cron jobs and multi-step workflows                           |
+| [Deploy](/runtime/deploy)                     | Docker, Railway, AWS, GCP, scaling                           |
+| [Build a Product](/runtime/build-a-product)   | From a working AgentOS to a shipped product                  |
+
+## Next
+
+[Serve as an API →](/runtime/serve-as-api)

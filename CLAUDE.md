@@ -2,9 +2,16 @@
 
 ## Philosophy
 
-Agno docs are direct, concrete, and professional. No marketing fluff. No AI-sounding prose. Every sentence earns its place.
+Agno docs are direct, concrete, and professional. No marketing fluff. No AI-sounding prose. Every sentence earns its place. We cover a massive surface area. Analogies and commentary add cognitive load without adding understanding. Be direct.
 
-We cover a massive surface area. Analogies and commentary add cognitive load without adding understanding. Be direct.
+## About This Repo
+
+- **Site builder:** Mintlify. Pages are `.mdx` with frontmatter (`title`, `description`).
+- **Navigation:** `docs.json` is the source of truth. Adding a page means adding it there too.
+- **Agno source:** symlinked at `./agno` (-> `~/code/agno`). Read it before writing about APIs, parameters, or behavior. Don't guess from memory or training data.
+- **Cookbook examples:** `agno/cookbook/` has runnable examples. Reference or adapt these rather than inventing new ones.
+- **Reusable snippets:** `_snippets/` holds shared install steps, setup blocks, and recurring components. Check there before duplicating content.
+- **Current branch:** `v2.6.0`. We're restructuring docs, not just patching. Prefer rewriting muddled pages to layering on top of them.
 
 ## Before Writing Any Page
 
@@ -14,7 +21,7 @@ Define these four things before you write:
 2. **What does the user need to do?** (the code)
 3. **What decisions might they face?** (tables)
 4. **Where do they go next?** (links)
-5. **What type of page is this?** (tutorial, how-to, reference, or explanation. See [DIATAXIS.md](./DIATAXIS.md))
+5. **What type of page is this?** (tutorial, how-to, reference, or explanation. See Page Types below.)
 
 If you can't answer these clearly, the page will ramble.
 
@@ -39,7 +46,7 @@ Every page should follow this pattern:
 
 ## Page Types
 
-Every page serves one primary documentation need. See [DIATAXIS.md](./DIATAXIS.md) for the complete framework.
+Every page serves one primary documentation need. The four types come from the Diátaxis framework:
 
 | Type | Purpose | Agno Examples |
 |------|---------|---------------|
@@ -237,7 +244,7 @@ Don't define things by what they aren't. State what they are directly.
 
 ## The Three Pillars
 
-Use consistently when describing Agno:
+Use on landing and overview pages where Agno is being introduced. Don't repeat the framing on every page. When you do use it, use these exact verbs and labels:
 
 | Layer | Verb | Description |
 |-------|------|-------------|
@@ -252,9 +259,22 @@ Use consistently when describing Agno:
 - Keep examples consistent across related pages
 - Show the minimal working example first, then variations
 
+## Mintlify Components
+
+| Component | When to use |
+|-----------|-------------|
+| `<CardGroup cols={N}>` + `<Card title icon href>` | Navigation grids on overview pages |
+| `<Steps>` + `<Step title>` | Sequential setup or tutorial steps |
+| `<CodeGroup>` | Variants of the same example (Mac/Windows, async/sync, providers) |
+| `<Tabs>` + `<Tab title>` | Alternative views of the same content |
+| `<Accordion>` / `<AccordionGroup>` | FAQ entries, optional details |
+| `<Note>` `<Tip>` `<Warning>` `<Info>` `<Check>` | Callouts. Use sparingly. |
+| `<Snippet file="name.mdx">` | Pull shared content from `_snippets/` |
+| `<Frame>` | Wrap images that need a caption or border |
+
 ## Page Templates
 
-Choose the template that matches your page type (see [DIATAXIS.md](./DIATAXIS.md)). The Overview template maps to Explanation, the Tutorial/Guide template maps to Tutorial or How-to, and the Usage/Example template maps to How-to.
+The Overview template maps to Explanation pages, Tutorial/Guide maps to Tutorial or How-to, and Usage/Example maps to How-to.
 
 ### Overview Page
 ````markdown
@@ -345,9 +365,12 @@ description: "What this combination achieves."
 
 ## Validation Commands
 ````bash
-# Check for broken links
-mintlify broken-links
+# Preview locally (run from the directory with docs.json)
+mint dev
 
-# Preview locally
-mintlify dev
+# Check for broken links
+mint broken-links
+
+# Catch build errors before pushing
+mint build
 ````

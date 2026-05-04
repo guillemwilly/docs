@@ -1,0 +1,100 @@
+---
+title: RAG
+description: "Hybrid search grounding text-to-SQL in the Dash team."
+---
+
+The [Dash team](https://github.com/agno-agi/demo-os/tree/main/agents/dash) uses retrieval to ground every SQL query in known patterns. Hallucinated SQL is the failure mode RAG prevents.
+
+| What it retrieves | Why retrieval |
+|-------------------|---------------|
+| Table descriptions, validated SQL queries, business rules | The Analyst grounds every query in known patterns. Without retrieval, the model invents column names and misreads enum values. |
+
+## Dash: SQL grounded in known patterns
+
+Dash holds three kinds of knowledge under one [`Knowledge`](https://github.com/agno-agi/demo-os/tree/main/agents/dash/knowledge) instance:
+
+| Knowledge | Purpose |
+|-----------|---------|
+| Table metadata | Column meanings, value enums, gotchas |
+| Validated query patterns | Tested SQL the Analyst can adapt |
+| Business rules | "MRR excludes trials", "active means `ended_at IS NULL`" |
+
+When a user asks "what's our MRR trend?", the Analyst retrieves matching table descriptions, similar past queries, and the MRR definition. The model writes SQL with all of that in context. Hallucination rate drops.
+
+```python
+from agno.knowledge import Knowledge
+from agno.vector_db.pgvector import PgVector
+
+dash_knowledge = Knowledge(
+    vector_db=PgVector(
+        table_name="dash_knowledge",
+        db_url=DB_URL,
+        search_type="hybrid",  # semantic + keyword
+    ),
+)
+
+analyst = Agent(
+    knowledge=dash_knowledge,
+    add_knowledge_to_context=True,
+    search_knowledge=True,
+)
+```
+
+`search_type="hybrid"` runs both vector similarity and BM25 keyword search, then merges results. Catches both "what's the same idea worded differently?" (semantic) and "find the doc that mentions this exact term" (keyword).
+
+## Loading knowledge
+
+Knowledge content gets loaded once at boot or via a script:
+
+```bash
+# Dash: table metadata, queries, business rules
+python -m agents.dash.scripts.load_knowledge
+```
+
+Re-running with `--recreate` rebuilds from scratch. Without the flag, content gets upserted by primary key.
+
+## How retrieval gets injected
+
+When `add_knowledge_to_context=True`, AgentOS:
+
+1. Takes the user's message.
+2. Runs hybrid search against the `Knowledge` vector DB.
+3. Pulls top-k chunks with metadata (configurable).
+4. Injects them into the system prompt under a "Relevant context" section.
+5. The model answers with both the message and the retrieved context.
+
+If `search_knowledge=True` is also set, the agent gets a `search_knowledge_base(query)` tool and can run additional searches mid-run when it needs to.
+
+## See it in action
+
+| Try in chat | What happens |
+|-------------|--------------|
+| Dash: *"what's our MRR trend?"* | Analyst retrieves MRR definition + matching query, writes grounded SQL. |
+| Dash: *"why is churn so high?"* | Analyst retrieves churn definitions, finds matching query patterns, executes, interprets. |
+| Dash: *"show me revenue by plan"* | Analyst pulls table metadata for `subscriptions`, generates the aggregation. |
+
+## When hybrid search isn't enough
+
+For very large knowledge bases, add reranking. PgVector + a reranker (Cohere, BGE) tightens the top-k:
+
+```python
+from agno.vector_db.pgvector import PgVector
+from agno.rerank.cohere import CohereReranker
+
+dash_knowledge = Knowledge(
+    vector_db=PgVector(
+        table_name="dash_knowledge",
+        db_url=DB_URL,
+        search_type="hybrid",
+        reranker=CohereReranker(model="rerank-3.5"),
+    ),
+)
+```
+
+Two-stage retrieval (hybrid then rerank) is the standard production setup. The hybrid stage casts a wide net (top-50), the reranker prunes to the best top-10.
+
+Source: [`agents/dash/`](https://github.com/agno-agi/demo-os/tree/main/agents/dash)
+
+## Next
+
+[Knowledge →](/demo-os/knowledge)

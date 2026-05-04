@@ -1,0 +1,95 @@
+---
+title: Context Providers
+description: "Inject runtime config, feature flags, and per-request data via dependencies."
+---
+
+The [Injector agent](https://github.com/agno-agi/demo-os/blob/main/agents/injector/agent.py) shows how to give an agent access to runtime configuration without baking it into the prompt or the tool definitions.
+
+```python
+from agno.agent import Agent
+
+DEPENDENCIES = {
+    "config": {
+        "app_name": "AgentOS Demo",
+        "version": "2.1.0",
+        "region": "us-east-1",
+    },
+    "feature_flags": {
+        "dark_mode": True,
+        "beta_features": False,
+        "ai_suggestions": True,
+    },
+    "user_preferences": {
+        "theme": "dark",
+        "timezone": "America/New_York",
+    },
+}
+
+injector = Agent(
+    id="injector",
+    name="Injector",
+    model=MODEL,
+    db=agent_db,
+    tools=[get_config, check_feature_flag, get_user_preference],
+    dependencies=DEPENDENCIES,
+    add_dependencies_to_context=True,
+)
+```
+
+`add_dependencies_to_context=True` makes the dependencies visible in the system prompt. The agent can refer to them directly:
+
+> *"Is dark mode enabled?"* → reads `feature_flags.dark_mode` from dependencies, answers "Yes."
+
+Tools can also access dependencies via `RunContext`:
+
+```python
+from agno.run import RunContext
+from agno.tools import tool
+
+@tool
+def get_config(run_context: RunContext, key: str) -> str:
+    """Read a config value injected from dependencies."""
+    return str(run_context.dependencies["config"].get(key, "not set"))
+```
+
+The `RunContext` parameter is auto-injected. Tools that take it get the full request scope: `dependencies`, `user_id`, `session_id`, `metadata`, `messages`, even the parent `agent`.
+
+## Static vs per-request dependencies
+
+The Injector example uses static dependencies (defined at agent construction). For per-request dependencies, set them on the run:
+
+```python
+result = agent.run(
+    "What region am I in?",
+    dependencies={"region": "eu-west-1"},     # request-scoped
+    user_id="user-123",
+)
+```
+
+Per-request dependencies override the agent-level ones for that single run. Useful for multi-tenant apps where each request brings its own tenant ID, feature set, or DB connection.
+
+## What belongs in dependencies vs memory vs knowledge
+
+| Lives in | When |
+|----------|------|
+| `dependencies` | Per-request runtime values: feature flags, tenant config, request scope |
+| Memory | User-level facts that should survive sessions |
+| Knowledge | Content the agent should be able to retrieve and cite |
+| `session_state` | Mutable state for one session only (see [Taskboard](/demo-os/session-state)) |
+
+The lines blur, but the rule of thumb is that dependencies are read-only and ephemeral, memory and knowledge are persistent, and session state is mutable but session-scoped.
+
+## See it in action
+
+```
+@Injector is dark mode enabled?
+@Injector what's the current app version and region?
+@Injector what's my preferred timezone?
+@Injector list all enabled feature flags
+```
+
+Source: [`agents/injector/agent.py`](https://github.com/agno-agi/demo-os/blob/main/agents/injector/agent.py)
+
+## Next
+
+[Session State →](/demo-os/session-state)
