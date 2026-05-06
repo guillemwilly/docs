@@ -4,9 +4,13 @@ description: Admin-mediated HITL workflows with persistent records and audit tra
 keywords: [approval, HITL, human-in-the-loop, admin approval, requires_confirmation, audit]
 ---
 
-Approval enables a "User Triggers, Admin Authorizes" workflow. When an agent hits a protected tool during a workflow run, the run pauses and persists a pending record to your database. Execution only resumes once an admin approves or rejects the request.
+Approval enables a "User Triggers, Admin Authorizes" workflow. When an agent (or team member) hits a protected tool during a run, the run pauses and persists a pending record to your database. Execution only resumes once an admin approves or rejects the request.
 
 Approvals are built on HITL primitives (requires_confirmation, requires_user_input, or external_execution). Your tool must implement at least one.
+
+<Note>
+Approvals work at both the agent and team level. When a member agent in a team calls an `@approval` tool, the team run pauses with the same flow shown below. See the [Team approval example](/examples/agents/approvals/approval-team).
+</Note>
 
 ## Quick start
 
@@ -86,8 +90,8 @@ There are three distinct phases in the approval flow:
   <Card title="Approval with external execution" icon="plug" href="/examples/agents/approvals/approval-external-execution">
     @approval + external_execution.
   </Card>
-  <Card title="Team approval" icon="users" href="/examples/agents/approvals/approval-team">
-    Team-level approval when a member agent uses an @approval tool.
+  <Card title="Team approvals" icon="users" href="/examples/agents/approvals/approval-team">
+    Three patterns: tool on the team, on a member agent, or on both.
   </Card>
   <Card title="Audit approval" icon="clipboard-list" href="/examples/agents/approvals/audit-approval-confirmation">
     @approval(type="audit") + requires_confirmation; no pause, audit record only.
