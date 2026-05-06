@@ -1,20 +1,23 @@
 ---
 title: Human-in-the-Loop in Workflows
 sidebarTitle: Overview
-description: Pause workflow execution for user confirmation, input, review, or decisions at the step level.
-keywords: [workflow, HITL, human-in-the-loop, confirmation, user input, pause, step, human review]
+description: Pause workflow execution for user confirmation, input, review, or decisions at the step level or executor level.
+keywords: [workflow, HITL, human-in-the-loop, confirmation, user input, pause, step, executor, human review]
 mode: wide
 ---
 
-Human-in-the-Loop (HITL) in Workflows enables you to pause execution at any step to collect user confirmation, input, or decisions. The workflow state is persisted, allowing you to resume execution after the user responds.
+Human-in-the-Loop (HITL) in Workflows enables you to pause execution to collect user confirmation, input, or decisions. The workflow state is persisted, allowing you to resume execution after the user responds.
+
+Workflows support HITL at two levels:
+
+- **Step-level HITL** — pauses *before* or *after* a workflow step executes. Configured on the workflow primitive (`Step`, `Loop`, `Router`, `Condition`, `Steps`).
+- **Executor-level HITL** — pauses *during* step execution when an agent or team inside the step calls a tool that requires human approval. Configured on the tool itself (e.g. `@tool(requires_confirmation=True)`). The pause propagates from the agent/team up to the workflow.
+
+Both levels can be combined on the same step. See [Executor HITL](/workflows/hitl/executor) and [Dual-level HITL](/workflows/hitl/dual-level) for details.
 
 <Note>
 User input is currently supported for `Step` (to collect parameters) and `Router` (to select routes). Other primitives (`Condition`, `Loop`, `Steps`) support confirmation only.
 </Note>
-
-<Warning>
-Agent tool-level HITL (e.g., `@tool(requires_confirmation=True)`) is **not** propagated to the workflow. If an agent inside a step has tool-level HITL, the workflow will continue but the paused tool may not execute. Use workflow-level HITL instead.
-</Warning>
 
 ```python
 from agno.workflow import Workflow, OnReject
@@ -97,15 +100,29 @@ Flat parameters (`requires_confirmation=True`, `confirmation_message="..."`) sti
 | [Timeout](/workflows/hitl/timeout) | Auto-resolve if no human response in time | `timeout=300` |
 | [Error Handling](#error-handling) | Retry or skip failed steps | `on_error=OnError.pause` |
 
+## Step-Level vs Executor-Level
+
+| Aspect | Step-Level HITL | Executor-Level HITL |
+|--------|----------------|---------------------|
+| **Configured on** | The workflow primitive (`Step`, `Loop`, etc.) | The tool used by the agent/team |
+| **When it pauses** | Before or after the step executes | During the step, when the agent calls the tool |
+| **Pause kind** | `pause_kind="step"` | `pause_kind="executor"` |
+| **Pause event** | `StepPaused` / `RouterPaused` / `StepOutputReview` | `StepExecutorPaused` |
+| **Continue event** | `StepContinued` | `StepExecutorContinued` |
+| **Use case** | Gate the whole step ("Run this step?", "Pick a branch", "Approve this output") | Gate a specific tool call ("Approve sending money to X", "Confirm this DB query") |
+| **Resolved by** | `req.confirm()`, `req.set_user_input(...)`, `req.select(...)` on the step requirement | Confirming each `executor_requirements[].tool_execution` |
+
+The two can be combined on the same step. For example: `requires_confirmation=True` on a `Step` (gate before the agent runs) + `@tool(requires_confirmation=True)` on the agent's tool (gate the tool call). See [Dual-level HITL](/workflows/hitl/dual-level).
+
 ## Supported Primitives
 
-| Primitive | Confirmation | User Input | Output Review | Iteration Review | Route Selection |
-|-----------|--------------|------------|---------------|------------------|-----------------|
-| [Step](/workflows/hitl/step) | ✓ | ✓ | [✓](/workflows/hitl/output-review) | - | - |
-| [Steps](/workflows/hitl/steps) | ✓ | - | - | - | - |
-| [Condition](/workflows/hitl/condition) | ✓ | - | - | - | - |
-| [Loop](/workflows/hitl/loop) | ✓ | - | [✓](/workflows/hitl/loop#iteration-review) | ✓ | - |
-| [Router](/workflows/hitl/router) | ✓ | - | [✓](/workflows/hitl/router#output-review) | - | ✓ |
+| Primitive | Confirmation | User Input | Output Review | Iteration Review | Route Selection | Executor HITL |
+|-----------|--------------|------------|---------------|------------------|-----------------|---------------|
+| [Step](/workflows/hitl/step) | ✓ | ✓ | [✓](/workflows/hitl/output-review) | - | - | [✓](/workflows/hitl/executor) (when `agent` / `team` is set) |
+| [Steps](/workflows/hitl/steps) | ✓ | - | - | - | - | [✓](/workflows/hitl/executor#composite-steps) (via inner Step) |
+| [Condition](/workflows/hitl/condition) | ✓ | - | - | - | - | [✓](/workflows/hitl/executor#composite-steps) (via inner Step) |
+| [Loop](/workflows/hitl/loop) | ✓ | - | [✓](/workflows/hitl/loop#iteration-review) | ✓ | - | [✓](/workflows/hitl/executor#composite-steps) (via inner Step) |
+| [Router](/workflows/hitl/router) | ✓ | - | [✓](/workflows/hitl/router#output-review) | - | ✓ | [✓](/workflows/hitl/executor#composite-steps) (via selected branch) |
 
 ## Run Output Properties
 
@@ -361,6 +378,12 @@ Step(name="process", executor=process_data)
   </Card>
   <Card title="Step HITL" icon="pause" href="/workflows/hitl/step">
     Confirmation, user input, and output review on steps
+  </Card>
+  <Card title="Executor HITL" icon="wrench" href="/workflows/hitl/executor">
+    Tool-level HITL inside agents/teams that propagates to the workflow
+  </Card>
+  <Card title="Dual-level HITL" icon="layer-group" href="/workflows/hitl/dual-level">
+    Combine step-level and executor-level HITL on the same step
   </Card>
   <Card title="Output Review" icon="eye" href="/workflows/hitl/output-review">
     Review, edit, or reject output after step execution
