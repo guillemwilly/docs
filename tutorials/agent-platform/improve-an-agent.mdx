@@ -1,13 +1,13 @@
 ---
 title: Improve an agent
-description: "Claude Code reads live traces from your platform and recursively improves your agents."
+description: "Claude Code reads container logs from your platform and recursively improves your agents."
 ---
 
-This is the part where owning the platform pays off. Your trace data, your agent code, your running platform, and your iteration tool all live in one repo. Claude Code can see every part of it.
+This is the part where owning the platform pays off. Your container logs, your agent code, your running platform, and your iteration tool all live in one repo. Claude Code can see every part of it.
 
 ## Run the prompt
 
-Open Claude Code in the repo and paste:
+Open Claude Code in the cloned `agent-platform` repo and paste:
 
 ```
 Run docs/improve-agent.md
@@ -16,8 +16,8 @@ Run docs/improve-agent.md
 Claude will:
 
 1. **Pick an agent.** Either the one you just built, or one you point it at.
-2. **Pull recent traces.** Hits the running AgentOS at `http://localhost:8000` via `curl` and reads runs, sessions, and tool calls.
-3. **Identify failure modes.** Reads through the traces and flags weak prompts, bad tool selections, missing instructions, hallucinations.
+2. **Pull recent container logs.** Reads `docker compose logs` to see runs, sessions, and tool calls.
+3. **Identify failure modes.** Reads through the logs and flags weak prompts, bad tool selections, missing instructions, hallucinations.
 4. **Propose changes.** Edits the agent's instructions, adds or removes tools, tightens the prompt, adds guardrails.
 5. **Re-run and verify.** Tests the changed agent against the same prompts, compares before/after, asks if you want to keep the changes.
 
@@ -27,7 +27,7 @@ Three things have to be true for a coding agent to improve another agent:
 
 | Requirement                          | Where it lives                                                  |
 | ------------------------------------ | --------------------------------------------------------------- |
-| The trace data                       | Your Postgres, queryable via the AgentOS API.                    |
+| The container logs                   | `docker compose logs`, visible to Claude Code in the terminal.   |
 | The agent code                       | `agents/*.py` in this repo.                                     |
 | A way to test changes                | The running platform, hot-reloads on file change.               |
 

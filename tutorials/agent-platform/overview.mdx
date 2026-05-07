@@ -6,7 +6,7 @@ description: "The leanest foundation for an agent platform: AgentOS, Postgres, D
 
 The Agent Platform template is a foundational codebase for an agent platform. FastAPI on port 8000, Postgres for sessions and memory, Docker for local, Railway for production, two reference agents, and a set of Claude Code prompts that create, improve, and eval new agents.
 
-Once it's running, ship a new agent without writing code. Claude Code uses the prompts in `docs/` to generate the agent file, register it, restart the container, and smoke-test it. Then it queries the running platform's traces to recursively improve what it built.
+Once it's running, ship a new agent without writing code. Claude Code uses the prompts in the template's `docs/` folder to generate the agent file, register it, restart the container, and smoke-test it. Then it reads the container logs to recursively improve what it built.
 
 ## Why an agent platform
 
@@ -32,7 +32,7 @@ This tutorial takes you from clone to a deployed agent platform in six steps:
 | ----------------------------------------------------------------- | ------------------------------------------------------------------ |
 | [Setup](/tutorials/agent-platform/setup)                          | Run AgentOS and Postgres locally with Docker Compose.              |
 | [Create an agent](/tutorials/agent-platform/create-an-agent)      | Claude Code generates a new agent from a prompt.                   |
-| [Improve an agent](/tutorials/agent-platform/improve-an-agent)    | Claude Code reads live traces and iterates.                        |
+| [Improve an agent](/tutorials/agent-platform/improve-an-agent)    | Claude Code reads container logs and iterates.                     |
 | [Evals](/tutorials/agent-platform/evals)                          | Lock in behavior with regression tests.                            |
 | [Deploy to Railway](/tutorials/agent-platform/deploy-to-railway)  | One command to provision Postgres, app, and a public domain.       |
 | [Next steps](/tutorials/agent-platform/next-steps)                | Teams, workflows, scheduling, and Slack interfaces.                |

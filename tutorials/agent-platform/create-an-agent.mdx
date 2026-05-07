@@ -3,11 +3,11 @@ title: Create an agent
 description: "Use a Claude Code prompt to generate, register, and smoke-test a new agent."
 ---
 
-The template ships a Claude Code prompt at `docs/create-new-agent.md` that handles the mechanical parts of adding an agent: creating the file in `agents/`, registering it in `app/main.py`, restarting the container, and running a smoke test.
+The template repo ships a Claude Code prompt at `docs/create-new-agent.md` (inside your cloned `agent-platform` directory) that handles the mechanical parts of adding an agent: creating the file in `agents/`, registering it in `app/main.py`, restarting the container, and running a smoke test.
 
 ## Run the prompt
 
-Open Claude Code in the repo and paste:
+Open Claude Code in the cloned `agent-platform` repo and paste:
 
 ```
 Run docs/create-new-agent.md
@@ -34,7 +34,7 @@ Open [os.agno.com](https://os.agno.com), select your new agent in the sidebar, a
 Click **Sessions** and **Traces** in the sidebar. Every run is recorded with full message history, tool calls, and timing. This is what powers the iteration loop on the next page.
 
 <Tip>
-  Spend 5–20 minutes in the UI before moving on. The traces you generate here become the input data for the improvement loop.
+  Spend 5–20 minutes in the UI before moving on. The runs you generate here produce the container logs that power the improvement loop.
 </Tip>
 
 ## What just happened
