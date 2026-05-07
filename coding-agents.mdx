@@ -1,0 +1,45 @@
+---
+title: Use Agno with your coding agent
+description: "Index the Agno docs in Cursor or wire them up as an MCP server."
+---
+
+Two ways to get Agno's full documentation surface inside your coding agent.
+
+## Option 1: Index the docs
+
+Add `https://docs.agno.com/llms-full.txt` as an indexed source. Your coding agent reads it like any other doc reference.
+
+| Tool         | Where to add it                                                    |
+| ------------ | ------------------------------------------------------------------ |
+| **Cursor**   | Settings → Indexing & Docs → Add `https://docs.agno.com/llms-full.txt` |
+| **VSCode**   | Add the URL as a doc source via your AI extension's settings.       |
+| **Windsurf** | Add it to your indexed sources in the Cascade settings.             |
+
+Re-index periodically as the docs evolve.
+
+## Option 2: Add the docs as an MCP server
+
+Add [docs.agno.com/mcp](https://docs.agno.com/mcp) as an MCP server in your coding agent. The agent gets live access to the docs, no indexing step.
+
+Works in any MCP-aware client: Claude Code, Cursor, Codex, Continue, and others.
+
+### Claude Code example
+
+```bash
+claude mcp add agno-docs https://docs.agno.com/mcp
+```
+
+Then in any session, the agent can call docs tools to search, read pages, and pull code samples on demand.
+
+## Which to pick
+
+| If you want...                                        | Use                |
+| ----------------------------------------------------- | ------------------ |
+| Offline access, integrated into existing indexed docs | Option 1 (indexed) |
+| Always-fresh docs, no index to maintain               | Option 2 (MCP)     |
+
+Both work together. Index for cheap recall, MCP for fresh detail.
+
+## Pair this with the Agent Platform template
+
+The [Agent Platform template](/tutorials/agent-platform/overview) ships with Claude Code prompts at `docs/create-new-agent.md`, `docs/improve-agent.md`, and `docs/run-evals.md`. With Agno's docs indexed (or wired as MCP), Claude Code has both the platform's local context and the framework's full reference. That's what closes the build → improve loop.

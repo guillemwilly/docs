@@ -1,12 +1,14 @@
 ---
 title: Welcome to Agno
-description: The Runtime for Agentic Software
+description: The cleanest way to build an agent platform.
 mode: wide
 ---
 
-**Agno turns agents into production software.**
+**Agno is software for building agent platforms.**
 
-Build agents in any framework. Run them as a service. Ship to real users.
+- Build agents using any agent framework.
+- Run them as production services with session management, tracing, scheduling, and RBAC.
+- Manage your platform using a single control plane.
 
 <CodeGroup>
 
@@ -106,38 +108,44 @@ app = agent_os.get_app()
 
 20 lines of code and you have a FastAPI backend with 50+ endpoints, persisted sessions, tracing, scheduling and RBAC. Interact using the AgentOS UI, Slack, Discord or build a product on top.
 
-Run native Agno agents next to Claude Code, LangGraph and DSPy agents in the same AgentOS. See [Multi-Framework Support](/agent-os/multi-framework/overview) to know more about it.
+Run native Agno agents next to Claude Code, LangGraph and DSPy agents in the same AgentOS. See [Multi-Framework Support](/agent-os/multi-framework/overview).
 
 ## Three layers, one architecture
 
+Everything except the control plane is free and open-source.
+
 | Layer | Use it to | What it does |
 |-------|------|--------------|
-| **SDK** | Build | Define agents, teams, and workflows with memory, knowledge, guardrails, and 100+ integrations. |
-| **Runtime** | Run | Secure, stateless FastAPI backend with sessions, scheduling, and interfaces. |
-| **Control Plane** | Manage | Monitor and operate your system from the [AgentOS UI](https://os.agno.com). |
+| **SDK** | Build | Agents, multi-agent teams, and agentic workflows with memory, knowledge, guardrails, and 100+ integrations. |
+| **Runtime** | Run | A stateless, secure FastAPI backend with sessions, scheduling, and interfaces. |
+| **Control Plane** | Manage | Operate your platform from the [AgentOS UI](https://os.agno.com). |
 
-## What AgentOS gives you
+## Agno features
 
-- [**Production API.**](/runtime/serve-as-api) 50+ endpoints with SSE and websockets to build your product on.
-- [**Storage.**](/runtime/storage) Store sessions, memory, knowledge, and traces in your database.
-- [**Context.**](/runtime/context) Navigate live context across Slack, Drive, MCP, and custom sources.
+- [**Production API.**](/runtime/serve-as-api) 50+ endpoints with SSE and websockets to build a product on top of your agent platform.
+- [**Storage.**](/runtime/storage) Sessions, memory, knowledge, and traces in your own database. Postgres for sessions and memory, ClickHouse for OLAP traces.
+- [**100+ integrations.**](/tools/toolkits/overview) Pre-built toolkits for the systems your agents need to reach.
+- [**Context Providers.**](/runtime/context) Live data from Slack, Drive, wikis, MCP, and custom sources.
 - [**Human approval.**](/runtime/human-approval) Pause runs for user confirmation, admin approval, or external execution.
 - [**Observability.**](/runtime/observability) OpenTelemetry tracing, run history, and audit logs out of the box.
-- [**Security & auth.**](/runtime/security-and-auth) JWT-based RBAC and multi-user, multi-tenant isolation.
-- [**Interfaces.**](/runtime/interfaces) Slack, Telegram, WhatsApp, Discord, AG-UI, or roll your own.
-- [**Scheduling.**](/runtime/scheduling) Cron-based scheduling and background jobs without any external infra.
-- [**Deploy.**](/runtime/deploy) Docker, Railway, AWS, GCP. Any container host works.
+- [**Security.**](/runtime/security-and-auth) JWT-based RBAC and multi-user, multi-tenant isolation.
+- [**Interfaces.**](/runtime/interfaces) Slack, Telegram, WhatsApp, Discord, AG-UI, A2A.
+- [**Scheduling.**](/runtime/scheduling) Cron-based scheduling and background jobs without external infra.
+- [**Deploy anywhere.**](/runtime/deploy) Docker, Railway, AWS, GCP. Any container host works.
 
 ## Pick a path
 
 <CardGroup cols={1}>
+  <Card title="Build an agent platform" icon="layer-group" iconType="duotone" href="/tutorials/agent-platform/overview">
+    The full tutorial: clone the template, ship your first agent with Claude Code, deploy to Railway.
+  </Card>
   <Card title="Build your first agent" icon="bolt" iconType="duotone" href="/first-agent">
-    Spin up an agent with memory and tools in 20 lines of code.
+    A model, tools, and instructions in 20 lines of code.
   </Card>
-  <Card title="Build a real product" icon="rocket-launch" iconType="duotone" href="/tutorials/pick-a-template">
-    Three production templates (Scout, Dash, Coda) you can deploy today.
+  <Card title="Use Agno with your coding agent" icon="terminal" iconType="duotone" href="/coding-agents">
+    Index the docs in Cursor or wire them up as an MCP server.
   </Card>
-  <Card title="Understand the runtime" icon="cubes" iconType="duotone" href="/runtime/overview">
-    Why AgentOS exists and the work it handles for you.
+  <Card title="Start from a template" icon="rocket-launch" iconType="duotone" href="/tutorials/pick-a-template">
+    Production templates (Scout, Dash, Coda) you can clone and deploy.
   </Card>
 </CardGroup>

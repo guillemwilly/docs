@@ -1,0 +1,75 @@
+---
+title: What is the Agent Platform Template?
+description: "The leanest foundation for an agent platform: AgentOS, Postgres, Docker, Railway, with Claude Code prompts that build agents for you."
+---
+
+The Agent Platform template is the smallest amount of code that gets you a production agent platform. FastAPI on port 8000, Postgres for sessions and memory, Docker for local, Railway for production, two reference agents, and a set of Claude Code prompts that create, improve, and eval new agents.
+
+Once it's running, ship a new agent without writing code. Claude Code uses the prompts in `docs/` to generate the agent file, register it, restart the container, and smoke-test it. Then it queries the running platform's traces to recursively improve what it built.
+
+## Why an agent platform
+
+Every team running agents in production hits the same shape of problem: agents need a system to run on. Sessions live somewhere. Traces live somewhere. Tools and credentials live somewhere. Without a platform, each new agent stitches its own version of the same six concerns. With one, you build agents and the platform handles the rest.
+
+## What an agent platform needs
+
+| Layer              | Responsibility                                                                |
+| ------------------ | ----------------------------------------------------------------------------- |
+| **Runtime**        | The service that runs agents. SSE streaming, sessions, scheduling, RBAC.      |
+| **Storage**        | Sessions, memory, knowledge, traces, eval history. One database.              |
+| **Connectors**     | Tools, MCP servers, APIs, CLIs the agents reach out to.                       |
+| **Interfaces**     | Slack, Discord, Telegram, custom UIs. One place to resolve user identity.     |
+| **Infrastructure** | Where it all runs. Docker locally, Railway (or any container host) for prod.  |
+
+This template gives you all five.
+
+## What's in the template
+
+```
+agent-platform
+├── agents                     # agent code goes here
+│   ├── code_search.py
+│   └── web_search.py
+├── app                        # server code goes here
+│   ├── config.yaml
+│   ├── main.py
+│   └── settings.py
+├── compose.yaml
+├── db
+│   ├── session.py
+│   └── url.py
+├── Dockerfile
+├── docs                       # Claude Code prompts
+│   ├── create-new-agent.md
+│   ├── improve-agent.md
+│   └── run-evals.md
+├── evals
+│   └── cases.py               # test cases
+└── README.md
+```
+
+## What you'll build
+
+This tutorial takes you from clone to a deployed agent platform in six steps:
+
+| Step                                                              | What happens                                                       |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------ |
+| [Setup](/tutorials/agent-platform/setup)                          | Run AgentOS and Postgres locally with Docker Compose.              |
+| [Create an agent](/tutorials/agent-platform/create-an-agent)      | Claude Code generates a new agent from a prompt.                   |
+| [Improve an agent](/tutorials/agent-platform/improve-an-agent)    | Claude Code reads live traces and iterates.                        |
+| [Evals](/tutorials/agent-platform/evals)                          | Lock in behavior with regression tests.                            |
+| [Deploy to Railway](/tutorials/agent-platform/deploy-to-railway)  | One command to provision Postgres, app, and a public domain.       |
+| [Next steps](/tutorials/agent-platform/next-steps)                | Teams, workflows, scheduling, and Slack interfaces.                |
+
+## Why control your data
+
+Every interaction with your platform produces data. Sessions, memory, traces, eval history. Two reasons keeping it in your own database matters:
+
+1. **Compliance.** Customer data, proprietary code, and internal documents stay where you control them. No third-party trace tool. No vendor-side retention.
+2. **Auto-improvement.** Coding agents close the loop on agent quality by reading trace data. They can only do that when the trace data lives where the iteration tool can read it. Vendor-stitched stacks split this surface across three SaaS products and the loop never closes.
+
+The agents you ship today are the smallest part of what you've built. The platform underneath them, and the iteration loop it enables, is what compounds.
+
+## Next
+
+[Setup →](/tutorials/agent-platform/setup) takes about five minutes.

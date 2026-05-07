@@ -1,10 +1,10 @@
 ---
 title: "What is AgentOS?"
 sidebarTitle: "Introduction"
-description: "The production runtime and control plane for multi-agent systems."
+description: "The runtime and control plane that runs your agent platform."
 ---
 
-**AgentOS turns your agents into a production service you can deploy anywhere.**
+**AgentOS is the runtime and control plane layers of an Agno-built agent platform.** Together with the [Agno SDK](/sdk/introduction), they form the three layers of the platform: SDK to build, Runtime to run, Control Plane to manage.
 
 - **Production API**: 50+ ready to use endpoints with SSE-compatible streaming.
 - **Data Ownership**: Sessions, memory, knowledge, and traces stored in your database.
@@ -40,12 +40,12 @@ app = agent_os.get_app()
 
 ## Architecture
 
-AgentOS consists of two parts:
+AgentOS has two parts:
 
-1. **Runtime**: Runs agents built with the Agno SDK (using FastAPI).
-2. **Control plane**: UI for managing, monitoring, and debugging your system.
+1. **Runtime**: A FastAPI service that runs agents, teams, and workflows.
+2. **Control plane**: A UI for managing, monitoring, and debugging your system.
 
-The runtime exposes a set of APIs that powers both, the control plane and your AI products.
+The runtime exposes the APIs that power both the control plane and your AI products. The runtime can serve agents built with the [Agno SDK](/sdk/introduction), the [Claude Agent SDK, LangGraph, or DSPy](/agent-os/multi-framework/overview).
 
 <img
   className="block dark:hidden"
