@@ -1,8 +1,8 @@
 ---
-title: Dual-Level HITL
-sidebarTitle: Dual-level HITL
+title: Nested HITL
+sidebarTitle: Nested HITL
 description: "Combine step-level and executor-level HITL on the same step. The workflow pauses twice: once before the step runs, once when the agent calls a HITL tool."
-keywords: [workflow, HITL, dual-level, step, executor, multi-pause, requires_confirmation, agent, tool]
+keywords: [workflow, HITL, nested, step, executor, multi-pause, requires_confirmation, agent, tool]
 mode: wide
 ---
 
@@ -65,7 +65,7 @@ else:
 ```
 
 <Warning>
-Iterating over the full `step_requirements` list during dual-level HITL re-resolves already-resolved requirements and produces wrong behavior. Use `[-1:]` to scope to the active pause.
+Iterating over the full `step_requirements` list during nested HITL re-resolves already-resolved requirements and produces wrong behavior. Use `[-1:]` to scope to the active pause.
 </Warning>
 
 ## Resolution Loop
@@ -99,68 +99,6 @@ while run_output.is_paused:
 
 print(run_output.content)
 ```
-
-## Supported Combinations
-
-Step-level HITL composes with executor-level HITL across all primitives that support both.
-
-| Step-Level Gate | Executor-Level Gate | Pause Order |
-|----------------|---------------------|-------------|
-| `requires_confirmation` on `Step` | `@tool(requires_confirmation=True)` | step confirm → tool confirm |
-| `requires_user_input` on `Step` | `@tool(requires_confirmation=True)` | step input → tool confirm |
-| `requires_output_review` on `Step` | `@tool(requires_confirmation=True)` | tool confirm → output review |
-| `requires_confirmation` on `Condition` | `@tool(requires_confirmation=True)` in branch | condition confirm → tool confirm |
-| `requires_user_input` on `Router` | `@tool(requires_confirmation=True)` in branch | route select → tool confirm |
-| `requires_confirmation` on `Router` | `@tool(requires_confirmation=True)` in branch | router confirm → tool confirm |
-| `requires_confirmation` on `Loop` | `@tool(requires_confirmation=True)` in inner step | loop start confirm → tool confirm (per iteration) |
-
-<Note>
-For `requires_output_review` + executor HITL, the executor pause comes **first** (during step execution) and the output review pause comes **after** (once the step's output is ready). The order matches when each gate naturally fires.
-</Note>
-
-## Streaming
-
-The same active-requirement pattern applies. Read the paused run from the session, not the stream.
-
-```python
-from agno.run.workflow import (
-    StepPausedEvent,
-    StepExecutorPausedEvent,
-    WorkflowCompletedEvent,
-)
-
-
-def consume_stream(stream):
-    for event in stream:
-        if isinstance(event, StepPausedEvent):
-            print(f"Step paused: {event.step_name}")
-        elif isinstance(event, StepExecutorPausedEvent):
-            print(f"Executor paused: {event.executor_name}")
-        elif isinstance(event, WorkflowCompletedEvent):
-            print("Done")
-
-
-consume_stream(workflow.run("Send a weather alert for Tokyo", stream=True))
-
-session = workflow.get_session()
-run_output = session.runs[-1] if session and session.runs else None
-
-while run_output and run_output.is_paused:
-    _active = (run_output.step_requirements or [])[-1:]
-    if any(r.requires_executor_input for r in _active):
-        resolve_executor_pause(run_output)
-    else:
-        resolve_step_pause(run_output)
-
-    consume_stream(workflow.continue_run(run_output, stream=True))
-
-    session = workflow.get_session()
-    run_output = session.runs[-1] if session and session.runs else None
-```
-
-## Loop Limitation
-
-`Loop` with executor HITL inside its inner step pauses on the iteration where the agent calls the HITL tool. The loop's own `requires_confirmation` (start gate) fires once before the first iteration. There is no per-iteration *executor* gate beyond what the agent's tool already provides.
 
 ## Cookbooks
 

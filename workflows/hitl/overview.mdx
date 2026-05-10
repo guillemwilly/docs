@@ -1,23 +1,20 @@
 ---
 title: Human-in-the-Loop in Workflows
 sidebarTitle: Overview
-description: Pause workflow execution for user confirmation, input, review, or decisions at the step level or executor level.
-keywords: [workflow, HITL, human-in-the-loop, confirmation, user input, pause, step, executor, human review]
+description: "Pause workflow execution to collect user confirmation, input, decisions, or tool approvals. State is persisted to the database so you can resume after the user responds."
+keywords: [workflow, HITL, human-in-the-loop, confirmation, user input, pause, step, executor, nested, human review]
 mode: wide
 ---
 
-Human-in-the-Loop (HITL) in Workflows enables you to pause execution to collect user confirmation, input, or decisions. The workflow state is persisted, allowing you to resume execution after the user responds.
+Workflows pause for user action at three levels:
 
-Workflows support HITL at two levels:
+| Level | What pauses | Configured on | Guide |
+|-------|-------------|---------------|-------|
+| **Step-level** | The workflow primitive, before or after it executes | `Step`, `Loop`, `Router`, `Condition`, `Steps` | [Step HITL](/workflows/hitl/step) |
+| **Executor-level** | A tool call inside the agent or team running the step | The `@tool` decorator | [Executor HITL](/workflows/hitl/executor) |
+| **Nested** | Both gates on the same step, in sequence | Both of the above | [Nested HITL](/workflows/hitl/nested) |
 
-- **Step-level HITL** — pauses *before* or *after* a workflow step executes. Configured on the workflow primitive (`Step`, `Loop`, `Router`, `Condition`, `Steps`).
-- **Executor-level HITL** — pauses *during* step execution when an agent or team inside the step calls a tool that requires human approval. Configured on the tool itself (e.g. `@tool(requires_confirmation=True)`). The pause propagates from the agent/team up to the workflow.
-
-Both levels can be combined on the same step. See [Executor HITL](/workflows/hitl/executor) and [Dual-level HITL](/workflows/hitl/dual-level) for details.
-
-<Note>
-User input is currently supported for `Step` (to collect parameters) and `Router` (to select routes). Other primitives (`Condition`, `Loop`, `Steps`) support confirmation only.
-</Note>
+Pause state is persisted to the workflow's database. When the user resolves the requirement, call `workflow.continue_run(run_output)` to resume from where it left off.
 
 ```python
 from agno.workflow import Workflow, OnReject
@@ -39,7 +36,6 @@ workflow = Workflow(
                 on_reject=OnReject.skip,
             ),
         ),
-        Step(name="save_results", agent=save_agent),
     ],
 )
 
@@ -51,68 +47,33 @@ if run_output.is_paused:
     run_output = workflow.continue_run(run_output)
 ```
 
-## Requirements
+## Pick a Level
 
-HITL workflows require a database to persist state between pauses:
-
-```python
-from agno.db.sqlite import SqliteDb
-from agno.db.postgres import PostgresDb
-
-# SQLite for development
-workflow = Workflow(db=SqliteDb(db_file="workflow.db"), ...)
-
-# PostgreSQL for production
-workflow = Workflow(db=PostgresDb(db_url="postgresql://..."), ...)
-```
-
-## HumanReview Config
-
-All HITL settings are grouped into a single [`HumanReview`](/workflows/hitl/human-review) object:
-
-```python
-from agno.workflow.types import HumanReview
-
-Step(
-    name="review_step",
-    agent=review_agent,
-    human_review=HumanReview(
-        requires_output_review=True,
-        output_review_message="Check the output.",
-        on_reject=OnReject.retry,
-        max_retries=3,
-        timeout=300,
-    ),
-)
-```
-
-Flat parameters (`requires_confirmation=True`, `confirmation_message="..."`) still work for backward compatibility. See the [HumanReview Config](/workflows/hitl/human-review) page for all fields and validation rules.
-
-## HITL Types
-
-| Type | Use Case | Field |
-|------|----------|-------|
-| [Confirmation](#confirmation) | Approve/reject before step execution | `requires_confirmation=True` |
-| [User Input](#user-input) | Collect parameters before step execution | `requires_user_input=True` |
-| [Output Review](/workflows/hitl/output-review) | Review/edit/reject output after step execution | `requires_output_review=True` |
-| [Route Selection](#route-selection) | User chooses which path(s) to execute | **Router** with `requires_user_input=True` |
-| [Iteration Review](/workflows/hitl/loop#iteration-review) | Review output between loop iterations | `requires_iteration_review=True` |
-| [Timeout](/workflows/hitl/timeout) | Auto-resolve if no human response in time | `timeout=300` |
-| [Error Handling](#error-handling) | Retry or skip failed steps | `on_error=OnError.pause` |
+| You want to... | Use |
+|----------------|-----|
+| Approve a whole step before it runs | [Step confirmation](/workflows/hitl/step#confirmation) |
+| Collect parameters before a step runs | [Step user input](/workflows/hitl/step#user-input) |
+| Review a step's output after it runs | [Output review](/workflows/hitl/output-review) |
+| Let the user pick which Router branch executes | [Router selection](/workflows/hitl/router#route-selection) |
+| Review each iteration of a Loop | [Loop iteration review](/workflows/hitl/loop#iteration-review) |
+| Pause a specific tool call inside an agent | [Executor confirmation](/workflows/hitl/executor#confirmation) |
+| Have an agent's tool ask the user for argument values | [Executor user input](/workflows/hitl/executor#user-input) |
+| Defer a tool's execution to an external system | [External execution](/workflows/hitl/executor#external-execution) |
+| Combine a step gate and a tool gate on the same step | [Nested HITL](/workflows/hitl/nested) |
+| Pause when a step errors | [Error handling](/workflows/hitl/error-handling) |
+| Auto-resolve a pause if the user is slow | [Timeout](/workflows/hitl/timeout) |
 
 ## Step-Level vs Executor-Level
 
-| Aspect | Step-Level HITL | Executor-Level HITL |
-|--------|----------------|---------------------|
-| **Configured on** | The workflow primitive (`Step`, `Loop`, etc.) | The tool used by the agent/team |
-| **When it pauses** | Before or after the step executes | During the step, when the agent calls the tool |
-| **Pause kind** | `pause_kind="step"` | `pause_kind="executor"` |
-| **Pause event** | `StepPaused` / `RouterPaused` / `StepOutputReview` | `StepExecutorPaused` |
-| **Continue event** | `StepContinued` | `StepExecutorContinued` |
-| **Use case** | Gate the whole step ("Run this step?", "Pick a branch", "Approve this output") | Gate a specific tool call ("Approve sending money to X", "Confirm this DB query") |
-| **Resolved by** | `req.confirm()`, `req.set_user_input(...)`, `req.select(...)` on the step requirement | Confirming each `executor_requirements[].tool_execution` |
-
-The two can be combined on the same step. For example: `requires_confirmation=True` on a `Step` (gate before the agent runs) + `@tool(requires_confirmation=True)` on the agent's tool (gate the tool call). See [Dual-level HITL](/workflows/hitl/dual-level).
+| Aspect | Step-Level | Executor-Level |
+|--------|-----------|----------------|
+| Configured on | The workflow primitive (`Step`, `Loop`, etc.) | The tool, via `@tool(...)` |
+| When it pauses | Before or after the step executes | During the step, when the agent calls the tool |
+| `pause_kind` | `"step"` | `"executor"` |
+| Pause event | `StepPausedEvent`, `RouterPausedEvent`, `StepOutputReviewEvent` | `StepExecutorPausedEvent` |
+| Continue event | `StepContinuedEvent` | `StepExecutorContinuedEvent` |
+| Use case | Gate the whole step | Gate a specific tool call |
+| Resolved by | `req.confirm()`, `req.set_user_input(...)`, `req.select(...)` | `executor_req.confirm()`, `executor_req.provide_user_input(...)` |
 
 ## Supported Primitives
 
@@ -124,192 +85,58 @@ The two can be combined on the same step. For example: `requires_confirmation=Tr
 | [Loop](/workflows/hitl/loop) | ✓ | - | [✓](/workflows/hitl/loop#iteration-review) | ✓ | - | [✓](/workflows/hitl/executor#composite-steps) (via inner Step) |
 | [Router](/workflows/hitl/router) | ✓ | - | [✓](/workflows/hitl/router#output-review) | - | ✓ | [✓](/workflows/hitl/executor#composite-steps) (via selected branch) |
 
+<Note>
+User input is currently supported on `Step` (to collect parameters) and `Router` (to select routes). Other primitives support confirmation only.
+</Note>
+
+## Requirements
+
+HITL workflows need a database to persist state between pauses.
+
+```python
+from agno.db.sqlite import SqliteDb       # SQLite for development
+from agno.db.postgres import PostgresDb   # PostgreSQL for production
+
+workflow = Workflow(db=SqliteDb(db_file="workflow.db"), ...)
+workflow = Workflow(db=PostgresDb(db_url="postgresql://..."), ...)
+```
+
 ## Run Output Properties
 
-When a workflow pauses, check these properties on `WorkflowRunOutput`:
+When a workflow pauses, inspect `WorkflowRunOutput`:
 
 | Property | Description |
 |----------|-------------|
-| `is_paused` | `True` if workflow is waiting for user action |
-| `steps_requiring_confirmation` | Steps needing confirm/reject |
-| `steps_requiring_user_input` | Steps needing user input values |
-| `steps_requiring_output_review` | Steps needing output review after execution |
-| `steps_requiring_route` | Routers needing route selection |
+| `is_paused` | `True` if waiting for user action |
+| `pause_kind` | `"step"` or `"executor"` |
+| `paused_step_name` | Name of the step where the pause occurred |
+| `step_requirements` | List of pending requirements (last entry is the active one) |
+| `steps_requiring_confirmation` | Filter: steps needing confirm/reject |
+| `steps_requiring_user_input` | Filter: steps needing user input values |
+| `steps_requiring_output_review` | Filter: steps needing output review |
+| `steps_requiring_route` | Filter: routers needing route selection |
 | `steps_with_errors` | Steps that failed with `on_error="pause"` |
 
-## Confirmation
-
-Pause before executing a step. User confirms to proceed or rejects to skip/cancel.
-
-```python
-Step(
-    name="delete_records",
-    agent=delete_agent,
-    human_review=HumanReview(
-        requires_confirmation=True,
-        confirmation_message="Delete 1000 records?",
-        on_reject=OnReject.skip,
-    ),
-)
-```
-
-Handle in your code:
-
-```python
-for req in run_output.steps_requiring_confirmation:
-    print(req.confirmation_message)
-    if user_approves():
-        req.confirm()
-    else:
-        req.reject()
-```
-
-## User Input
-
-Collect parameters from the user before step execution.
-
-```python
-from agno.workflow.types import HumanReview, UserInputField
-
-Step(
-    name="generate_report",
-    agent=report_agent,
-    human_review=HumanReview(
-        requires_user_input=True,
-        user_input_message="Configure report settings:",
-        user_input_schema=[
-            UserInputField(name="format", field_type="str", required=True),
-            UserInputField(name="include_charts", field_type="bool", required=False),
-        ],
-    ),
-)
-```
-
-Handle in your code:
-
-```python
-for req in run_output.steps_requiring_user_input:
-    print(req.user_input_message)
-    for field in req.user_input_schema:
-        value = get_user_value(field.name, field.field_type)
-        req.set_user_input(**{field.name: value})
-```
-
-<Tip>
-User input is available in the custom function step via `step_input.additional_data["user_input"]`.
-</Tip>
-
-## Output Review
-
-Pause after a step executes so the user can review the output. Supported on Step and Router. See the dedicated [Output Review](/workflows/hitl/output-review) page for full details.
-
-```python
-Step(
-    name="draft_email",
-    agent=draft_agent,
-    human_review=HumanReview(
-        requires_output_review=True,
-        output_review_message="Review the draft email.",
-        on_reject=OnReject.retry,
-        max_retries=3,
-    ),
-)
-```
-
-When rejected with `on_reject=OnReject.retry`, the step re-executes up to `max_retries` times. Pair with `reject(feedback=...)` to send feedback to the agent.
-
-## Iteration Review
-
-Pause after each loop iteration for review. Supported on Loop only.
-
-```python
-from agno.workflow.loop import Loop
-
-Loop(
-    name="refinement_loop",
-    steps=[Step(name="refine", executor=refine_fn)],
-    max_iterations=5,
-    human_review=HumanReview(
-        requires_iteration_review=True,
-        iteration_review_message="Review this iteration.",
-        on_reject=OnReject.retry,
-    ),
-)
-```
-
-## Route Selection
-
-Let users choose which path(s) a Router executes.
-
-```python
-from agno.workflow.router import Router
-
-Router(
-    name="analysis_router",
-    choices=[
-        Step(name="quick_analysis", ...),
-        Step(name="deep_analysis", ...),
-    ],
-    human_review=HumanReview(
-        requires_user_input=True,
-        user_input_message="Select analysis type:",
-    ),
-    allow_multiple_selections=False,
-)
-```
-
-Handle in your code:
-
-```python
-for req in run_output.steps_requiring_route:
-    print(req.available_choices)  # ["quick_analysis", "deep_analysis"]
-    req.select("deep_analysis")
-    # or req.select_multiple(["quick_analysis", "deep_analysis"])
-```
-
-## Error Handling
-
-Pause when a step fails, letting the user retry or skip.
-`This is only at the Step level.`
-
-```python
-from agno.workflow import OnError
-
-Step(
-    name="api_call",
-    executor=unreliable_function,
-    on_error=OnError.pause,  # fail | skip(default) | pause
-)
-```
-
-Handle in your code:
-
-```python
-for req in run_output.steps_with_errors:
-    print(f"Error: {req.error_message}")
-    if should_retry():
-        req.retry()
-    else:
-        req.skip()
-```
+For nested HITL, always read the **last** entry in `step_requirements` to determine the current pause type. Earlier entries are history. See [Nested HITL](/workflows/hitl/nested).
 
 ## OnReject Behavior
 
-The `on_reject` parameter controls what happens when a user rejects a step:
+`on_reject` controls what happens when a user rejects a step.
 
 | Value | Behavior |
 |-------|----------|
-| `OnReject.skip` | Skip the step and continue with the next (default for most primitives) |
+| `OnReject.skip` | Skip the step and continue (default for most primitives) |
 | `OnReject.cancel` | Cancel the entire workflow |
-| `OnReject.retry` | Re-execute the step. Pair with `reject(feedback=...)` to send feedback to the agent. See [Output Review](/workflows/hitl/output-review#reject-with-retry) |
-| `OnReject.else_branch` | For Condition only: execute `else_steps` (default for Condition) |
+| `OnReject.retry` | Re-execute the step. Pair with `reject(feedback=...)` to send feedback. See [Output Review](/workflows/hitl/output-review#reject-with-retry) |
+| `OnReject.else_branch` | For `Condition` only: execute `else_steps` (default for `Condition`) |
 
 ## Timeout
 
-Set a timeout for HITL pauses. If the user does not respond in time, `on_timeout` determines the action. See the dedicated [Timeout](/workflows/hitl/timeout) page for full details.
+Every HITL pause can have a deadline. If the user does not respond in time, `on_timeout` decides what happens.
 
 ```python
 from agno.workflow import OnTimeout
+from agno.workflow.types import HumanReview
 
 Step(
     name="approve_deploy",
@@ -317,39 +144,39 @@ Step(
     human_review=HumanReview(
         requires_confirmation=True,
         confirmation_message="Approve deployment?",
-        timeout=300,  # 5 minutes
-        on_timeout=OnTimeout.approve,
+        timeout=300,                       # 5 minutes
+        on_timeout=OnTimeout.approve,      # approve | reject | cancel
     ),
 )
 ```
 
-| `OnTimeout` Value | Behavior |
-|-------------------|----------|
-| `OnTimeout.approve` | Auto-approve and continue |
-| `OnTimeout.reject` | Auto-reject |
-| `OnTimeout.cancel` | Cancel the workflow |
+See [Timeout](/workflows/hitl/timeout) for the full set of behaviors and per-primitive details.
 
 ## Streaming
 
-HITL works with streaming workflows. Check for pauses in the event stream:
+HITL works with streaming. Watch for pause events; read the paused run from the session.
 
 ```python
-for event in workflow.run("input", stream=True, stream_events=True):
-    if isinstance(event, StepPausedEvent):
-        # Handle pause
+from agno.run.workflow import StepPausedEvent, StepExecutorPausedEvent
+
+for event in workflow.run("input", stream=True):
+    if isinstance(event, (StepPausedEvent, StepExecutorPausedEvent)):
         pass
 
 session = workflow.get_session()
 run_output = session.runs[-1]
 
 if run_output.is_paused:
-    # Handle requirements
-    workflow.continue_run(run_output, stream=True, stream_events=True)
+    # resolve requirements...
+    for event in workflow.continue_run(run_output, stream=True):
+        pass
 ```
+
+The full `WorkflowRunOutput` (including `step_requirements`) is persisted to the database, not yielded as a stream event.
 
 ## The @pause Decorator
 
-Mark custom function steps with HITL configuration using the `@pause` decorator:
+Mark custom function steps with HITL configuration.
 
 ```python
 from agno.workflow.decorators import pause
@@ -366,7 +193,6 @@ def process_data(step_input: StepInput) -> StepOutput:
     threshold = step_input.additional_data["user_input"]["threshold"]
     return StepOutput(content=f"Processed with threshold {threshold}")
 
-# The decorator config is auto-detected when used in a custom function step
 Step(name="process", executor=process_data)
 ```
 
@@ -380,13 +206,13 @@ Step(name="process", executor=process_data)
     Confirmation, user input, and output review on steps
   </Card>
   <Card title="Executor HITL" icon="wrench" href="/workflows/hitl/executor">
-    Tool-level HITL inside agents/teams that propagates to the workflow
+    Tool-level HITL inside agents and teams
   </Card>
-  <Card title="Dual-level HITL" icon="layer-group" href="/workflows/hitl/dual-level">
-    Combine step-level and executor-level HITL on the same step
+  <Card title="Nested HITL" icon="layer-group" href="/workflows/hitl/nested">
+    Combine step-level and executor-level on the same step
   </Card>
   <Card title="Output Review" icon="eye" href="/workflows/hitl/output-review">
-    Review, edit, or reject output after step execution
+    Review, edit, or reject output after a step runs
   </Card>
   <Card title="Router HITL" icon="route" href="/workflows/hitl/router">
     Route selection, confirmation, and output review

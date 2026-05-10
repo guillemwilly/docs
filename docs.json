@@ -267,7 +267,7 @@
                       "workflows/hitl/human-review",
                       "workflows/hitl/step",
                       "workflows/hitl/executor",
-                      "workflows/hitl/dual-level",
+                      "workflows/hitl/nested",
                       "workflows/hitl/output-review",
                       "workflows/hitl/router",
                       "workflows/hitl/condition",
