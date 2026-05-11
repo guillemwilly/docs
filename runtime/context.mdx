@@ -285,9 +285,10 @@ When the built-ins don't fit, subclass `ContextProvider`. The base class handles
 | `_default_tools()` | `[_query_tool()]` | Custom tool surface for `mode=default` |
 | `_all_tools()` | `[_query_tool()]` | Custom surface for `mode=tools` |
 
-<Accordion title="Minimal read-only example">
 ```python
 from agno.context import Answer, ContextProvider, Status
+
+FAQ = {"pricing": "See agno.com/pricing", "support": "Email help@agno.com"}
 
 class FAQContextProvider(ContextProvider):
     def status(self) -> Status:
@@ -308,7 +309,6 @@ agent = Agent(model=..., tools=faq.get_tools())
 ```
 
 The agent now has a `query_faq` tool. Same shape as every built-in provider.
-</Accordion>
 
 #### Sub-agent model
 
