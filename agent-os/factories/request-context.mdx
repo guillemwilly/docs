@@ -1,0 +1,130 @@
+---
+title: RequestContext
+sidebarTitle: RequestContext
+description: The trusted and untrusted fields AgentOS passes to every factory call.
+keywords: [request context, trusted context, factory trust model, jwt claims, factory input, multi-tenant authorization, request state, claims, scopes]
+---
+
+<Badge icon="code-branch" color="orange">
+    <Tooltip tip="Introduced in v2.6.0" cta="View release notes" href="https://github.com/agno-agi/agno/releases/tag/v2.6.0">v2.6.0</Tooltip>
+</Badge>
+
+`RequestContext` is the single object AgentOS threads into every factory call. It carries the caller's identity, validated client input, and claims populated by verified middleware.
+
+```python
+from agno.factory import RequestContext
+
+
+def build_agent(ctx: RequestContext):
+    user_id = ctx.user_id            # request.state wins; form field is fallback
+    role = ctx.trusted.claims.get("role") # populated by JWTMiddleware
+    cfg = ctx.input                   # validated against input_schema
+    ...
+```
+
+## Fields
+
+| Field | Type | Source | Description |
+|-------|------|--------|-------------|
+| `user_id` | `Optional[str]` | `request.state.user_id` (set by middleware), with form field as fallback | Caller identity. Same precedence as the prototype path. JWT claims reach this field only via `JWTMiddleware` setting `request.state.user_id`; without middleware the JWT is invisible to factories. |
+| `session_id` | `Optional[str]` | `request.state.session_id`, with form field as fallback | Conversation/session handle. Same precedence rules as `user_id`. |
+| `input` | `Optional[BaseModel \| dict]` | `factory_input` form field or query parameter | Validated against the factory's `input_schema` if set. Otherwise the parsed JSON object or `None`. |
+| `trusted` | `TrustedContext` | `request.state.claims` / `request.state.scopes` | Populated only by verified middleware. Use for authorization. |
+| `trusted.claims` | `Mapping[str, Any]` | `request.state.claims` | Token claims set by verified middleware (e.g. `JWTMiddleware`). |
+| `trusted.scopes` | `frozenset[str]` | `request.state.scopes` | RBAC scopes set by verified middleware. |
+| `request` | `Any` | Raw FastAPI `Request` | Escape hatch for anything not plumbed through the typed fields. Typed as `Any` in the source to avoid forcing a FastAPI import. |
+
+## The Trust Split
+
+The split between `ctx.input` and `ctx.trusted` decides which fields are safe to use for authorization.
+
+| Source | Use For |
+|--------|---------|
+| `ctx.trusted.claims` / `ctx.trusted.scopes` | Authorization decisions: which tools to grant, which model tier, which database scope. |
+| `ctx.input` | Non-privileged customization: persona, depth, theme, output format. |
+| `ctx.user_id` / `ctx.session_id` | Identity for logging, session storage, and personalization. Not an authorization signal on its own. |
+
+Anything in `ctx.input` came from the client request body, so reading authorization decisions from it lets clients escalate privileges. Read `role`, tier, or scopes from `ctx.trusted.claims` instead, which only verified middleware can populate:
+
+```python
+def build_agent(ctx: RequestContext) -> Agent:
+    if ctx.trusted.claims.get("role") == "admin":
+        tools = [read_docs, write_docs, manage_members]
+    ...
+```
+
+## Where Trusted Fields Come From
+
+`AgentOS` builds `TrustedContext` from `request.state.claims` and `request.state.scopes`. For JWTs, use [`JWTMiddleware`](/agent-os/middleware/jwt). For any other verification flow, write middleware that sets these two fields:
+
+```python
+from starlette.middleware.base import BaseHTTPMiddleware
+
+
+class TenantContextMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        tenant = await verify_session_cookie(request)
+        request.state.claims = {"tenant_id": tenant.id, "role": tenant.role}
+        request.state.scopes = frozenset(tenant.scopes)
+        return await call_next(request)
+
+
+app.add_middleware(TenantContextMiddleware)
+```
+
+If no middleware sets these, `ctx.trusted.claims` is `{}` and `ctx.trusted.scopes` is empty.
+
+<Note>
+Anything on `request.state.claims` or `request.state.scopes` is treated as trusted. Only set these from verified sources.
+</Note>
+
+## factory_input on the Request
+
+`factory_input` is a JSON object the client sends to drive non-privileged customization. Where it is accepted:
+
+| Endpoint | Source |
+|----------|--------|
+| `POST /{agents,teams,workflows}/{id}/runs` | Form field |
+| `POST /workflows/{id}/runs/{run_id}/continue` | Form field |
+| `GET /workflows/{id}/runs/{run_id}` | Query parameter |
+| `GET /workflows/{id}/runs` | Query parameter |
+| `WS /workflows/{id}/ws` | JSON field in the message body |
+| `POST /agents/{id}/runs/{run_id}/continue` and `POST /teams/{id}/runs/{run_id}/continue` | Not read. The factory re-runs with `ctx.input=None`. |
+| `POST .../cancel` | Not read. The factory is not invoked. |
+
+```bash
+curl -X POST http://localhost:7777/agents/research-agent/runs \
+    -F 'message=Summarize the latest AI papers' \
+    -F 'factory_input={"persona": "skeptic", "depth": 5}' \
+    -F 'stream=false'
+```
+
+| Factory setting | Effect on `ctx.input` |
+|-----------------|-----------------------|
+| `input_schema=SomeModel` | `ctx.input` is a validated `SomeModel` instance. Invalid input returns 400 before the factory runs. |
+| No `input_schema` | `ctx.input` is the parsed dict or `None`. |
+
+## Where user_id and session_id Come From
+
+`user_id` and `session_id` follow the same precedence as the prototype path. **Verified middleware wins over the form field.** If both are set and disagree, the form value is overridden and a warning is logged.
+
+1. `request.state.user_id` / `request.state.session_id` set by verified middleware (e.g. `JWTMiddleware` lifting the `sub` claim). Wins if present.
+2. Explicit form field on the run request. Used only when no verified value is set.
+3. `None`.
+
+The factory sees the resolved value on `ctx.user_id` / `ctx.session_id`.
+
+<Warning>
+A client cannot impersonate another user via the `user_id` form field. The JWT value on `request.state` wins; the form value is overridden.
+</Warning>
+
+<Note>
+The warn-on-conflict check runs on `POST /runs` only. On agent and team `/continue` endpoints, the factory rebuilds with `ctx.user_id=None` if neither the client nor middleware sets it, so re-send `user_id` on every `/continue` if your factory branches on it.
+</Note>
+
+## Developer Resources
+
+- [Factories overview](/agent-os/factories/overview)
+- [JWT Middleware](/agent-os/middleware/jwt)
+- [Custom Middleware](/agent-os/middleware/custom)
+- [Factories reference](/reference/agent-os/factories)

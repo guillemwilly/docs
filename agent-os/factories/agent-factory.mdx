@@ -1,0 +1,188 @@
+---
+title: AgentFactory
+sidebarTitle: AgentFactory
+description: Build an Agent per request from verified middleware claims, client input, or any request-time context.
+keywords: [agent factory, per-request agent, multi-tenant agent, factory input, input schema, request context, dynamic tools, jwt role agent]
+---
+
+<Badge icon="code-branch" color="orange">
+    <Tooltip tip="Introduced in v2.6.0" cta="View release notes" href="https://github.com/agno-agi/agno/releases/tag/v2.6.0">v2.6.0</Tooltip>
+</Badge>
+
+An `AgentFactory` is a registered callable that produces a fresh `Agent` for each request. Register it in `AgentOS(agents=[...])` alongside any prototype agents.
+
+```python basic_factory.py
+from agno.agent import Agent, AgentFactory
+from agno.db.postgres import PostgresDb
+from agno.factory import RequestContext
+from agno.models.openai import OpenAIResponses
+from agno.os import AgentOS
+
+db = PostgresDb(db_url="postgresql+psycopg://ai:ai@localhost:5532/ai")
+
+
+def build_tenant_agent(ctx: RequestContext) -> Agent:
+    user_id = ctx.user_id or "anonymous"
+    return Agent(
+        model=OpenAIResponses(id="gpt-5.4"),
+        db=db,
+        instructions=f"You are a helpful assistant for tenant {user_id}. Be concise.",
+        markdown=True,
+    )
+
+
+tenant_factory = AgentFactory(
+    id="tenant-agent",
+    db=db,
+    factory=build_tenant_agent,
+    name="Per-tenant assistant",
+    description="Builds a personalized agent per tenant on each request.",
+)
+
+agent_os = AgentOS(agents=[tenant_factory])
+app = agent_os.get_app()
+
+if __name__ == "__main__":
+    agent_os.serve(app="basic_factory:app", port=7777, reload=True)
+```
+
+Run it against the factory like any other agent:
+
+```bash
+curl -X POST http://localhost:7777/agents/tenant-agent/runs \
+    -F 'message=Hello, who are you?' \
+    -F 'user_id=tenant_42' \
+    -F 'stream=false'
+```
+
+See the [Factories reference](/reference/agent-os/factories) for the full constructor signature and parameter list.
+
+## Async Factories
+
+Use an async callable when you need to fetch context from a database, an HTTP service, or any other awaitable resource.
+
+```python
+async def build_tenant_agent(ctx: RequestContext) -> Agent:
+    profile = await fetch_tenant_profile(ctx.user_id)
+    return Agent(
+        model=OpenAIResponses(id="gpt-5.4"),
+        db=db,
+        instructions=profile["instructions"],
+    )
+
+
+tenant_factory = AgentFactory(
+    id="tenant-agent",
+    db=db,
+    factory=build_tenant_agent,
+)
+```
+
+AgentOS detects the coroutine and awaits it on every request.
+
+## With an Input Schema
+
+Declare a Pydantic model on the factory to validate client-supplied `factory_input` before the factory runs.
+
+```python input_schema_factory.py
+from typing import Literal
+
+from pydantic import BaseModel
+
+from agno.agent import Agent, AgentFactory
+from agno.db.postgres import PostgresDb
+from agno.factory import RequestContext
+from agno.models.openai import OpenAIResponses
+from agno.os import AgentOS
+
+db = PostgresDb(db_url="postgresql+psycopg://ai:ai@localhost:5532/ai")
+
+PERSONAS = {
+    "analyst": "You are a data-driven research analyst. Cite sources and use numbers.",
+    "advisor": "You are a strategic advisor. Focus on actionable recommendations.",
+    "skeptic": "You are a critical skeptic. Challenge assumptions and highlight risks.",
+}
+
+
+class ResearchInput(BaseModel):
+    persona: Literal["analyst", "advisor", "skeptic"] = "analyst"
+    depth: int = 3
+
+
+def build_research_agent(ctx: RequestContext) -> Agent:
+    cfg: ResearchInput = ctx.input
+    return Agent(
+        model=OpenAIResponses(id="gpt-5.4"),
+        db=db,
+        instructions=(
+            f"{PERSONAS[cfg.persona]}\n\n"
+            f"Research depth: {cfg.depth} (higher = more thorough)."
+        ),
+        markdown=True,
+    )
+
+
+research_factory = AgentFactory(
+    id="research-agent",
+    db=db,
+    factory=build_research_agent,
+    input_schema=ResearchInput,
+)
+
+agent_os = AgentOS(agents=[research_factory])
+app = agent_os.get_app()
+
+if __name__ == "__main__":
+    agent_os.serve(app="input_schema_factory:app", port=7777, reload=True)
+```
+
+Send `factory_input` as a JSON string in the run request:
+
+```bash
+curl -X POST http://localhost:7777/agents/research-agent/runs \
+    -F 'message=What are the latest trends in AI?' \
+    -F 'factory_input={"persona": "skeptic", "depth": 5}' \
+    -F 'stream=false'
+```
+
+If `factory_input` does not validate, AgentOS returns 400 before the factory runs. If `factory_input` is omitted entirely, AgentOS validates the empty object `{}` against the schema: the request succeeds when every field has a default (like `ResearchInput` above), and 400s otherwise.
+
+## Authorization From Verified Context
+
+Use `ctx.trusted.claims` and `ctx.trusted.scopes` for any decision that affects authorization. Trusted fields are populated by middleware that has verified the request, never by client input.
+
+```python
+def build_workspace_agent(ctx: RequestContext) -> Agent:
+    role = ctx.trusted.claims.get("role")
+    tools = [read_docs]
+    if role in ("admin", "editor"):
+        tools.append(write_docs)
+    if role == "admin":
+        tools.append(manage_members)
+    return Agent(model=OpenAIResponses(id="gpt-5.4"), db=db, tools=tools)
+```
+
+The trust split keeps authorization decisions visible at code review time. See [RequestContext](/agent-os/factories/request-context) for the full model and [JWT Role Factory](/examples/agent-os/factories/jwt-role-factory) for an end-to-end example.
+
+## Error Handling
+
+Raise `FactoryPermissionError` from inside the factory to reject unauthorized callers with HTTP 403. AgentOS raises `FactoryValidationError` (400) automatically when `factory_input` fails `input_schema` validation.
+
+```python
+from agno.factory import FactoryPermissionError
+
+
+def build_agent(ctx: RequestContext) -> Agent:
+    if "agents:run" not in ctx.trusted.scopes:
+        raise FactoryPermissionError("Missing 'agents:run' scope")
+    ...
+```
+
+See the [Factories reference](/reference/agent-os/factories) for the full exception hierarchy and the post-resolve behavior (id enforcement, db fallback, `store_events`, `/continue` re-invocation).
+
+## Developer Resources
+
+- [Factories overview](/agent-os/factories/overview)
+- [RequestContext and TrustedContext](/agent-os/factories/request-context)
+- [Factories reference](/reference/agent-os/factories) for the full API surface.
+- [Factory examples](/examples/agent-os/factories/overview) for runnable cookbooks.

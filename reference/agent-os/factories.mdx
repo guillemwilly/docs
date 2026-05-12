@@ -1,0 +1,100 @@
+---
+title: Factories
+sidebarTitle: Factories
+---
+
+Registered callables that produce a fresh `Agent`, `Team`, or `Workflow` per request. `AgentFactory`, `TeamFactory`, and `WorkflowFactory` are thin subclasses of `BaseFactory[T]` and share the same constructor; they differ only in the component type produced.
+
+## Import
+
+```python
+from agno.agent import AgentFactory
+from agno.team import TeamFactory
+from agno.workflow import WorkflowFactory
+from agno.factory import (
+    BaseFactory,
+    RequestContext,
+    TrustedContext,
+    FactoryError,
+    FactoryValidationError,
+    FactoryPermissionError,
+    FactoryContextRequired,
+)
+```
+
+## Parameters
+
+Shared constructor signature for `AgentFactory`, `TeamFactory`, and `WorkflowFactory`:
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `id` | `str` | required | Stable handle used in API URLs (e.g. `POST /agents/{id}/runs`). The produced component's `id` is enforced to match this. Empty string raises `ValueError`. |
+| `db` | `Union[BaseDb, AsyncBaseDb]` | required | Database for session storage. Used as the fallback `db` if the produced component's `db` attribute is falsy. `None` raises `ValueError`. |
+| `factory` | `Union[Callable[[RequestContext], T], Callable[[RequestContext], Awaitable[T]]]` | required | Callable invoked on every run-scoped request. Returns a fresh component of type `T`. Both sync and async callables are accepted. |
+| `name` | `Optional[str]` | `None` | Human-readable name for UI discovery. |
+| `description` | `Optional[str]` | `None` | Description for UI discovery. |
+| `input_schema` | `Optional[Type[BaseModel]]` | `None` | Pydantic model describing the expected shape of `factory_input` in the run request. Used for validation and OpenAPI schema generation. |
+
+After the factory returns, AgentOS enforces the component's `id` to match the factory's `id`, sets `store_events=True` so per-step run events persist on the run output, and runs the component-specific `initialize_*()`.
+
+## Exceptions
+
+All factory exceptions inherit from `FactoryError`. The router maps them to HTTP status codes:
+
+| Exception | HTTP | When |
+|-----------|------|------|
+| `FactoryValidationError` | 400 | `factory_input` failed validation against `input_schema`. Raised automatically by AgentOS. |
+| `FactoryPermissionError` | 403 | Factory decided the caller is not authorized. Raise from inside the factory. |
+| `FactoryError` | 500 | Base for all factory errors. A bad return type, sync invocation of an async factory, or any uncaught exception inside the factory surfaces as 500. |
+| `FactoryContextRequired` | internal | Raised by the `get_agent_by_id` / `get_team_by_id` / `get_workflow_by_id` helpers (both sync and async variants) when a factory is matched without a `RequestContext`. The HTTP routers short-circuit before this can fire on normal endpoints; the WebSocket workflow replay path catches it and falls back to event-buffer / DB lookup. |
+
+## Usage
+
+```python
+from agno.agent import Agent, AgentFactory
+from agno.db.postgres import PostgresDb
+from agno.factory import RequestContext
+from agno.models.openai import OpenAIResponses
+from agno.os import AgentOS
+
+db = PostgresDb(db_url="postgresql+psycopg://ai:ai@localhost:5532/ai")
+
+
+def build_agent(ctx: RequestContext) -> Agent:
+    return Agent(model=OpenAIResponses(id="gpt-5.4"), db=db)
+
+
+agent_factory = AgentFactory(id="tenant-agent", db=db, factory=build_agent)
+
+agent_os = AgentOS(agents=[agent_factory])
+app = agent_os.get_app()
+```
+
+### Mixing Factories and Prototypes
+
+```python
+agent_os = AgentOS(
+    agents=[
+        Agent(id="support-agent", model=OpenAIResponses(id="gpt-5.4"), db=db),
+        AgentFactory(id="tenant-agent", db=db, factory=build_agent),
+    ],
+)
+```
+
+### Sending `factory_input`
+
+```bash
+curl -X POST http://localhost:7777/agents/tenant-agent/runs \
+    -F 'message=Hello' \
+    -F 'factory_input={"persona": "analyst"}' \
+    -F 'stream=false'
+```
+
+## See Also
+
+- [AgentOS Factories](/agent-os/factories/overview) - Conceptual overview
+- [AgentFactory](/agent-os/factories/agent-factory) - Build an Agent per request
+- [TeamFactory](/agent-os/factories/team-factory) - Build a Team per request
+- [WorkflowFactory](/agent-os/factories/workflow-factory) - Build a Workflow per request
+- [RequestContext](/agent-os/factories/request-context) - Trusted vs untrusted fields and field precedence
+- [Factory examples](/examples/agent-os/factories/overview) - Runnable examples mirroring the cookbook

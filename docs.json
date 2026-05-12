@@ -4359,6 +4359,16 @@
                 ]
               },
               {
+                "group": "Factories",
+                "pages": [
+                  "agent-os/factories/overview",
+                  "agent-os/factories/agent-factory",
+                  "agent-os/factories/team-factory",
+                  "agent-os/factories/workflow-factory",
+                  "agent-os/factories/request-context"
+                ]
+              },
+              {
                 "group": "Knowledge",
                 "pages": [
                   "agent-os/knowledge/manage-knowledge",
@@ -6980,6 +6990,16 @@
                     ]
                   },
                   {
+                    "group": "Factories",
+                    "pages": [
+                      "examples/agent-os/factories/overview",
+                      "examples/agent-os/factories/tenant-agent-factory",
+                      "examples/agent-os/factories/input-schema-factory",
+                      "examples/agent-os/factories/jwt-role-factory",
+                      "examples/agent-os/factories/hitl-factory"
+                    ]
+                  },
+                  {
                     "group": "Os Config",
                     "pages": [
                       "examples/agent-os/os-config/overview",
@@ -7399,7 +7419,8 @@
                   "reference/agent-os/agent-os",
                   "reference/agent-os/configuration",
                   "reference/agent-os/authorization-config",
-                  "reference/agent-os/jwt-middleware"
+                  "reference/agent-os/jwt-middleware",
+                  "reference/agent-os/factories"
                 ]
               },
               {

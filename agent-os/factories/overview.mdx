@@ -1,0 +1,106 @@
+---
+title: AgentOS Factories
+sidebarTitle: Overview
+description: Build agents, teams, and workflows per request from verified middleware claims, user input, and other request-time context.
+keywords: [agent factory, team factory, workflow factory, multi-tenant, per-request agents, dynamic agent construction, factory pattern, request context, trusted context, jwt claims, factory input schema, agentos factories]
+---
+
+<Badge icon="code-branch" color="orange">
+    <Tooltip tip="Introduced in v2.6.0" cta="View release notes" href="https://github.com/agno-agi/agno/releases/tag/v2.6.0">v2.6.0</Tooltip>
+</Badge>
+
+Per-request, context-driven Agent, Team, and Workflow construction in AgentOS. A factory is a registered callable that AgentOS invokes on every request, returning a freshly built component whose tools, instructions, model, or database scope can depend on who is calling.
+
+```python tenant_factory.py
+from agno.agent import Agent, AgentFactory
+from agno.db.postgres import PostgresDb
+from agno.factory import RequestContext
+from agno.models.openai import OpenAIResponses
+from agno.os import AgentOS
+
+db = PostgresDb(
+    id="factory-demo-db",
+    db_url="postgresql+psycopg://ai:ai@localhost:5532/ai",
+)
+
+
+def build_tenant_agent(ctx: RequestContext) -> Agent:
+    user_id = ctx.user_id or "anonymous"
+    return Agent(
+        model=OpenAIResponses(id="gpt-5.4"),
+        db=db,
+        instructions=f"You are a helpful assistant for tenant {user_id}. Be concise.",
+        markdown=True,
+    )
+
+
+tenant_factory = AgentFactory(
+    id="tenant-agent",
+    db=db,
+    factory=build_tenant_agent,
+    name="Per-tenant assistant",
+    description="Builds a personalized agent per tenant on each request.",
+)
+
+agent_os = AgentOS(agents=[tenant_factory])
+app = agent_os.get_app()
+
+if __name__ == "__main__":
+    agent_os.serve(app="tenant_factory:app", port=7777)
+```
+
+Hit `POST /agents/tenant-agent/runs` and the factory is invoked with a [`RequestContext`](/agent-os/factories/request-context) for that request.
+
+## When to Use a Factory
+
+| Use Case | Pattern |
+|----------|---------|
+| Tools or model vary per caller role | `AgentFactory` reading `ctx.trusted.claims` |
+| Members vary per tenant | `TeamFactory` returning a `Team` with tenant-specific agents |
+| Pipeline shape varies per request | `WorkflowFactory` returning a different step graph |
+| Client picks persona, depth, or style | Factory with `input_schema` reading `ctx.input` |
+| Static, shared component | A prototype `Agent` / `Team` / `Workflow` (no factory) |
+
+## How It Works
+
+1. Register a factory in `AgentOS(agents=[...])`, `teams=[...]`, or `workflows=[...]`.
+2. The client calls the same endpoint as a prototype component (`POST /agents/{id}/runs`).
+3. AgentOS builds a `RequestContext`. `user_id` and `session_id` come from `request.state` (set by verified middleware) and fall back to the form field; the form value is overridden with a warning if they disagree. `claims` and `scopes` come from `request.state` only. `factory_input` is parsed from the form, the query string (workflow GETs), or the WebSocket message body (workflow WebSocket runs), depending on the endpoint.
+4. AgentOS validates `factory_input` against the factory's `input_schema`, if set.
+5. AgentOS invokes the factory with the validated context and gets a fresh component back.
+6. The component's `id` is forced to match the factory's `id`. Its `db` is filled in from the factory if falsy. `store_events=True` is set. The relevant `initialize_agent()` / `initialize_team()` / `initialize_workflow()` runs. Then the request runs.
+
+The prototype path (a plain `Agent` / `Team` / `Workflow` in the same list) is unchanged. Factories and prototypes coexist in the same `AgentOS`.
+
+<Note>
+`GET /agents/{id}`, `GET /teams/{id}`, and `GET /workflows/{id}` (the component-detail endpoints) return the factory's metadata without invoking it. The [Factories reference](/reference/agent-os/factories) has the full per-endpoint behavior and discovery payload shape.
+</Note>
+
+## Learn How To
+
+<CardGroup cols={3}>
+  <Card title="AgentFactory" icon="user" href="/agent-os/factories/agent-factory">
+    Produce a fresh Agent per request from verified claims or client input.
+  </Card>
+  <Card title="TeamFactory" icon="users" href="/agent-os/factories/team-factory">
+    Compose a fresh Team and its members for each request.
+  </Card>
+  <Card title="WorkflowFactory" icon="diagram-project" href="/agent-os/factories/workflow-factory">
+    Compose pipelines whose step graph depends on the request.
+  </Card>
+  <Card title="RequestContext" icon="shield" href="/agent-os/factories/request-context">
+    Trusted vs untrusted fields, claim plumbing, and authorization.
+  </Card>
+  <Card title="JWT Middleware" icon="key" href="/agent-os/middleware/jwt">
+    Populate `ctx.trusted.claims` from verified JWTs.
+  </Card>
+  <Card title="Factories Reference" icon="code" href="/reference/agent-os/factories">
+    Class signatures, parameters, and exceptions.
+  </Card>
+</CardGroup>
+
+## Developer Resources
+
+- [Factory examples](/examples/agent-os/factories/overview)
+- [AgentFactory / TeamFactory / WorkflowFactory reference](/reference/agent-os/factories)
+- [RequestContext reference](/reference/agent-os/factories#requestcontext)
