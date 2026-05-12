@@ -1,7 +1,7 @@
 ---
 title: Dynamic Agents
 sidebarTitle: Overview
-description: Build agents, teams, and workflows dynamically per request from verified middleware claims, user input, and other request-time context.
+description: Build agents, teams, and workflows per request from JWT claims, user input, and other request-time context.
 keywords: [agent factory, team factory, workflow factory, multi-tenant, per-request agents, dynamic agent construction, factory pattern, request context, trusted context, jwt claims, factory input schema, agentos factories]
 ---
 
@@ -9,7 +9,7 @@ keywords: [agent factory, team factory, workflow factory, multi-tenant, per-requ
     <Tooltip tip="Introduced in v2.6.0" cta="View release notes" href="https://github.com/agno-agi/agno/releases/tag/v2.6.0">v2.6.0</Tooltip>
 </Badge>
 
-Per-request, context-driven Agent, Team, and Workflow construction in AgentOS. A factory is a registered callable that AgentOS invokes on every request, returning a freshly built component whose tools, instructions, model, or database scope can depend on who is calling.
+Build a fresh Agent, Team, or Workflow for each incoming request. A factory is a callable that AgentOS invokes per request, so tools, instructions, model, and database scope can depend on who's calling.
 
 ```python tenant_factory.py
 from agno.agent import Agent, AgentFactory
@@ -57,17 +57,17 @@ Hit `POST /agents/tenant-agent/runs` and the factory is invoked with a [`Request
 
 ## When to Use a Factory
 
+Use a plain `Agent` / `Team` / `Workflow` when the component is shared across all callers. Reach for a factory when construction depends on the request.
+
 | Use Case | Pattern |
 |----------|---------|
 | Tools or model vary per caller role | `AgentFactory` reading `ctx.trusted.claims` |
 | Members vary per tenant | `TeamFactory` returning a `Team` with tenant-specific agents |
 | Pipeline shape varies per request | `WorkflowFactory` returning a different step graph |
 | Client picks persona, depth, or style | Factory with `input_schema` reading `ctx.input` |
-| Static, shared component | A prototype `Agent` / `Team` / `Workflow` (no factory) |
-
 
 <Note>
-`GET /agents/{id}`, `GET /teams/{id}`, and `GET /workflows/{id}` (the component-detail endpoints) return the factory's metadata without invoking it. The [Factories reference](/reference/agent-os/factories) has the full per-endpoint behavior and discovery payload shape.
+`GET /agents/{id}`, `GET /teams/{id}`, and `GET /workflows/{id}` (the component-detail endpoints) return the factory's metadata without invoking it. See the [Factories reference](/reference/agent-os/factories) for per-endpoint behavior and discovery payload shape.
 </Note>
 
 ## Learn How To
