@@ -1,0 +1,170 @@
+---
+title: TeamFactory
+sidebarTitle: TeamFactory
+description: Build a Team per request whose members, model, and instructions depend on the caller.
+keywords: [team factory, per-request team, multi-tenant team, factory input, request context, dynamic members, jwt role team]
+---
+
+<Badge icon="code-branch" color="orange">
+    <Tooltip tip="Introduced in v2.6.0" cta="View release notes" href="https://github.com/agno-agi/agno/releases/tag/v2.6.0">v2.6.0</Tooltip>
+</Badge>
+
+A `TeamFactory` produces a fresh `Team` for each request. Register it in `AgentOS(teams=[...])` alongside any prototype teams.
+
+```python basic_team_factory.py
+from agno.agent import Agent
+from agno.db.postgres import PostgresDb
+from agno.factory import RequestContext
+from agno.models.openai import OpenAIResponses
+from agno.os import AgentOS
+from agno.team import Team, TeamFactory
+
+db = PostgresDb(db_url="postgresql+psycopg://ai:ai@localhost:5532/ai")
+
+
+def build_support_team(ctx: RequestContext) -> Team:
+    user_id = ctx.user_id or "anonymous"
+
+    billing_agent = Agent(
+        name="Billing Agent",
+        role="Handle billing inquiries",
+        model=OpenAIResponses(id="gpt-5.4"),
+        instructions=f"You handle billing questions for tenant {user_id}. Be concise.",
+    )
+
+    tech_agent = Agent(
+        name="Tech Support Agent",
+        role="Handle technical issues",
+        model=OpenAIResponses(id="gpt-5.4"),
+        instructions=f"You handle technical support for tenant {user_id}. Be concise.",
+    )
+
+    return Team(
+        name="Support Team",
+        model=OpenAIResponses(id="gpt-5.4"),
+        members=[billing_agent, tech_agent],
+        db=db,
+        instructions=[
+            f"You are the support team leader for tenant {user_id}.",
+            "Route billing questions to the Billing Agent and technical issues to the Tech Support Agent.",
+        ],
+        markdown=True,
+    )
+
+
+support_team_factory = TeamFactory(
+    id="support-team",
+    db=db,
+    factory=build_support_team,
+    name="Per-tenant Support Team",
+    description="Builds a support team with billing and tech agents per tenant.",
+)
+
+agent_os = AgentOS(teams=[support_team_factory])
+app = agent_os.get_app()
+
+if __name__ == "__main__":
+    agent_os.serve(app="basic_team_factory:app", port=7777, reload=True)
+```
+
+Run the team like any other team:
+
+```bash
+curl -X POST http://localhost:7777/teams/support-team/runs \
+    -F 'message=I need help with billing and a technical issue' \
+    -F 'user_id=tenant_42' \
+    -F 'stream=false'
+```
+
+See the [Factories reference](/reference/agent-os/factories) for the full constructor signature and parameter list.
+
+## Members That Scale with the Caller
+
+Member composition can change per request. A common pattern: scale team size and model quality with a subscription tier from `ctx.trusted.claims`.
+
+```python
+def build_research_team(ctx: RequestContext) -> Team:
+    tier = ctx.trusted.claims.get("tier", "free")
+    model_id = TIER_MODELS.get(tier, "gpt-4.1-mini")
+
+    members = [researcher(model_id), writer(model_id)]
+    if tier == "enterprise":
+        members.append(reviewer(model_id))
+
+    return Team(name="Research Team", model=OpenAIResponses(id=model_id), members=members, db=db)
+```
+
+The `tier` claim comes from verified middleware, so the `tier` cannot be changed by the request body. See [Authorization From Verified Context](/agent-os/factories/agent-factory#authorization-from-verified-context) for the trust model and [JWT Role Factory](/examples/agent-os/factories/jwt-role-factory) for an end-to-end JWT example.
+
+## Async Factories
+
+Use an async callable when you need to fetch context from a database, an HTTP service, or any other awaitable resource.
+
+```python async_team_factory.py
+async def build_team(ctx: RequestContext) -> Team:
+    members = await load_members_for_tenant(ctx.user_id)
+    return Team(
+        name="Tenant Team",
+        model=OpenAIResponses(id="gpt-5.4"),
+        members=members,
+        db=db,
+    )
+
+
+team_factory = TeamFactory(id="tenant-team", db=db, factory=build_team)
+```
+
+## With an Input Schema
+
+Declare a Pydantic model on the factory to validate client-supplied `factory_input` before the factory runs.
+
+```python team_factory_input.py
+from pydantic import BaseModel
+
+
+class TeamConfig(BaseModel):
+    include_reviewer: bool = False
+
+
+def build_team(ctx: RequestContext) -> Team:
+    cfg: TeamConfig = ctx.input
+    members = [researcher, writer]
+    if cfg.include_reviewer:
+        members.append(reviewer)
+    return Team(name="Research", model=OpenAIResponses(id="gpt-5.4"), members=members, db=db)
+
+
+team_factory = TeamFactory(
+    id="research-team",
+    db=db,
+    factory=build_team,
+    input_schema=TeamConfig,
+)
+```
+
+<Note>
+`AgentFactory` and `TeamFactory` instances cannot be passed inside `members`. Build per-member customization inside the team's factory.
+</Note>
+
+## Error Handling
+
+Raise `FactoryPermissionError` from inside the factory to reject unauthorized callers with HTTP 403. AgentOS raises `FactoryValidationError` (400) automatically when `factory_input` fails `input_schema` validation.
+
+```python
+from agno.factory import FactoryPermissionError
+
+
+def build_team(ctx: RequestContext) -> Team:
+    if "teams:run" not in ctx.trusted.scopes:
+        raise FactoryPermissionError("Missing 'teams:run' scope")
+    ...
+```
+
+See the [Factories reference](/reference/agent-os/factories) for the full exception hierarchy and the post-resolve behavior.
+
+## Developer Resources
+
+- [Factories overview](/agent-os/factories/overview)
+- [RequestContext fields](/reference/agent-os/factories#requestcontext)
+- [Factories reference](/reference/agent-os/factories)
+- [Factory examples](/examples/agent-os/factories/overview)

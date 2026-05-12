@@ -1,0 +1,11 @@
+---
+title: "Factories"
+sidebarTitle: "Overview"
+description: "Examples for `AgentFactory` in AgentOS."
+---
+| Example | Description |
+|---------|-------------|
+| [Tenant Agent Factory](/examples/agent-os/factories/tenant-agent-factory) | A factory that builds a per-tenant Agent on every request, registered alongside a static prototype. |
+| [Input Schema Factory](/examples/agent-os/factories/input-schema-factory) | Client sends `factory_input` JSON, validated against a Pydantic schema before the factory runs. |
+| [JWT Role Factory](/examples/agent-os/factories/jwt-role-factory) | RBAC tool grants from trusted JWT claims. Authorization from verified middleware, customization from client input. |
+| [HITL Factory](/examples/agent-os/factories/hitl-factory) | Factory agent with a tool that requires human confirmation before executing. |

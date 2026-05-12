@@ -1,0 +1,100 @@
+---
+title: Dynamic Agents
+sidebarTitle: Overview
+description: Build agents, teams, and workflows per request from JWT claims, user input, and other request-time context.
+keywords: [agent factory, team factory, workflow factory, multi-tenant, per-request agents, dynamic agent construction, factory pattern, request context, trusted context, jwt claims, factory input schema, agentos factories]
+---
+
+<Badge icon="code-branch" color="orange">
+    <Tooltip tip="Introduced in v2.6.0" cta="View release notes" href="https://github.com/agno-agi/agno/releases/tag/v2.6.0">v2.6.0</Tooltip>
+</Badge>
+
+Build a fresh Agent, Team, or Workflow for each incoming request. A factory is a callable that AgentOS invokes per request, so tools, instructions, model, and database scope can depend on who's calling.
+
+```python tenant_factory.py
+from agno.agent import Agent, AgentFactory
+from agno.db.postgres import PostgresDb
+from agno.factory import RequestContext
+from agno.models.openai import OpenAIResponses
+from agno.os import AgentOS
+
+db = PostgresDb(
+    id="factory-demo-db",
+    db_url="postgresql+psycopg://ai:ai@localhost:5532/ai",
+)
+
+
+def build_tenant_agent(ctx: RequestContext) -> Agent:
+    user_id = ctx.user_id or "anonymous"
+    return Agent(
+        model=OpenAIResponses(id="gpt-5.4"),
+        db=db,
+        instructions=f"You are a helpful assistant for tenant {user_id}. Be concise.",
+        markdown=True,
+    )
+
+
+tenant_factory = AgentFactory(
+    id="tenant-agent",
+    db=db,
+    factory=build_tenant_agent,
+    name="Per-tenant assistant",
+    description="Builds a personalized agent per tenant on each request.",
+)
+
+agent_os = AgentOS(agents=[tenant_factory])
+app = agent_os.get_app()
+
+if __name__ == "__main__":
+    agent_os.serve(app="tenant_factory:app", port=7777)
+```
+
+Hit `POST /agents/tenant-agent/runs` and the factory is invoked with a [`RequestContext`](/reference/agent-os/factories#requestcontext) for that request.
+
+<Note>
+`id` and `db` are required on `AgentFactory`. The factory's `id` overrides any `id` set on the `Agent` returned by the callable.
+</Note>
+
+## When to Use a Factory
+
+Use a plain `Agent` / `Team` / `Workflow` when the component is shared across all callers. Reach for a factory when construction depends on the request.
+
+| Use Case | Pattern |
+|----------|---------|
+| Tools or model vary per caller role | `AgentFactory` reading `ctx.trusted.claims` |
+| Members vary per tenant | `TeamFactory` returning a `Team` with tenant-specific agents |
+| Pipeline shape varies per request | `WorkflowFactory` returning a different step graph |
+| Client picks persona, depth, or style | Factory with `input_schema` reading `ctx.input` |
+
+<Note>
+`GET /agents/{id}`, `GET /teams/{id}`, and `GET /workflows/{id}` (the component-detail endpoints) return the factory's metadata without invoking it. See the [Factories reference](/reference/agent-os/factories) for per-endpoint behavior and discovery payload shape.
+</Note>
+
+## Learn How To
+
+<CardGroup cols={3}>
+  <Card title="AgentFactory" icon="user" href="/agent-os/factories/agent-factory">
+    Produce a fresh Agent per request from verified claims or client input.
+  </Card>
+  <Card title="TeamFactory" icon="users" href="/agent-os/factories/team-factory">
+    Compose a fresh Team and its members for each request.
+  </Card>
+  <Card title="WorkflowFactory" icon="diagram-project" href="/agent-os/factories/workflow-factory">
+    Compose pipelines whose step graph depends on the request.
+  </Card>
+  <Card title="RequestContext" icon="shield" href="/reference/agent-os/factories#requestcontext">
+    Fields, sources, and identity precedence.
+  </Card>
+  <Card title="JWT Middleware" icon="key" href="/agent-os/middleware/jwt">
+    Populate `ctx.trusted.claims` from verified JWTs.
+  </Card>
+  <Card title="Factories Reference" icon="code" href="/reference/agent-os/factories">
+    Class signatures, parameters, and exceptions.
+  </Card>
+</CardGroup>
+
+## Developer Resources
+
+- [Factory examples](/examples/agent-os/factories/overview)
+- [AgentFactory / TeamFactory / WorkflowFactory reference](/reference/agent-os/factories)
+- [RequestContext reference](/reference/agent-os/factories#requestcontext)
