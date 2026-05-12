@@ -1951,16 +1951,16 @@
                   {
                     "group": "Providers",
                     "pages": [
-                      "context-providers/catalog/overview",
-                      "context-providers/catalog/slack",
-                      "context-providers/catalog/gmail",
-                      "context-providers/catalog/calendar",
-                      "context-providers/catalog/drive",
-                      "context-providers/catalog/database",
-                      "context-providers/catalog/filesystem",
-                      "context-providers/catalog/web",
-                      "context-providers/catalog/mcp",
-                      "context-providers/catalog/wiki"
+                      "context-providers/providers/overview",
+                      "context-providers/providers/slack",
+                      "context-providers/providers/gmail",
+                      "context-providers/providers/calendar",
+                      "context-providers/providers/drive",
+                      "context-providers/providers/database",
+                      "context-providers/providers/filesystem",
+                      "context-providers/providers/web",
+                      "context-providers/providers/mcp",
+                      "context-providers/providers/wiki"
                     ]
                   },
                   "context-providers/custom-providers"
