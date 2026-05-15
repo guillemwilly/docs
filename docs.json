@@ -4741,6 +4741,18 @@
                 ]
               },
               {
+                "group": "Coda",
+                "pages": [
+                  "deploy/templates/coda/overview"
+                ]
+              },
+              {
+                "group": "PAL",
+                "pages": [
+                  "deploy/templates/pal/overview"
+                ]
+              },
+              {
                 "group": "Gcode",
                 "pages": [
                   "deploy/templates/gcode/overview"

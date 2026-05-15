@@ -1,0 +1,105 @@
+---
+title: "Coda"
+sidebarTitle: "Overview"
+description: "Code companion that lives in Slack. PR reviews, issue triage, architecture questions."
+---
+
+**Coda is a code companion that lives in Slack and works alongside your team.**
+
+Most engineering work isn't writing code. It's understanding how things work, reviewing PRs, figuring out what broke, triaging the backlog, and deciding what's safe to change. That work happens in Slack and GitHub, not in an editor. Coda fills that gap.
+
+## How It Works
+
+Coda connects to your GitHub repos and learns your codebase. It answers architecture questions, reviews PRs, reads open issues, and flags what's worth tackling next.
+
+| Capability | What It Does |
+|------------|--------------|
+| **Architecture Q&A** | "How does auth work?" "Where is the model API call?" |
+| **PR Reviews** | Diffs against your conventions, leaves comments |
+| **Issue Triage** | Reads open issues, flags urgent ones |
+| **Code Standards** | Learns your patterns and conventions over time |
+
+### Self-Learning
+
+Coda improves with use. It picks up your coding standards, conventions, and patterns. Over time it stops waiting to be asked: it reviews open issues on a schedule, flags low-hanging fruit, and proposes changes.
+
+## Run Locally
+
+```bash
+git clone https://github.com/agno-agi/coda.git && cd coda
+
+cp example.env .env
+# Edit .env: add OPENAI_API_KEY and GITHUB_ACCESS_TOKEN
+
+docker compose up -d --build
+```
+
+Confirm Coda is running at `http://localhost:8000/docs`.
+
+### Configure GitHub Access
+
+Create a GitHub Personal Access Token with repo access and add it to `.env`:
+
+```bash
+GITHUB_ACCESS_TOKEN="github_pat_***"
+```
+
+Then tell Coda which repos to learn by editing `repos.yaml`:
+
+```yaml
+repos:
+  - url: https://github.com/your-org/your-repo
+    branch: main
+```
+
+### Connect to the Control Plane
+
+1. Open [os.agno.com](https://os.agno.com)
+2. Click **Connect OS** → **Local**
+3. Enter `http://localhost:8000`
+
+## Connect to Slack
+
+Coda is designed to live in Slack as your teammate. Add your Slack credentials to `.env`:
+
+```bash
+SLACK_TOKEN="xoxb-***"
+SLACK_SIGNING_SECRET="***"
+```
+
+Then restart to pick up the credentials:
+
+```bash
+docker compose restart
+```
+
+See [Slack setup](/deploy/interfaces/slack/overview) for creating the Slack app.
+
+## Deploy to Railway
+
+```bash
+railway login
+./scripts/railway_up.sh
+```
+
+The script provisions PostgreSQL, configures environment variables, and deploys Coda.
+
+Then connect via the control plane:
+
+1. Open [os.agno.com](https://os.agno.com)
+2. Click **Connect OS** → **Live**
+3. Enter your Railway domain
+
+## Example Prompts
+
+Try these after connecting your repos:
+
+- How does authentication work in this codebase?
+- Review the open PR on feature/new-api
+- What are the most important open issues?
+- Where is the database connection configured?
+- What testing conventions does this project use?
+
+## Source
+
+For GitHub access setup, Slack configuration, and architecture details, see the [GitHub repo](https://github.com/agno-agi/coda).
