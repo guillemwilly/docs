@@ -10,20 +10,38 @@ Most engineering work isn't writing code. It's understanding how things work, re
 
 ## How It Works
 
-Coda connects to your GitHub repos and learns your codebase. It answers architecture questions, reviews PRs, reads open issues, and flags what's worth tackling next.
+Coda is a team of five specialist agents coordinated by a leader:
+
+| Agent | Role |
+|-------|------|
+| **Explorer** | Code search, architecture Q&A, PR reviews (read-only) |
+| **Coder** | Writes code in isolated worktrees, opens PRs |
+| **Planner** | Breaks features into ordered GitHub issues |
+| **Triager** | Labels, comments, closes issues based on code analysis |
+| **Researcher** | Web search for docs, APIs, error messages |
+
+**Code isolation:** All code changes happen in git worktrees on `coda/*` branches. Your main branch is never touched. Coda opens PRs; humans merge them.
 
 | Capability | What It Does |
 |------------|--------------|
 | **Architecture Q&A** | "How does auth work?" "Where is the model API call?" |
 | **PR Reviews** | Diffs against your conventions, leaves comments |
 | **Issue Triage** | Reads open issues, flags urgent ones |
-| **Code Standards** | Learns your patterns and conventions over time |
+| **Code Writing** | Isolated worktrees, never touches main |
 
 ### Self-Learning
 
-Coda improves with use. It picks up your coding standards, conventions, and patterns. Over time it stops waiting to be asked: it reviews open issues on a schedule, flags low-hanging fruit, and proposes changes.
+Coda improves without retraining through Agno's `LearningMachine`. It picks up your coding standards, conventions, and patterns:
+
+| Week 1 | Week 4 |
+|--------|--------|
+| Writes working code using generic patterns | Follows your service layer conventions, uses your team's error handling pattern, matches your naming style |
+
+Over time Coda stops waiting to be asked: it reviews open issues on a schedule, flags low-hanging fruit, and proposes changes.
 
 ## Run Locally
+
+See [Setup guide](/tutorials/coda/setup) for detailed instructions.
 
 ```bash
 git clone https://github.com/agno-agi/coda.git && cd coda
@@ -73,9 +91,11 @@ Then restart to pick up the credentials:
 docker compose restart
 ```
 
-See [Slack setup](/deploy/interfaces/slack/overview) for creating the Slack app.
+See [Slack setup](/tutorials/coda/connect-slack) for creating the Slack app.
 
 ## Deploy to Railway
+
+See [Deploy to Railway](/tutorials/coda/deploy-to-railway) for JWT setup and production configuration.
 
 ```bash
 railway login

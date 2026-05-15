@@ -25,7 +25,7 @@ Scout doesn't just search. It **navigates**: following links between systems, re
 
 ### Self-Building Knowledge
 
-As Scout answers questions, it maintains two internal systems:
+As Scout answers questions, it maintains two internal systems. See [Knowledge & CRM](/tutorials/scout/knowledge-and-crm) for details.
 
 | System | Purpose |
 |--------|---------|
@@ -35,6 +35,8 @@ As Scout answers questions, it maintains two internal systems:
 These start empty and grow with use. Scout learns that "the API" means your REST API, not a generic concept. It learns that Sarah owns billing and Marcus handles infrastructure.
 
 ## Run Locally
+
+See [Setup guide](/tutorials/scout/setup) for detailed instructions.
 
 ```bash
 git clone https://github.com/agno-agi/scout.git && cd scout
@@ -55,6 +57,8 @@ Confirm Scout is running at `http://localhost:8000/docs`.
 
 ## Deploy to Railway
 
+See [Deploy to Railway](/tutorials/scout/deploy-to-railway) for JWT setup and production configuration.
+
 ```bash
 railway login
 ./scripts/railway_up.sh
@@ -74,26 +78,26 @@ Scout's power comes from the providers you connect. Start with one or two, then 
 
 ### Slack
 
+See [Slack setup](/tutorials/scout/connect-slack) for bot creation and permissions.
+
 ```bash
 # Add to .env
 SLACK_BOT_TOKEN=xoxb-...
 SLACK_SIGNING_SECRET=...
 ```
 
-Scout can search messages, read channel history, and understand who said what.
-
 ### Google Drive
+
+See [Google Drive setup](/tutorials/scout/connect-google-drive) for service account configuration.
 
 ```bash
 # Add to .env
 GOOGLE_SERVICE_ACCOUNT_FILE=/path/to/service-account.json
 ```
 
-Scout can read documents, spreadsheets, and presentations shared with the service account.
-
 ### MCP Servers
 
-Connect any MCP-compatible tool:
+See [MCP setup](/tutorials/scout/connect-mcp-servers) for server configuration. Connect any MCP-compatible tool:
 
 ```python
 from agno.tools.mcp import MCPTools

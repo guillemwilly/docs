@@ -6,7 +6,9 @@ description: "Self-learning data agent that grounds answers in 6 layers of conte
 
 **Dash is a self-learning data agent that gets better with every query.**
 
-Most Text-to-SQL agents are stateless. They make mistakes, you fix them, then they make the same mistake again. Dash solves this with 6 layers of grounded context and a learning loop that improves with every run.
+Traditional Text-to-SQL agents start from scratch on every query. They guess column names, repeat the same mistakes, and never learn from corrections. Your team fixes an error, and the agent makes the same error again tomorrow.
+
+Dash solves this with 6 layers of grounded context and a learning loop that captures every fix. The knowledge base functions like manually-editable model weights: update retrieval context, not neural network parameters.
 
 Checkout the [repo](https://github.com/agno-agi/dash) for more details.
 
@@ -19,6 +21,8 @@ Dash is a team of three agents coordinated by a leader:
 | **Analyst** | Reads company data (read-only), generates SQL, interprets results |
 | **Engineer** | Builds reusable views and summary tables in the `dash` schema |
 | **Leader** | Routes queries, coordinates the team, posts to Slack |
+
+**Schema boundaries:** Company data lives in the `public` schema (read-only). Agent-created views and summary tables live in the `dash` schema. The Analyst's SQL tools enforce read-only at the PostgreSQL level, not just in prompts.
 
 ### Six Layers of Context
 
@@ -33,7 +37,7 @@ Dash is a team of three agents coordinated by a leader:
 
 ### Self-Learning
 
-Dash improves without retraining or fine-tuning through two complementary systems:
+Two paths run in parallel: the **online path** answers questions using retrieved context, the **offline path** captures learnings for future queries. Dash improves without retraining or fine-tuning:
 
 | System | Stores | How It Evolves |
 |--------|--------|----------------|
@@ -53,6 +57,8 @@ Dash reasons about what makes an answer useful, not just technically correct.
 | `Hamilton: 11` | Lewis Hamilton dominated 2019 with **11 wins out of 21 races**, more than double Bottas's 4 wins. This performance secured his sixth world championship. |
 
 ## Run Locally
+
+See [Setup guide](/tutorials/dash/setup) for detailed instructions.
 
 ```bash
 git clone https://github.com/agno-agi/dash.git && cd dash
@@ -89,6 +95,8 @@ Confirm Dash is running at `http://localhost:8000/docs`.
 </Frame>
 
 ## Deploy to Railway
+
+See [Deploy to Railway](/tutorials/dash/deploy-to-railway) for JWT setup and production configuration.
 
 Railway deployment uses `.env.production` to keep production credentials separate.
 
@@ -155,7 +163,7 @@ Dash can receive DMs, @mentions, and thread replies, and can post to channels pr
 3. Set `SLACK_TOKEN` and `SLACK_SIGNING_SECRET` in `.env`
 4. Restart Dash
 
-See [Slack setup](/deploy/interfaces/slack/overview) for details.
+See [Slack setup](/tutorials/dash/connect-slack) for details.
 
 ## Example Prompts
 
