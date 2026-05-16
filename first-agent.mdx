@@ -4,38 +4,35 @@ description: "Build and run your first agent in 20 lines of code."
 keywords: [agno, agent, quickstart, tutorial]
 ---
 
-Let's build an agent that can read/write local files, has long and short term memory, and runs as a production API you can build a product on top of.
+Let's create an agent that organizes a messy folder. It walks through the folder, categorizes the files and proposes a clean layout.
 
-## 1. Create the Agent
+## Create your Agent
 
-Save the following code as `workbench.py`:
+Save the following code as `sorting_hat.py`:
 
-```python workbench.py lines
+```python sorting_hat.py lines
+from pathlib import Path
 from agno.agent import Agent
-from agno.db.sqlite import SqliteDb
-from agno.os import AgentOS
 from agno.tools.workspace import Workspace
 
-workbench = Agent(
-    name="Workbench",
-    model="openai:gpt-5.4",
-    tools=[Workspace(".",
-        allowed=["read", "list", "search"],
-        confirm=["write", "edit", "delete", "shell"],
-    )],  # read/write/edit/shell in this directory
-    enable_agentic_memory=True,  # remembers across sessions
-    add_history_to_context=True,  # include past runs
-    num_history_runs=3,  # last 3 conversations
+folder = Path(__file__).parent
+
+sorting_hat = Agent(
+    name="Sorting Hat",
+    model="openai:gpt-5.5",
+    tools=[Workspace(root=str(folder), allowed=["read", "list", "search", "shell"])],
+    instructions=(
+        "Walk the folder, figure out what's there, and propose a clean organization. "
+        "Decide the categories yourself. Use shell commands when they help (e.g. `file`, "
+        "`pdftotext`). Return a tidy summary, a category breakdown, and a folder tree."
+    ),
+    markdown=True,
 )
 
-# Serve via AgentOS
-agent_os = AgentOS(agents=[workbench], tracing=True, db=SqliteDb(db_file="agno.db"))
-app = agent_os.get_app()
+sorting_hat.print_response(f"Inventory and organize {folder}", stream=True)
 ```
 
-`Workspace(".")` scopes the agent to the current directory. `read`, `list`, and `search` run without approval. `write`, `edit`, `delete`, and `shell` require human approval.
-
-## 2. Run Your AgentOS
+## Run your Agent
 
 <Steps>
   <Step title="Set up your virtual environment">
@@ -54,7 +51,7 @@ app = agent_os.get_app()
   </Step>
   <Step title="Install dependencies">
     ```bash
-    uv pip install -U 'agno[os]' openai
+    uv pip install -U agno openai
     ```
   </Step>
   <Step title="Export your OpenAI API key">
@@ -71,33 +68,64 @@ app = agent_os.get_app()
     </CodeGroup>
 
   </Step>
-  <Step title="Run your AgentOS">
+  <Step title="Run your Agent">
     ```bash
-    fastapi dev workbench.py
+    python sorting_hat.py
     ```
-    Your AgentOS is now running at:
-
-    `http://localhost:8000`
-
-    API documentation is automatically available at:
-
-    `http://localhost:8000/docs`
-
   </Step>
 </Steps>
 
-Now you have:
-  - A stateful agent served as a production API.
-  - Tracing and session monitoring enabled out of the box.
-  - Per-session storage and isolation, with JWT-based RBAC available for multi-user isolation.
+## Run your Agent as a Service
+
+The code above is a one-run python script. If we need our agent to do anything useful, we need to run it as a service. We should also:
+1. **Add session storage**, so we can have conversations with our agent. Agno automatically manages session read, write and context injection for you.
+2. **Add memory**, so our agent learns from our usage patterns.
+
+Save the following code as `workbench.py`:
+
+```python workbench.py lines
+from agno.agent import Agent
+from agno.db.sqlite import SqliteDb
+from agno.os import AgentOS
+from agno.tools.workspace import Workspace
+
+workbench = Agent(
+    name="Workbench",
+    model="openai:gpt-5.5",
+    db=SqliteDb(db_file="workbench.db"),  # session storage
+    tools=[Workspace(".")],  # read/write/edit/shell in this directory
+    enable_agentic_memory=True,  # remembers across sessions
+    add_history_to_context=True,  # include past runs
+    num_history_runs=3,  # last 3 conversations
+)
+
+# Serve via AgentOS → streaming, auth, session isolation, API endpoints
+agent_os = AgentOS(agents=[workbench], tracing=True)
+app = agent_os.get_app()
+```
+
+Install the `os` extra and run with FastAPI:
+
+```bash
+uv pip install -U 'agno[os]'
+fastapi dev workbench.py
+```
+
+Your AgentOS is now running at `http://localhost:8000`. API docs are at `http://localhost:8000/docs`.
+
+20 lines of code and you have:
+- A stateful agent served as a production API
+- Session storage and conversation history
+- Tracing on every run
+- Per-session isolation, with JWT-based RBAC available for multi-user isolation
 
 No third-party services required.
 
-## 3. Chat with your Agent
+### Give your Agent a UI
 
-The [AgentOS UI](https://os.agno.com) connects your browser to your runtime.
+The code above runs our agent as a service using the AgentOS. AgentOS is a FastAPI-based runtime that serves agents and related operations as REST APIs.
 
-Use it to test, monitor, and manage your agents in real time.
+AgentOS also comes with a UI, available at: [os.agno.com](https://os.agno.com). It connects directly from your browser to the running API. Use it to test, monitor, and manage your agents in real time.
 
 1. Open [os.agno.com](https://os.agno.com) and sign in.
 2. Click **"Connect OS"**
@@ -119,12 +147,8 @@ Use it to test, monitor, and manage your agents in real time.
 **Click on Chat, and ask:**
 
 ```text
-List the files here and tell me what kind of project this is.
+Categorize the files in your working dir
 ```
-
-The agent reads your workspace and answers grounded in what it actually finds.
-
-Try a follow-up like "summarize the README" or "create a NOTES.md with three bullet takeaways". The second one will pause for your approval before the file is written, since `write_file` is a confirm-required tool by default.
 
 Click Sessions or Traces in the sidebar to inspect stored conversations.
 
@@ -132,19 +156,7 @@ Click Sessions or Traces in the sidebar to inspect stored conversations.
 All session data is stored in your local database, no data leaves your system.
 </Tip>
 
-## Next
+## Next Steps
 
-<CardGroup cols={2}>
-  <Card title="Build an agent platform" icon="layer-group" iconType="duotone" href="/tutorials/agent-platform/overview">
-    The full template: clone, ship agents with Claude Code, deploy to Railway.
-  </Card>
-  <Card title="Start from a production template" icon="rocket-launch" iconType="duotone" href="/tutorials/pick-a-template">
-    Scout, Dash, Coda. Pick the closest to what you're building.
-  </Card>
-  <Card title="Understand the runtime" icon="cubes" iconType="duotone" href="/runtime/overview">
-    Why AgentOS exists and the work it handles for you.
-  </Card>
-  <Card title="Use Agno with your coding agent" icon="terminal" iconType="duotone" href="/coding-agents">
-    Wire up agno documentation with your favorite coding agent.
-  </Card>
-</CardGroup>
+- [Wire up agno with your favorite coding agent. →](/coding-agents)
+- [Build an agent platform managed entirely by claude code →](/tutorials/agent-platform/overview)
