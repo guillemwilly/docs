@@ -15,8 +15,8 @@ This cookbook is for AgentOS/AGUI where tool execution happens in the frontend.
 The frontend will receive the tool call and handle execution on the client side.
 """
 
-from agno.agent import Agent
-from agno.models.openai import OpenAIResponses
+from agno.agent.agent import Agent
+from agno.models.openai import OpenAIChat
 from agno.os import AgentOS
 from agno.os.interfaces.agui import AGUI
 from agno.tools import tool
@@ -42,7 +42,7 @@ def generate_haiku(topic: str) -> str:
 
 
 agent = Agent(
-    model=OpenAIResponses(id="gpt-5.4"),
+    model=OpenAIChat(id="gpt-4o"),
     tools=[
         DuckDuckGoTools(),
         generate_haiku,

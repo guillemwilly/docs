@@ -12,8 +12,8 @@ Demonstrates agent with tools.
 
 from typing import List
 
-from agno.agent import Agent
-from agno.models.openai import OpenAIResponses
+from agno.agent.agent import Agent
+from agno.models.openai import OpenAIChat
 from agno.os import AgentOS
 from agno.os.interfaces.agui import AGUI
 from agno.tools import tool
@@ -34,7 +34,7 @@ def generate_haiku(
 
 
 agent = Agent(
-    model=OpenAIResponses(id="gpt-5.4"),
+    model=OpenAIChat(id="gpt-4o"),
     tools=[
         WebSearchTools(),
         generate_haiku,

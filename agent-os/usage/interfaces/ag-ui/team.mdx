@@ -5,17 +5,17 @@ description: "Multi-agent research team with specialized roles and web interface
 
 ## Code
 
-```python cookbook/os/interfaces/agui/research_team.py
-from agno.agent import Agent
-from agno.models.openai import OpenAIResponses
+```python cookbook/05_agent_os/interfaces/agui/research_team.py
+from agno.agent.agent import Agent
+from agno.models.openai import OpenAIChat
 from agno.os import AgentOS
 from agno.os.interfaces.agui import AGUI
-from agno.team import Team
+from agno.team.team import Team
 
 researcher = Agent(
     name="researcher",
     role="Research Assistant",
-    model=OpenAIResponses(id="gpt-5.4"),
+    model=OpenAIChat(id="gpt-4o"),
     instructions="You are a research assistant. Find information and provide detailed analysis.",
     markdown=True,
 )
@@ -23,7 +23,7 @@ researcher = Agent(
 writer = Agent(
     name="writer",
     role="Content Writer", 
-    model=OpenAIResponses(id="gpt-5.4"),
+    model=OpenAIChat(id="gpt-4o"),
     instructions="You are a content writer. Create well-structured content based on research.",
     markdown=True,
 )
@@ -77,7 +77,7 @@ if __name__ == "__main__":
 
   <Step title="Run Example">
     ```bash
-    python cookbook/os/interfaces/agui/research_team.py
+    python cookbook/05_agent_os/interfaces/agui/research_team.py
     ```
   </Step>
 </Steps>

@@ -23,12 +23,12 @@ uv pip install ag-ui-protocol
   Expose an Agno agent through the AG-UI interface using `AgentOS` and `AGUI`.
 
 ```python basic.py
-from agno.agent import Agent
-from agno.models.openai import OpenAIResponses
+from agno.agent.agent import Agent
+from agno.models.openai import OpenAIChat
 from agno.os import AgentOS
 from agno.os.interfaces.agui import AGUI
 
-chat_agent = Agent(model=OpenAIResponses(id="gpt-5.4"))
+chat_agent = Agent(model=OpenAIChat(id="gpt-4o"))
 
 agent_os = AgentOS(agents=[chat_agent], interfaces=[AGUI(agent=chat_agent)])
 app = agent_os.get_app()
@@ -118,9 +118,9 @@ Provide `agent` or `team`.
 
 ### Key Method
 
-| Method       | Parameters               | Return Type | Description                                              |
-| ------------ | ------------------------ | ----------- | -------------------------------------------------------- |
-| `get_router` | `use_async: bool = True` | `APIRouter` | Returns the AG-UI FastAPI router and attaches endpoints. |
+| Method       | Parameters | Return Type | Description                                              |
+| ------------ | ---------- | ----------- | -------------------------------------------------------- |
+| `get_router` | None       | `APIRouter` | Returns the AG-UI FastAPI router and attaches endpoints. |
 
 ## Endpoints
 

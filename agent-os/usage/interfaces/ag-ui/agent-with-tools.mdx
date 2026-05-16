@@ -5,15 +5,15 @@ description: "Investment analyst agent with financial tools and web interface"
 
 ## Code
 
-```python cookbook/os/interfaces/agui/agent_with_tool.py
-from agno.agent import Agent
-from agno.models.openai import OpenAIResponses
+```python cookbook/05_agent_os/interfaces/agui/agent_with_tools.py
+from agno.agent.agent import Agent
+from agno.models.openai import OpenAIChat
 from agno.os import AgentOS
 from agno.os.interfaces.agui import AGUI
 from agno.tools.yfinance import YFinanceTools
 
 agent = Agent(
-    model=OpenAIResponses(id="gpt-5.4"),
+    model=OpenAIChat(id="gpt-4o"),
     tools=[
         YFinanceTools(
             stock_price=True, 
@@ -32,7 +32,7 @@ agent_os = AgentOS(
 app = agent_os.get_app()
 
 if __name__ == "__main__":
-    agent_os.serve(app="agent_with_tool:app", reload=True)
+    agent_os.serve(app="agent_with_tools:app", reload=True)
 ```
 
 ## Usage
@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
   <Step title="Run Example">
     ```bash
-    python cookbook/os/interfaces/agui/agent_with_tool.py
+    python cookbook/05_agent_os/interfaces/agui/agent_with_tools.py
     ```
   </Step>
 </Steps>
@@ -65,5 +65,5 @@ if __name__ == "__main__":
 - **Investment Analysis**: Comprehensive company analysis and recommendations  
 - **Data Visualization**: Tables and formatted financial information
 - **Web Interface**: Professional browser-based interaction
-- **GPT-5.4 Powered**: Advanced reasoning for financial insights
+- **GPT-4o Powered**: Advanced reasoning for financial insights
 
