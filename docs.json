@@ -4641,6 +4641,12 @@
             ]
           },
           {
+            "group": "Infra CLI",
+            "pages": [
+              "deploy/infra/overview"
+            ]
+          },
+          {
             "group": "Platforms",
             "pages": [
               {
