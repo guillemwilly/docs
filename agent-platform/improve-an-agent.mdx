@@ -1,55 +1,47 @@
 ---
-title: Improve an agent
-description: "Claude Code reads container logs from your platform and recursively improves your agents."
+title: Improve an Agent
+description: "Use Claude Code to recursively improve your agents."
 ---
 
-This is the part where owning the platform pays off. Your container logs, your agent code, your running platform, and your iteration tool all live in one repo. Claude Code can see every part of it.
+Today we're going to improve our agents using Claude Code.
 
-## Run the prompt
+The biggest advantage of having a unified agent platform is that coding agents can read logs to iteratively improve the agents. The codebase comes with two prompts:
 
-Open Claude Code in the cloned `agent-platform` repo and paste:
+- `docs/improve-agent.md`. Claude derives probes from the agent's instructions, judges responses, and edits until they pass. **Autonomous.**
+- `docs/extend-agent.md`. Add a tool, refine a prompt, fix a bug. **User-driven.**
+
+Both edit `agents/<slug>.py` directly. Hot-reload picks up the change in ~2s, so the test → judge → edit cycle is fairly tight.
+
+## Improve: autonomous probe-and-judge
+
+Open Claude Code in your `agent-platform` directory and paste:
 
 ```
 Run docs/improve-agent.md
 ```
 
-Claude will:
+Claude reads the target agent's `INSTRUCTIONS` and derives 8–12 probes across four categories: golden path, edge cases, tool selection, and adversarial. For each probe, it cURLs the live container, reads tool calls from the logs, and judges PASS or FAIL against what the instructions promise.
 
-1. **Pick an agent.** Either the one you just built, or one you point it at.
-2. **Pull recent container logs.** Reads `docker compose logs` to see runs, sessions, and tool calls.
-3. **Identify failure modes.** Reads through the logs and flags weak prompts, bad tool selections, missing instructions, hallucinations.
-4. **Propose changes.** Edits the agent's instructions, adds or removes tools, tightens the prompt, adds guardrails.
-5. **Re-run and verify.** Tests the changed agent against the same prompts, compares before/after, asks if you want to keep the changes.
+For every failure, Claude picks a lever and edits: tighten a rule, add a rule, swap a tool, bump `num_history_runs`. Hot-reload picks up the change in ~2s. Claude re-runs only the failed probes. Caps at five iterations.
 
-## Why this works
+## Extend: user-driven changes
 
-Three things have to be true for a coding agent to improve another agent:
+When you have a specific change in mind, paste:
 
-| Requirement                          | Where it lives                                                  |
-| ------------------------------------ | --------------------------------------------------------------- |
-| The container logs                   | `docker compose logs`, visible to Claude Code in the terminal.   |
-| The agent code                       | `agents/*.py` in this repo.                                     |
-| A way to test changes                | The running platform, hot-reloads on file change.               |
+```
+Run docs/extend-agent.md
+```
 
-When all three live in one place, the loop closes. When they're split across three SaaS products, it doesn't.
+Claude asks what to change. You describe a tool to add, a prompt to refine, a bug to fix. The agno-docs MCP is loaded so toolkit research is grounded in the real API. Each iteration is one small, verified change.
 
-## When to run it
+## When to run each
 
-- After a batch of real usage (not just your own testing).
-- Before deploying a major change.
-- When users report that an agent is missing the point.
-- Periodically as part of routine maintenance.
-
-## What changes, what doesn't
-
-Claude Code edits agent code in place: instructions, tools, guardrails, model choice. It does not touch:
-
-- The platform code (`app/`, `db/`).
-- Other agents not under review.
-- Your `.env` or any secrets.
-
-Every change is a regular file edit you can `git diff` and revert.
+- **Just created an agent and want to harden it before deploying.** Use **improve**.
+- **Users report the agent is missing the point.** Use **improve**.
+- **You want to add a new tool or knowledge base.** Use **extend**.
+- **You hit a specific bug.** Use **extend**.
+- **You just extended an agent and want to make sure nothing regressed.** Use **improve** again.
 
 ## Next
 
-[Lock in behavior with evals →](/tutorials/agent-platform/evals)
+[Lock in behavior with evals →](/agent-platform/evals)
