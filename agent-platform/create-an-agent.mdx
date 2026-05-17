@@ -1,51 +1,42 @@
 ---
-title: Create an agent
-description: "Use a Claude Code prompt to generate, register, and smoke-test a new agent."
+title: Create an Agent
+description: "Use Claude Code to create a new agent."
 ---
 
-The template repo ships a Claude Code prompt at `docs/create-new-agent.md` (inside your cloned `agent-platform` directory) that handles the mechanical parts of adding an agent: creating the file in `agents/`, registering it in `app/main.py`, restarting the container, and running a smoke test.
+Today we're going to create a new agent using Claude Code.
+
+A great side-effect of having a unified platform is that coding agents can manage it end-to-end. Your agent platform comes with five prompts that cover the full ADLC.
+
+Let's try `docs/create-new-agent.md`
 
 ## Run the prompt
 
-Open Claude Code in the cloned `agent-platform` repo and paste:
+Open Claude Code in your `agent-platform` directory and paste:
 
 ```
 Run docs/create-new-agent.md
 ```
 
-Claude will ask:
+Claude will ask a few questions and build your agent out.
 
-1. **What should the agent do?** A one-line description. "Summarize GitHub issues for a given repo," "Triage incoming Slack messages," etc.
-2. **What tools does it need?** Pick from Agno's [100+ toolkits](/tools/toolkits/overview) or describe a custom tool.
-3. **Any specific instructions?** Tone, format, escalation rules, anything you'd put in the system prompt.
+Once the spec is locked in, Claude generates `agents/<slug>.py`, registers it in `app/main.py`, adds three starter prompts to `app/config.yaml`, restarts the container, and hits the new endpoint with cURL. It reads the container logs to confirm the right tools fired.
 
-Claude generates `agents/<your_agent>.py`, adds the import and registration to `app/main.py`, runs `docker compose restart`, and hits the new agent's endpoint to confirm it responds.
+## Test your agents on the AgentOS UI
 
-A simple agent (one toolkit, no custom tools) takes 5–10 minutes. A bespoke agent with custom tools takes longer.
+Open [os.agno.com](https://os.agno.com), select your new agent in the sidebar, and try a few prompts:
 
-## Test in the AgentOS UI
+- **The golden path.** What you built the agent for.
+- **Edge cases.** Unusual inputs, ambiguous questions, partial information.
+- **Adversarial inputs.** Prompt injection, out-of-scope requests, attempts to make it do something it shouldn't.
 
-Open [os.agno.com](https://os.agno.com), select your new agent in the sidebar, and try realistic prompts. Run it through:
+## Summary
 
-- **The golden path.** What you built it for.
-- **Edge cases.** Unusual inputs, partial information, ambiguous questions.
-- **Adversarial inputs.** Prompt injection, out-of-distribution requests, attempts to make it do something it shouldn't.
+Congrats on creating a new agent. Here are the details if you're looking to do this manually:
 
-Click **Sessions** and **Traces** in the sidebar. Every run is recorded with full message history, tool calls, and timing. This is what powers the iteration loop on the next page.
-
-<Tip>
-  Spend 5–20 minutes in the UI before moving on. The runs you generate here produce the container logs that power the improvement loop.
-</Tip>
-
-## What just happened
-
-| Action                                       | Where it landed                          |
-| -------------------------------------------- | ---------------------------------------- |
-| Agent definition                             | `agents/<your_agent>.py`                 |
-| Registration                                 | `app/main.py`                            |
-| Endpoint                                     | `http://localhost:8000/agents/<your_agent>` |
-| Sessions and traces from your test runs     | Postgres, viewable in the AgentOS UI     |
+- Create a file in `agents/<slug>.py`.
+- Register the agent in `app/main.py`.
+- Add quick-start prompts in `app/config.yaml`.
 
 ## Next
 
-[Improve the agent →](/tutorials/agent-platform/improve-an-agent)
+[Improve the agent →](/agent-platform/improve-an-agent)
