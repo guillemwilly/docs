@@ -104,11 +104,10 @@
             ]
           },
           {
-            "group": "Tutorials",
+            "group": "Use Cases",
             "pages": [
-              "tutorials/pick-a-template",
               {
-                "group": "Agent Platform",
+                "group": "Data Labeling",
                 "pages": [
                   "tutorials/agent-platform/overview",
                   "tutorials/agent-platform/setup",
@@ -120,7 +119,7 @@
                 ]
               },
               {
-                "group": "Scout",
+                "group": "Conversational Agents",
                 "pages": [
                   "tutorials/scout/overview",
                   "tutorials/scout/setup",
@@ -129,26 +128,6 @@
                   "tutorials/scout/connect-google-drive",
                   "tutorials/scout/connect-mcp-servers",
                   "tutorials/scout/deploy-to-railway"
-                ]
-              },
-              {
-                "group": "Dash",
-                "pages": [
-                  "tutorials/dash/overview",
-                  "tutorials/dash/setup",
-                  "tutorials/dash/connect-slack",
-                  "tutorials/dash/deploy-to-railway",
-                  "tutorials/dash/next-steps"
-                ]
-              },
-              {
-                "group": "Coda",
-                "pages": [
-                  "tutorials/coda/overview",
-                  "tutorials/coda/setup",
-                  "tutorials/coda/connect-slack",
-                  "tutorials/coda/deploy-to-railway",
-                  "tutorials/coda/next-steps"
                 ]
               }
             ]
@@ -167,42 +146,6 @@
               "runtime/scheduling",
               "runtime/deploy",
               "runtime/build-a-product"
-            ]
-          },
-          {
-            "group": "Demo OS",
-            "pages": [
-              "demo-os/overview",
-              {
-                "group": "Knowledge & Memory",
-                "pages": [
-                  "demo-os/rag",
-                  "demo-os/knowledge",
-                  "demo-os/memory",
-                  "demo-os/learning"
-                ]
-              },
-              {
-                "group": "Tools & Integrations",
-                "pages": [
-                  "demo-os/mcp",
-                  "demo-os/context-providers"
-                ]
-              },
-              {
-                "group": "State & Patterns",
-                "pages": [
-                  "demo-os/session-state",
-                  "demo-os/human-in-the-loop"
-                ]
-              },
-              {
-                "group": "Multi-Agent Teams",
-                "pages": [
-                  "demo-os/multi-agent-teams/text-to-sql",
-                  "demo-os/multi-agent-teams/investment"
-                ]
-              }
             ]
           }
         ]

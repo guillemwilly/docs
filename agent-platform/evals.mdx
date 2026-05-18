@@ -1,24 +1,34 @@
 ---
 title: Evals
-description: "Lock in agent behavior with regression tests that run on a schedule."
+description: "Lock in agent behavior with regression tests."
 ---
 
-Evals are the regression test for your agents. Same prompts, same agents, run on a schedule, fail when behavior drifts.
+Next, let's lock in our agent behavior with evals.
 
-## Define cases
+Think of Evals as regression tests for your agents. Same prompts, same agents, run on a schedule. Notify when behavior drifts.
 
-Cases live in `evals/cases.py`. Each case is a prompt, the agent that should answer it, and a criterion the answer must satisfy. `Case` is a dataclass defined at the top of the same file, so opening `evals/cases.py` shows you everything in one place.
+When we run `docs/improve-agent.md`, we're looking for out-of-distribution improvements. Evals make sure in-distribution cases continue to pass. The two work together.
+
+## Cases
+
+Cases live in `evals/cases.py`. Each case sends one input to an agent and (optionally) checks two things:
+
+- **judge** — `AgentAsJudgeEval` scores the response against `criteria` (binary pass/fail) using an LLM.
+- **reliability** — `ReliabilityEval` checks which tools fired against `expected_tool_calls`.
+
+Results are stored in your database via `eval_db` (visible at [os.agno.com](https://os.agno.com)).
+
+A case looks like this:
 
 ```python evals/cases.py
 CASES: tuple[Case, ...] = (
     Case(
         name="web_search_recent_anthropic_research",
         agent=web_search,
-        input="What did Anthropic publish about agent research recently?",
+        input="What did Anthropic publish about agents recently?",
         criteria=(
             "Answers the question by citing at least one real Anthropic URL "
-            "(anthropic.com domain). The response is grounded in fetched content "
-            "rather than refusing to answer."
+            "(anthropic.com domain). The response is grounded in fetched content."
         ),
         expected_tool_calls=(_WEB_SEARCH_TOOL,),
     ),
@@ -26,19 +36,51 @@ CASES: tuple[Case, ...] = (
 )
 ```
 
-`criteria` is graded by an LLM judge. `expected_tool_calls` checks that the agent actually used the tools you expect. `_WEB_SEARCH_TOOL` switches between `parallel_search` (SDK) and `web_search` (MCP) based on whether `PARALLEL_API_KEY` is set.
+A case can use either check or both. If both are set, the agent runs once and feeds the same response into both.
 
 ## Run the suite
 
-```bash
-python -m evals
-```
+<Steps>
+  <Step title="Create a virtual environment">
 
-Results write to Postgres via `eval_db`. Eval history shows up at [os.agno.com](https://os.agno.com) alongside your sessions and traces, so you can see when a case started failing and what changed.
+    To run the eval suite, let's create a local virtual environment
+
+    ```bash
+    ./scripts/venv_setup.sh
+    ```
+
+    Activate it
+
+    ```bash
+    source .venv/bin/activate
+    ```
+
+  </Step>
+
+  <Step title="Run the eval suite">
+
+    ```bash
+    python -m evals                # full suite
+    ```
+
+    Other options:
+
+    ```bash
+    python -m evals -v             # stream the agent run with full panels
+    python -m evals --case <name>  # single case while iterating
+    ```
+
+  </Step>
+
+</Steps>
+
+Each case prints the response, the judge verdict, and the reliability verdict. The run ends with an `Eval Summary` table.
+
+Results write to Postgres via `eval_db`. You can view the Eval history on [os.agno.com](https://os.agno.com) alongside your sessions and traces. You can see when a case started failing and what changed.
 
 ## Diagnose failures with Claude Code
 
-Open Claude Code in the cloned `agent-platform` repo and paste:
+Open Claude Code and paste:
 
 ```
 Run docs/eval-and-improve.md
@@ -55,7 +97,7 @@ Claude runs the full suite, triages every failure (bad criteria, real regression
 | Against production                    | On a weekly cron      |
 | After bumping a model version         | Every time            |
 
-Wire the weekly run into the platform's own scheduler. See [scheduling](/runtime/scheduling) for the cron API, and the next page for production setup.
+The weekly production cron is the most valuable one. Wire it into your platform's scheduler. See [scheduling](/runtime/scheduling) for the cron API.
 
 ## What good cases look like
 
