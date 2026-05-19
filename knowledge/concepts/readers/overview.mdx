@@ -156,11 +156,15 @@ See [Chunking](/knowledge/concepts/chunking/overview) for available strategies.
 
 ## Restricting URL Fetches
 
-Pass `allowed_hosts` to a URL-fetching reader to limit which hostnames it will fetch from. URLs outside the list are skipped and return no documents. Each hostname must match exactly, so include every subdomain you want to permit.
+By default, URL-fetching readers will fetch any reachable URL. When a reader is wired up to accept URLs from untrusted input — for example an endpoint that takes a user-supplied link — an attacker-influenced URL can reach internal services or cloud metadata endpoints.
+
+Pass `allowed_hosts` to lock the reader to an explicit hostname allowlist. URLs outside the list are skipped and return no documents. Each hostname must match exactly, so include every subdomain you want to permit.
 
 ```python
 reader = WebsiteReader(allowed_hosts=["docs.agno.com"])
 ```
+
+For `WebsiteReader`, `WebSearchReader`, and `LLMsTxtReader`, every redirect hop is re-validated against the same allowlist, so a permitted host cannot 3xx-bounce the request to a disallowed one. `FirecrawlReader` and `DoclingReader` validate the initial URL only; redirects in those paths are handled by the underlying library.
 
 ## Error Handling
 
