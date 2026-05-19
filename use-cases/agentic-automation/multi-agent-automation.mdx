@@ -1,0 +1,68 @@
+---
+title: "Multi-agent automation"
+description: "Split the work across specialist doers behind a leader that routes and reports."
+---
+
+One agent with every tool is a poor automation system. Issue triage, code edits, feature planning, and web research need different tools and different judgment. Split them into specialists, each with a scoped toolset, behind a leader that routes the request and reports back.
+
+```python
+from agno.models.openai import OpenAIResponses
+from agno.team import Team, TeamMode
+
+coda = Team(
+    name="Coda",
+    mode=TeamMode.route,
+    model=OpenAIResponses(id="gpt-5.5"),
+    members=[explorer, coder, planner, researcher, triager],
+    instructions=[
+        "Route the request to the right specialist.",
+        "Explorer reads and explains. Coder writes in a worktree and opens a PR.",
+        "Planner breaks features into issues. Triager labels and closes issues.",
+        "Post the result back to the requesting channel.",
+    ],
+)
+```
+
+The leader picks the specialist; the specialist does the work with only its tools. Triage never touches code. Code edits never run on `main`.
+
+## Specialists by capability
+
+| Specialist | Owns | Tool surface |
+|------------|------|--------------|
+| Explorer | Reading and tracing | Read-only code, Git, GitHub |
+| Coder | Changes in a worktree | Write Git (worktree), opens PRs |
+| Planner | Breaking work down | Read code, GitHub issues |
+| Researcher | External knowledge | Web search |
+| Triager | Issue hygiene | Read code, write issue labels/comments |
+| Leader | Routing and reporting | Slack, no work tools |
+
+Capability is the toolset. The split is what keeps a triage request from ever editing code.
+
+## Pick the orchestration shape
+
+Automation uses the same shapes as [deep research](/use-cases/deep-research/orchestration-patterns), chosen for the job:
+
+| Shape | Use for |
+|-------|---------|
+| Route | A request that one specialist owns ("triage this issue") |
+| Coordinate | A job needing several specialists in sequence ("plan and start this feature") |
+| Workflow | A standardized recurring job ("the nightly triage pipeline") |
+
+Route keeps single-purpose ops fast. A `Workflow` is the right shape for the scheduled jobs from [proactive scheduling](/use-cases/agentic-automation/proactive-scheduling), because they must run the same way every night.
+
+## Boundaries compose
+
+The safety of the system is the sum of each specialist's boundary. The Coder is sandboxed to a worktree. The Triager has no code-write tool. Irreversible actions are wrapped with `requires_confirmation`. No single prompt failure crosses all three.
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| Scope each specialist's tools | [Action tools and boundaries](/use-cases/agentic-automation/action-tools-and-boundaries) |
+| Run the team on a schedule | [Proactive scheduling](/use-cases/agentic-automation/proactive-scheduling) |
+| See six roles shipped | [Example: Coda](/use-cases/agentic-automation/example-coda) |
+
+## Developer Resources
+
+- [Teams](/teams/overview)
+- [Orchestration patterns](/use-cases/deep-research/orchestration-patterns)

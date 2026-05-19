@@ -1,0 +1,73 @@
+---
+title: "Institutional learning"
+description: "Share what every review learns so the next one starts from the team's accumulated judgment."
+---
+
+A research team that does not learn re-derives the same conclusions and repeats the same mistakes. The value compounds when an insight from one review is available to every agent on the next. Agno's `LearningMachine` with a shared store and a global namespace makes the team's learning institutional, not per-agent.
+
+```python
+from agno.agent import Agent
+from agno.learn import LearnedKnowledgeConfig, LearningMachine, LearningMode
+from agno.models.openai import OpenAIResponses
+
+# Shared learnings store, imported once, used by every agent and team
+from agents.settings import team_learnings
+
+analyst = Agent(
+    name="Financial Analyst",
+    model=OpenAIResponses(id="gpt-5.5"),
+    learning=LearningMachine(
+        knowledge=team_learnings,
+        learned_knowledge=LearnedKnowledgeConfig(
+            mode=LearningMode.AGENTIC,
+            namespace="global",
+        ),
+    ),
+)
+```
+
+Every analyst and every team writes to and reads from the same `team_learnings` store. An insight the risk officer captured this week is in the financial analyst's context next week.
+
+## Per-agent vs institutional
+
+| | Per-agent memory | Institutional learning |
+|--|------------------|------------------------|
+| Scope | One agent | Every agent and team that shares the store |
+| Namespace | The user or agent | `"global"` |
+| Effect | This analyst remembers | The committee remembers |
+
+For deep research, institutional is the point. The team's judgment should outlive any single review.
+
+## What to capture
+
+| Worth a learning | Not worth a learning |
+|------------------|----------------------|
+| "Analyst estimates lag this sector by a quarter" | A one-off number from a single query |
+| "This data source double-counts renewals" | A restatement of the mandate |
+| A correction to a conclusion that was wrong | A summary of what was already in the library |
+
+Capture corrections and transferable insights. Leave durable facts to the [research library](/use-cases/deep-research/grounding-research) and rules to the static context.
+
+## Modes
+
+| Mode | Behavior | Use for |
+|------|----------|---------|
+| `ALWAYS` | Capture runs after every response | Steady accumulation of observations |
+| `AGENTIC` | The agent decides what is worth keeping | Research, where signal-to-noise matters |
+| `PROPOSE` | A human approves before it persists | Anything that changes how the team decides |
+
+This is the same machine the [data agent uses to self-correct](/use-cases/data-agents/self-correcting-agents), pointed at a shared store instead of a per-warehouse one.
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| Feed it grounded context too | [Grounding research](/use-cases/deep-research/grounding-research) |
+| Audit what changed the team's mind | [Structured deliverable](/use-cases/deep-research/structured-deliverable) |
+| See it shared across seven analysts | [Example: Investment committee](/use-cases/deep-research/example-investment-committee) |
+
+## Developer Resources
+
+- [Learning Machines](/learning/overview)
+- [Learning modes](/learning/learning-modes)
+- [Learning cookbook](https://github.com/agno-agi/agno/tree/main/cookbook/08_learning)

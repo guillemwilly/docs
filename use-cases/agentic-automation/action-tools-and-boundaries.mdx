@@ -1,0 +1,65 @@
+---
+title: "Action tools and boundaries"
+description: "Give agents the tools to do real work, with read-only and write surfaces that are scoped, not implied."
+---
+
+An automation agent needs tools that change the world: open a PR, label an issue, post to Slack, run a command. The risk scales with the tool. The pattern that holds is the same one a data agent uses for SQL: split read from write, and scope the write surface so a mistake is contained.
+
+```python
+from agno.agent import Agent
+from agno.models.openai import OpenAIResponses
+from agno.tools.github import GithubTools
+
+explorer = Agent(
+    name="Explorer",
+    model=OpenAIResponses(id="gpt-5.5"),
+    tools=[GithubTools(get_repository=True, list_issues=True, get_pull_request=True)],
+    instructions="Investigate and report. You have no write tools.",
+)
+```
+
+The Explorer can read the repo and reason about it. It has no write tool, so no prompt can make it mutate anything. The agent that does the writing is a different agent with a different, scoped toolset.
+
+## Split read from write
+
+| Agent | Tools | Can | Cannot |
+|-------|-------|-----|--------|
+| Explorer | Read-only Git/GitHub | Trace code, read issues, report | Change anything |
+| Coder | Write Git, scoped to a worktree | Edit code, open a PR | Merge, push to main |
+| Triager | Read code, write issue labels/comments | Label, comment, close issues | Touch code |
+
+Each agent's capability is its toolset, not its instructions. Even a perfectly adversarial prompt cannot make the Explorer write, because the write function is not attached to it.
+
+## Sandbox the write surface
+
+A write agent should act in a place that is cheap to discard. Coda's Coder works in a `coda/<branch>` git worktree off main. It edits there, opens a PR, and a human merges. The worktree is disposable: a bad change is contained to a branch nobody depends on, and worktrees are cleaned up on restart.
+
+| | Production surface | Sandboxed surface |
+|--|--------------------|-------------------|
+| Example | `main`, prod database, public channel | A git worktree, a `dash` schema, a draft |
+| Who writes | Humans, after review | The agent, freely |
+| Blast radius of a bad write | High | Contained, revertible |
+
+## Tools that do work
+
+| Toolkit | Actions it enables |
+|---------|--------------------|
+| `GithubTools` | Issues, pull requests, comments, labels |
+| `GitTools` | Branches, worktrees, commits |
+| `SlackTools` | Post messages, reply in threads |
+| `SchedulerTools` | Create and manage scheduled jobs |
+
+Attach the narrow set an agent needs. Fewer tools is better routing and a smaller blast radius. Wrap the irreversible ones with `requires_confirmation` from [taking action safely](/use-cases/agentic-automation/taking-action-safely).
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| Gate the irreversible tools | [Taking action safely](/use-cases/agentic-automation/taking-action-safely) |
+| Assign tools across specialists | [Multi-agent automation](/use-cases/agentic-automation/multi-agent-automation) |
+| See the read/write split shipped | [Example: Coda](/use-cases/agentic-automation/example-coda) |
+
+## Developer Resources
+
+- [Tools and toolkits](/tools/overview)
+- [External tool execution](/hitl/external-execution)

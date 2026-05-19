@@ -1,0 +1,62 @@
+---
+title: "Example: Dash"
+description: "A self-learning data agent over a SaaS dataset that puts grounding, self-correction, and write safety together."
+---
+
+Dash is a working data agent you can clone and run. It answers questions over a SaaS dataset, grounds every answer in curated context, captures its own errors as learnings, and enforces a hard read-only / read-write split. It is every page in this section, shipped.
+
+```bash
+git clone https://github.com/agno-agi/dash && cd dash
+cp example.env .env   # set OPENAI_API_KEY
+docker compose up -d --build
+docker exec -it dash-api python scripts/generate_data.py
+docker exec -it dash-api python scripts/load_knowledge.py
+curl http://localhost:8000/health   # {"status":"ok"}
+```
+
+Then ask: *"What's our current MRR?"* or *"Which plan has the highest churn rate?"*
+
+## Where each concept shows up
+
+| Concept | In Dash |
+|---------|---------|
+| [Querying your data](/use-cases/data-agents/querying-your-data) | The Analyst introspects the schema and runs read-only SQL against `public` |
+| [Grounding in context](/use-cases/data-agents/grounding-in-context) | Six layers: validated queries, table metadata, business rules, MCP, learnings, runtime introspection |
+| [Self-correcting agents](/use-cases/data-agents/self-correcting-agents) | Errors are diagnosed and saved as learnings so the same error cannot recur |
+| [Safe data access](/use-cases/data-agents/safe-data-access) | Analyst read-only on `public`, Engineer read-write only on `dash`, enforced by the engine |
+| [Materialization](/use-cases/data-agents/materialization) | The Engineer builds reusable views in the `dash` schema when a question repeats |
+| [Serve and embed](/use-cases/data-agents/serve-and-embed) | Ships as an AgentOS service with an optional Slack interface |
+
+## The team
+
+Dash is a multi-agent system with boundaries enforced by the database, not the prompt.
+
+| Member | Access | Role |
+|--------|--------|------|
+| **Analyst** | `public`, read-only | Introspects, writes and runs SELECT, answers |
+| **Engineer** | `public` read, `dash` read-write | Builds views, records learnings |
+| **Leader** | None directly | Routes the request, composes the answer |
+
+## The loop
+
+Retrieve the matching context and prior learnings, generate grounded SQL, answer with a citation, diagnose any error into a learning, and materialize a view when a question recurs. After a few weeks of real use, the same errors stop happening and the `dash` schema fills with the views your team relies on.
+
+## Follow the full build
+
+| Step | Guide |
+|------|-------|
+| Architecture deep dive | [What is Dash?](/tutorials/dash/overview) |
+| Run it locally on a SaaS dataset | [Setup](/tutorials/dash/setup) |
+| Ask from Slack | [Connect Slack](/tutorials/dash/connect-slack) |
+| Ship it | [Deploy to Railway](/tutorials/dash/deploy-to-railway) |
+| Extend it | [Next steps](/tutorials/dash/next-steps) |
+
+## Adapt it
+
+Dash ships on a synthetic dataset so the first run works. Point it at your warehouse: replace `scripts/generate_data.py` with a loader for your data, then rewrite `knowledge/` for your tables, query patterns, and business rules. The goal is one agent answering one real question correctly, then iterate from real usage.
+
+## Developer Resources
+
+- [Dash on GitHub](https://github.com/agno-agi/dash)
+- [Dash tutorial](/tutorials/dash/overview)
+- [Learning Machines](/learning/overview)

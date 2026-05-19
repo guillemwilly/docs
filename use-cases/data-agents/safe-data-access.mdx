@@ -1,0 +1,76 @@
+---
+title: "Safe data access"
+description: "Read-only and read-write boundaries enforced by the database engine, not by a prompt."
+---
+
+A prompt that says "only run SELECT" is a suggestion. A connection that physically cannot write is a guarantee. A production data agent answers from a read-only engine and isolates any writes to a schema it owns. The boundary holds even when the model goes off-script.
+
+```python
+from agno.agent import Agent
+from agno.models.openai import OpenAIResponses
+from agno.tools.sql import SQLTools
+
+analyst = Agent(
+    name="Analyst",
+    model=OpenAIResponses(id="gpt-5.5"),
+    tools=[
+        SQLTools(
+            db_url="postgresql+psycopg://readonly@warehouse/analytics",
+            read_only=True,
+        )
+    ],
+    instructions="Answer questions from the public schema. You cannot write.",
+)
+```
+
+`read_only=True` on a connection scoped to a read-only database role means a generated `DROP TABLE` fails at the engine, before it reaches your data. Defense does not depend on the model behaving.
+
+## Split the roles
+
+Most data-agent questions are read-only. Writes (building a summary table, recording a correction) are rarer and riskier. Separate them into different agents on different connections.
+
+| Member | Connection | Can do | Cannot do |
+|--------|-----------|--------|-----------|
+| **Analyst** | Read-only role on `public` | Introspect, SELECT, answer | Any write, anywhere |
+| **Engineer** | Read on `public`, read-write on an agent-owned schema | Build views in its own schema | Touch `public` |
+| **Leader** | No direct database access | Route the request, compose the answer | Run SQL itself |
+
+The Engineer's writes are scoped to a schema (for example `dash`) that the Analyst never touches. Even prompted into `DROP TABLE public.users`, its engine refuses, because the connection has no write grant on `public`.
+
+## Gate the writes that remain
+
+For writes you do allow, add a human in the loop. `requires_confirmation` pauses the run until someone approves the action.
+
+```python
+from agno.tools import tool
+
+
+@tool(requires_confirmation=True)
+def materialize_view(name: str, sql: str) -> str:
+    """Create a view in the agent-owned schema after human approval."""
+    ...
+```
+
+Approval everywhere kills adoption. Gate the irreversible actions, not the reads.
+
+## Layers of defense
+
+| Layer | Enforced by |
+|-------|-------------|
+| Read-only answers | Database role with no write grant |
+| Write isolation | Schema-scoped grant on a separate connection |
+| Irreversible actions | Human approval via `requires_confirmation` |
+| Auditability | The [Decision Log](/learning/stores/decision-log) records what changed and why |
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| Let the Engineer build reusable views | [Materialization](/use-cases/data-agents/materialization) |
+| Approve sensitive actions | [Human approval](/runtime/human-approval) |
+| See the dual-schema split live | [Example: Dash](/use-cases/data-agents/example-dash) |
+
+## Developer Resources
+
+- [Human approval](/runtime/human-approval)
+- [Dash: dual-schema enforcement](/tutorials/dash/overview)

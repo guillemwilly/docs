@@ -1,0 +1,73 @@
+---
+title: "Agentic product surfaces"
+description: "One agent backend behind every AI-driven surface in your product."
+---
+
+Once the agent is an API, any surface in your product can become AI-driven by calling it. A copilot panel, an inline "summarize" button, a smart empty state, a webhook. They are all the same `POST /agents/{id}/runs` call with a different `user_id` and `session_id`.
+
+```javascript
+// An AI-driven widget anywhere in your product
+async function askCopilot(message, userId, threadId) {
+  const res = await fetch("https://os.yourproduct.com/agents/copilot/runs", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${jwt}`,
+    },
+    body: JSON.stringify({
+      message,
+      user_id: userId,
+      session_id: threadId,
+      stream: true,
+    }),
+  });
+  return res.body; // SSE stream into the UI
+}
+```
+
+The widget holds no agent logic. It holds a `fetch`. The intelligence lives in one backend you version, trace, and improve in one place.
+
+## One agent, many surfaces
+
+The same agent answers a chat panel, an inline action, and a Slack mention. Because state is keyed by `(user_id, session_id)`, memory follows the user across all of them.
+
+| Surface | `session_id` | Feels like |
+|---------|--------------|------------|
+| Persistent copilot panel | One stable thread per user | A colleague who remembers the last conversation |
+| Inline action (summarize, draft, explain) | Short-lived, per-document | A button that understands the current context |
+| Slack or browser widget | Mapped by the interface | The same assistant, wherever the user is |
+| Backend automation | A system thread | Proactive work with no human in the loop |
+
+A user asks the copilot panel a question on Monday. On Wednesday they hit an inline action on a different screen. With the same `user_id`, the agent already knows their preferences. The product feels coherent because there is one brain behind every surface.
+
+## Why this beats embedding logic per surface
+
+| Per-surface logic | One agent backend |
+|-------------------|-------------------|
+| Prompt and tool code copied into every feature | Defined once, called everywhere |
+| Each surface has its own memory, or none | Memory shared per user across surfaces |
+| Debugging means reproducing one feature's state | One trace store for every surface |
+| Improving the agent means shipping every client | Improve the backend, every surface improves |
+
+## Patterns
+
+| Pattern | Shape |
+|---------|-------|
+| Copilot panel | Long-lived `session_id` per user, `stream=true` for token-by-token UI |
+| Inline action | New `session_id` per invocation, the document or selection in the message |
+| Proactive nudge | A scheduled job calls `agent.arun(...)`, result rendered as a notification |
+| Cross-surface continuity | Same `user_id` everywhere, so memory carries between features |
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| Stand up the API these surfaces call | [Serve as an API](/use-cases/product-agents/serve-as-an-api) |
+| Meet users in Slack and the browser | [Interfaces](/use-cases/product-agents/interfaces) |
+| Keep state coherent per user | [Sessions and memory](/use-cases/product-agents/sessions-and-memory) |
+
+## Developer Resources
+
+- [Build a product](/runtime/build-a-product)
+- [AG-UI interface](/agent-os/interfaces/ag-ui/introduction)
+- [Security and auth](/runtime/security-and-auth)

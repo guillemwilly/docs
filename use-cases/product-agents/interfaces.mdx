@@ -1,0 +1,98 @@
+---
+title: "Interfaces"
+description: "Slack, Telegram, WhatsApp, and browser surfaces, each one line on the AgentOS."
+---
+
+An interface adapts AgentOS to a surface where users already are. It receives events from Slack, Telegram, or the browser, maps them onto runs and sessions, and routes the response back to the right thread. The agent does not change.
+
+```python
+from agno.os import AgentOS
+from agno.os.interfaces.slack import Slack
+from agno.os.interfaces.telegram import Telegram
+
+agent_os = AgentOS(
+    agents=[agent],
+    db=db,
+    interfaces=[
+        Slack(agent=agent, token="xoxb-...", signing_secret="..."),
+        Telegram(agent=agent, token="bot-token"),
+    ],
+)
+```
+
+## Available surfaces
+
+| Interface | Use case |
+|-----------|----------|
+| Slack | Team chat, DMs, channel mentions, thread sessions |
+| Telegram | Personal assistants, mobile chat |
+| WhatsApp | Customer support, mobile chat |
+| Discord | Community servers, custom commands |
+| AG-UI | Browser clients consuming SSE streams |
+| A2A | Other agents calling yours over a standard protocol |
+
+## Sessions carry across surfaces
+
+Each interface maps surface state onto AgentOS sessions, so a conversation continues without the user re-mentioning the bot.
+
+| Interface | `session_id` | `user_id` |
+|-----------|--------------|-----------|
+| Slack | Thread timestamp | Slack user ID |
+| Telegram | Chat ID | Telegram user ID |
+| WhatsApp | Phone number | Phone number |
+| AG-UI | Browser session | JWT subject |
+
+Map a user's Slack ID to the same `user_id` your browser widget passes and memory follows them between surfaces. The agent only ever sees a `user_id`, a `session_id`, and a message. It does not know which surface a request came from.
+
+## One agent, every surface
+
+```python
+agent_os = AgentOS(
+    agents=[support_agent],
+    db=db,
+    interfaces=[
+        Slack(agent=support_agent, token=..., signing_secret=...),
+        Telegram(agent=support_agent, token=...),
+        WhatsApp(agent=support_agent, token=..., verify_token=...),
+        AGUI(agent=support_agent),
+    ],
+)
+```
+
+## Conditional registration
+
+Register only the interfaces you have credentials for, so a dev run without secrets does not crash.
+
+```python
+interfaces = []
+
+if SLACK_TOKEN and SLACK_SIGNING_SECRET:
+    interfaces.append(Slack(agent=agent, token=SLACK_TOKEN, signing_secret=SLACK_SIGNING_SECRET))
+
+if TELEGRAM_TOKEN:
+    interfaces.append(Telegram(agent=agent, token=TELEGRAM_TOKEN))
+
+agent_os = AgentOS(agents=[agent], db=db, interfaces=interfaces)
+```
+
+## Resolving Slack names
+
+Slack hands you opaque IDs like `U07ABCXYZ`. Set `resolve_user_identity=True` on the Slack interface and it resolves IDs to names before the agent sees them. Off by default because it costs an extra Slack API call per message.
+
+## One-off webhooks
+
+For a single integration, do not write an interface. Add a route to the FastAPI app and call the agent directly. See [Serve as an API](/use-cases/product-agents/serve-as-an-api#custom-routes).
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| See interfaces in a shipped agent | [Example: Scout](/use-cases/product-agents/example-scout) |
+| Drive in-product widgets | [Agentic product surfaces](/use-cases/product-agents/agentic-product-surfaces) |
+| Keep memory coherent per user | [Sessions and memory](/use-cases/product-agents/sessions-and-memory) |
+
+## Developer Resources
+
+- [Interfaces in the runtime](/runtime/interfaces)
+- [Slack interface](/agent-os/interfaces/slack/introduction)
+- [AG-UI interface](/agent-os/interfaces/ag-ui/introduction)

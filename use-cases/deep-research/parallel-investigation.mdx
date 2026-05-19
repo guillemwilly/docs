@@ -1,0 +1,63 @@
+---
+title: "Parallel investigation"
+description: "Run independent specialists at the same time, then synthesize, so deep research stays fast."
+---
+
+Most research work is independent. The fundamental analyst does not need the technical analyst's output to do its job. Run them at the same time. A `Parallel` block in a Workflow does exactly that: every step inside it runs concurrently, and the pipeline waits for all of them before moving on.
+
+```python
+from agno.workflow import Parallel, Step, Workflow
+
+workflow = Workflow(
+    id="review",
+    name="Deep Dive Review",
+    steps=[
+        Step(name="Market Assessment", agent=market_analyst),
+        Parallel(
+            Step(name="Fundamental Analysis", agent=financial_analyst),
+            Step(name="Technical Analysis", agent=technical_analyst),
+            name="Deep Dive",
+        ),
+        Step(name="Risk Assessment", agent=risk_officer),
+    ],
+)
+```
+
+The market assessment runs first because risk and the deep dive depend on it. Fundamental and technical analysis have no dependency on each other, so they run together. Risk waits for both.
+
+## Two ways to fan out
+
+| Shape | Use when |
+|-------|----------|
+| `Parallel` step in a Workflow | The set of investigations is fixed and the pipeline is auditable |
+| Broadcast Team | A lead should synthesize independent opinions on one question |
+
+A Broadcast team is the adaptive version: every member evaluates the same question simultaneously and the lead reconciles them. See [Orchestration patterns](/use-cases/deep-research/orchestration-patterns#broadcast-everyone-evaluates-the-lead-synthesizes).
+
+## Sequence only what depends
+
+The skill is dependency analysis, not maximum parallelism. Put a step in `Parallel` only when it does not read another step's output. Keep the genuine dependencies sequential.
+
+| Step | Depends on | Runs |
+|------|-----------|------|
+| Market assessment | Nothing | First, alone |
+| Fundamental analysis | Market context | In parallel with technical |
+| Technical analysis | Market context | In parallel with fundamental |
+| Risk assessment | Both analyses | After the parallel block |
+
+## Why this matters for deep research
+
+Deep research is slow because it is thorough. Parallelism is what keeps thoroughness affordable in wall-clock time. A five-specialist review that runs the three independent specialists at once finishes in roughly the time of the longest one, not the sum of all five.
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| Choose the orchestration shape | [Orchestration patterns](/use-cases/deep-research/orchestration-patterns) |
+| Ground each parallel specialist | [Grounding research](/use-cases/deep-research/grounding-research) |
+| Synthesize into one artifact | [Structured deliverable](/use-cases/deep-research/structured-deliverable) |
+
+## Developer Resources
+
+- [Parallel workflows](/workflows/workflow-patterns/parallel-workflow)
+- [Workflow cookbook](https://github.com/agno-agi/agno/tree/main/cookbook/04_workflows)

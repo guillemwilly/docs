@@ -1,0 +1,90 @@
+---
+title: "Agentic Automation & Ops"
+sidebarTitle: "Overview"
+description: "Agents that do the work, not just answer: gated actions, scheduled runs, and tools with real boundaries."
+---
+
+An agent that answers is a demo. An agent that does the work is a product. The gap between them is human gates, real tool boundaries, and a scheduler. Agno is built for that gap.
+
+- Actions are risky, so Agno pauses a run on a sensitive tool call and waits for a human.
+- Ops work is proactive, so AgentOS has an in-process scheduler. The agent shows up on its own.
+- Doing requires tools with limits, so write access is scoped and isolated, not implied by a prompt.
+- Work has conventions, so a LearningMachine picks up how your team operates over time.
+
+An agent that does irreversible work needs a gate on it. One decorator pauses the run until a human approves.
+
+```python
+from agno.agent import Agent
+from agno.models.openai import OpenAIResponses
+from agno.tools import tool
+
+
+@tool(requires_confirmation=True)
+def open_pull_request(branch: str, title: str) -> str:
+    """Open a PR. Pauses for human approval before it runs."""
+    ...
+
+
+agent = Agent(
+    model=OpenAIResponses(id="gpt-5.5"),
+    tools=[open_pull_request],
+    instructions="Do the work. Sensitive actions pause for approval.",
+)
+
+run = agent.run("Open a PR for the auth fix on branch fix/auth")
+for req in run.active_requirements:
+    if req.needs_confirmation:
+        req.confirm()  # or req.reject()
+agent.continue_run(run_response=run)
+```
+
+The agent proposes the action, the run pauses, a human decides, the run resumes. The boundary holds because it is in the framework, not in the prompt.
+
+## Why Agno fits this shape
+
+| Reason | What it means for an automation system |
+|--------|----------------------------------------|
+| HITL is native | Any tool can require confirmation; the run pauses and resumes cleanly. |
+| Scheduling is in-process | No worker fleet. Cron lives in your `db` and fires from the same service. |
+| Tools have boundaries | Read-only vs write agents, sandboxed write surfaces, not prompt promises. |
+| It compounds | A shared `LearningMachine` learns your conventions so the work gets more correct. |
+
+## The primitives
+
+| Concern | Page |
+|---------|------|
+| Gate irreversible actions | [Taking action safely](/use-cases/agentic-automation/taking-action-safely) |
+| Make the agent proactive | [Proactive scheduling](/use-cases/agentic-automation/proactive-scheduling) |
+| Scope what the agent can do | [Action tools and boundaries](/use-cases/agentic-automation/action-tools-and-boundaries) |
+| Split the work across specialists | [Multi-agent automation](/use-cases/agentic-automation/multi-agent-automation) |
+| Adapt to how your team works | [Learning your conventions](/use-cases/agentic-automation/learning-your-conventions) |
+| Put it behind Slack or an API | [Serve and embed](/use-cases/agentic-automation/serve-and-embed) |
+
+## Explore
+
+<CardGroup cols={3}>
+  <Card title="Taking action safely" icon="hand" href="/use-cases/agentic-automation/taking-action-safely">
+    Pause on sensitive tool calls. A human approves, the run resumes.
+  </Card>
+  <Card title="Proactive scheduling" icon="clock" href="/use-cases/agentic-automation/proactive-scheduling">
+    Daily digests, triage, syncs. The agent shows up on its own.
+  </Card>
+  <Card title="Action tools and boundaries" icon="lock" href="/use-cases/agentic-automation/action-tools-and-boundaries">
+    Read-only vs write agents, sandboxed write surfaces.
+  </Card>
+  <Card title="Multi-agent automation" icon="diagram-project" href="/use-cases/agentic-automation/multi-agent-automation">
+    Specialist doers behind a routing leader.
+  </Card>
+  <Card title="Learning your conventions" icon="arrows-rotate" href="/use-cases/agentic-automation/learning-your-conventions">
+    Week 1 generic. Week 4 it follows your team's patterns.
+  </Card>
+  <Card title="Example: Coda" icon="code-branch" href="/use-cases/agentic-automation/example-coda">
+    A code-ops teammate that triages issues and opens PRs.
+  </Card>
+</CardGroup>
+
+## Developer Resources
+
+- [Human-in-the-loop](/hitl/overview)
+- [Scheduling](/runtime/scheduling)
+- [Coda on GitHub](https://github.com/agno-agi/coda)

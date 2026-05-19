@@ -1,0 +1,72 @@
+---
+title: "Serve and embed"
+description: "Put the automation behind Slack, an API, and webhooks so people and events can trigger it."
+---
+
+Automation has to live where the work happens: a Slack channel the team already uses, a webhook your systems already fire, an API your product already calls. `AgentOS` serves the team and exposes routes for all three.
+
+```python
+from agno.os import AgentOS
+from agno.os.interfaces.slack import Slack
+
+agent_os = AgentOS(
+    agents=[explorer, coder, triager],
+    teams=[coda],
+    db=db,
+    scheduler=True,
+    interfaces=[Slack(agent=coda, token="xoxb-...", signing_secret="...")],
+)
+app = agent_os.get_app()
+```
+
+The team answers in Slack, runs its scheduled jobs, and exposes run endpoints, all from one service.
+
+## Three ways automation gets triggered
+
+| Trigger | Mechanism |
+|---------|-----------|
+| A person asks | Slack interface: "triage the new issues on repo X" |
+| A schedule fires | The in-process [scheduler](/use-cases/agentic-automation/proactive-scheduling) hits a workflow endpoint |
+| An event happens | A webhook route calls the agent |
+
+### Event-triggered: a webhook route
+
+The most useful ops trigger is an event, not a person. A GitHub webhook that fires the triager on every new issue turns automation from "someone ran it" into "it already ran."
+
+```python
+app = agent_os.get_app()
+
+
+@app.post("/webhooks/github")
+async def on_issue_opened(event: dict):
+    if event.get("action") == "opened":
+        await coda.arun(
+            f"Triage issue #{event['issue']['number']}",
+            user_id="github-webhook",
+        )
+    return {"ok": True}
+```
+
+The team is a regular Python object. Call `arun` from any route. The event becomes a run, traced and persisted like any other.
+
+## Same serving model, different work
+
+This is the same runtime as a [product agent](/use-cases/product-agents/serve-as-an-api), a [data agent](/use-cases/data-agents/serve-and-embed), and a [research committee](/use-cases/deep-research/serve-and-embed). What changes is that this one takes actions, so two things matter more in production:
+
+| Concern | Why it matters more for automation |
+|---------|-------------------------------------|
+| Auth | The endpoints can mutate real systems. Lock them with JWT and RBAC. |
+| HITL routing | A paused run needs its approval surfaced where the requester is (Slack, the UI) |
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| Gate the actions these triggers take | [Taking action safely](/use-cases/agentic-automation/taking-action-safely) |
+| Add the scheduled jobs | [Proactive scheduling](/use-cases/agentic-automation/proactive-scheduling) |
+| Lock down the endpoints | [Security and auth](/runtime/security-and-auth) |
+
+## Developer Resources
+
+- [Serve as an API](/runtime/serve-as-api)
+- [Interfaces](/use-cases/product-agents/interfaces)

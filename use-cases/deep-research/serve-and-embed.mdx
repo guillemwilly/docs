@@ -1,0 +1,67 @@
+---
+title: "Serve and embed"
+description: "Put the research team and pipeline behind an API so anyone, and any schedule, can ask for a review."
+---
+
+A research system that only runs from a script helps the person at the keyboard. Behind an API it answers from Slack, runs as a nightly review, and feeds a dashboard. `AgentOS` serves agents, teams, and workflows on the same contract.
+
+```python
+from agno.os import AgentOS
+
+agent_os = AgentOS(
+    agents=[market_analyst, financial_analyst, risk_officer, committee_chair],
+    teams=[coordinate_team, broadcast_team],
+    workflows=[investment_workflow],
+)
+app = agent_os.get_app()
+
+if __name__ == "__main__":
+    agent_os.serve(app="main:app", port=8000)
+```
+
+Every registered agent, team, and workflow gets run and session endpoints. A surface calls the workflow for the auditable review or a team for an open-ended question, with the same request shape.
+
+```bash
+curl -X POST http://localhost:8000/workflows/investment-workflow/runs \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Run a full review on NVDA","user_id":"pm@fund.com","session_id":"q4-review"}'
+```
+
+## Where a research system lives
+
+| Surface | Shape |
+|---------|-------|
+| Slack channel | An analyst asks "review NVDA"; the pipeline replies in-thread with the memo |
+| Scheduled review | A cron runs the workflow nightly on a watchlist and posts the decisions |
+| Dashboard | A widget triggers a review and renders the structured decision |
+| Backend gate | A pipeline calls the workflow before a position changes, blocks on a PASS |
+
+The serving model is identical to a [product agent](/use-cases/product-agents/serve-as-an-api) and a [data agent](/use-cases/data-agents/serve-and-embed). The difference is what runs behind the endpoint, not how it is served.
+
+## Pick the entry point per request
+
+| Caller wants | Hit |
+|--------------|-----|
+| The decision of record | The `Workflow` (deterministic, auditable) |
+| An open-ended question | A coordinate `Team` |
+| An independent multi-view read | A broadcast `Team` |
+| A single fact | A route `Team` |
+
+One AgentOS exposes all of them. The surface chooses the shape per request.
+
+## Scheduled research is the high-leverage pattern
+
+The review nobody remembered to run is the one that mattered. A scheduled workflow turns deep research from on-demand to always-on: every morning the watchlist is reviewed, the memos are written, and the decisions are waiting before anyone asks.
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| Add Slack or a browser surface | [Interfaces](/use-cases/product-agents/interfaces) |
+| Lock down the endpoints | [Security and auth](/runtime/security-and-auth) |
+| See a served committee | [Example: Investment committee](/use-cases/deep-research/example-investment-committee) |
+
+## Developer Resources
+
+- [Serve as an API](/runtime/serve-as-api)
+- [Scheduling](/runtime/scheduling)

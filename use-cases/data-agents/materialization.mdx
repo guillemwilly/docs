@@ -1,0 +1,72 @@
+---
+title: "Materialization"
+description: "When a question repeats, build a view once and answer from it forever."
+---
+
+The third time someone asks "what's MRR by plan," the agent should not be writing the join from scratch. It should be reading a view it built the first time. Materialization is the data agent turning recurring questions into durable, reusable structure in a schema it owns.
+
+## The pattern
+
+A recurring question is a signal. The agent promotes it from an ad-hoc query to a view in an agent-managed schema, then answers from the view.
+
+1. A question repeats, or a query gets validated as correct.
+2. The Engineer builds a view in its own schema (for example `dash`), never in `public`.
+3. The next ask hits the view directly: faster, cheaper, and consistent across users.
+
+```python
+from agno.agent import Agent
+from agno.models.openai import OpenAIResponses
+from agno.tools.sql import SQLTools
+
+engineer = Agent(
+    name="Engineer",
+    model=OpenAIResponses(id="gpt-5.5"),
+    tools=[
+        # Reads public, writes only to the agent-owned `dash` schema.
+        SQLTools(db_url="postgresql+psycopg://dash_writer@warehouse/analytics"),
+    ],
+    instructions=(
+        "When a question recurs, build a view in the dash schema that "
+        "answers it. Never create objects outside the dash schema."
+    ),
+)
+```
+
+## Why an agent-owned schema
+
+The agent writes structure, so that structure needs a sandbox. A dedicated schema keeps generated views away from the tables your product depends on.
+
+| | `public` (your data) | `dash` (agent-owned) |
+|--|----------------------|----------------------|
+| Who writes | Your application and pipelines | The Engineer agent only |
+| Holds | Source tables | Generated views and summary tables |
+| Blast radius of a bad write | Catastrophic | Contained, droppable, rebuildable |
+
+Because the schema is disposable, a wrong view is a cheap mistake. Drop it and let the agent rebuild.
+
+## Materialize from validated queries
+
+The best materialization candidates are the validated queries from [grounding](/use-cases/data-agents/grounding-in-context). A query analysts already trust, asked often, is exactly what should become a view. The agent is promoting known-good SQL, not inventing new shapes.
+
+## The compounding effect
+
+After a few weeks of real use:
+
+- Recurring errors stopped recurring ([self-correction](/use-cases/data-agents/self-correcting-agents)).
+- The right query shapes sit in the knowledge stores ([grounding](/use-cases/data-agents/grounding-in-context)).
+- The agent-owned schema fills with the views your team uses, with no migration written by hand.
+
+The agent gets faster and more consistent the more it is used, because repeated work becomes structure instead of recomputation.
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| Keep writes inside the boundary | [Safe data access](/use-cases/data-agents/safe-data-access) |
+| Seed the validated queries | [Grounding in context](/use-cases/data-agents/grounding-in-context) |
+| See it end to end | [Example: Dash](/use-cases/data-agents/example-dash) |
+
+## Developer Resources
+
+- [Dash: the materialize step](/tutorials/dash/overview)
+- [Serve and embed](/use-cases/data-agents/serve-and-embed)

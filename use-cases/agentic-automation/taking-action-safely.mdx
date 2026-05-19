@@ -1,0 +1,96 @@
+---
+title: "Taking action safely"
+description: "Pause a run on a sensitive tool call, let a human approve or reject, then resume."
+---
+
+The difference between an agent that answers and one that acts is what happens when it is wrong. A wrong answer is a bad sentence. A wrong action ships code, closes the wrong ticket, or moves money. Agno gates the actions you choose: the run pauses before the tool executes and waits for a human.
+
+```python
+from agno.tools import tool
+
+
+@tool(requires_confirmation=True)
+def close_issue(number: int, comment: str) -> str:
+    """Close a GitHub issue. Pauses for approval before it runs."""
+    ...
+```
+
+When the agent calls a `requires_confirmation` tool, the run does not execute it. It pauses and surfaces a requirement.
+
+## Resolve and resume
+
+```python
+run = agent.run("Triage and close stale issues in the repo")
+
+for requirement in run.active_requirements:
+    if requirement.needs_confirmation:
+        ok = input(
+            f"Approve {requirement.tool.tool_name}"
+            f"({requirement.tool.tool_args})? (y/n) "
+        )
+        requirement.confirm() if ok == "y" else requirement.reject()
+
+response = agent.continue_run(run_response=run)
+```
+
+`continue_run` resumes from the exact paused state. Approved tools run, rejected ones do not, and the agent continues with that outcome.
+
+## The kinds of pause
+
+| Requirement | Check | For |
+|-------------|-------|-----|
+| Confirmation | `requirement.needs_confirmation` | Approve or reject a tool call |
+| User input | `requirement.needs_user_input` | The agent needs a value to proceed |
+| External execution | `requirement.is_external_tool_execution` | A human or system runs the tool, returns the result |
+
+## Streaming
+
+For a live UI, watch for the pause in the event stream and resume the same way.
+
+```python
+for event in agent.run("Open a PR for the fix", stream=True):
+    if event.is_paused:
+        for requirement in event.active_requirements:
+            requirement.confirm()
+        agent.continue_run(run_id=event.run_id, requirements=event.requirements, stream=True)
+```
+
+## Teams pause too
+
+If a member calls a gated tool, the whole team run pauses. The requirement carries `member_agent_name`, so you know which specialist asked.
+
+```python
+run = team.run("Close every issue fixed in the last release")
+if run.is_paused:
+    for requirement in run.active_requirements:
+        if requirement.needs_confirmation:
+            print(f"{requirement.member_agent_name} wants {requirement.tool_execution.tool_name}")
+            requirement.confirm()
+    team.continue_run(run)
+```
+
+## Design the boundary, not just the gate
+
+Confirmation is the last line. The strong pattern is structural: let the agent do reversible work freely and make the irreversible step a separate, gated action. Coda's coder writes in an isolated git worktree and opens a PR, but it never merges. A human merges. The agent cannot do the irreversible thing even if it tries.
+
+| Reversible, ungated | Irreversible, gated |
+|---------------------|---------------------|
+| Write to a scratch branch or worktree | Merge to main |
+| Draft a PR or comment | Close an issue, post externally |
+| Stage a change | Apply it to production |
+
+Gate the few actions that matter. Approval on everything kills the automation.
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| Scope what tools can touch | [Action tools and boundaries](/use-cases/agentic-automation/action-tools-and-boundaries) |
+| Run gated work on a schedule | [Proactive scheduling](/use-cases/agentic-automation/proactive-scheduling) |
+| See the worktree pattern shipped | [Example: Coda](/use-cases/agentic-automation/example-coda) |
+
+## Developer Resources
+
+- [Human-in-the-loop](/hitl/overview)
+- [User confirmation](/hitl/user-confirmation)
+- [Admin approval and audit](/hitl/approval)

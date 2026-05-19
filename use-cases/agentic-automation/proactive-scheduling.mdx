@@ -1,0 +1,114 @@
+---
+title: "Proactive scheduling"
+description: "Daily digests, triage, and syncs that the agent runs on its own, with no separate worker fleet."
+---
+
+A useful ops agent does not wait to be asked. It posts the morning digest, triages new issues, and syncs state on a cadence. AgentOS has an in-process scheduler, so this needs no Celery, no cron container, no separate worker fleet. Schedules live in your `db` and fire from the same service that serves the agent.
+
+```python
+from agno.os import AgentOS
+
+agent_os = AgentOS(
+    agents=[agent],
+    db=db,
+    scheduler=True,
+    scheduler_poll_interval=15,  # check for due jobs every N seconds
+)
+```
+
+The scheduler polls `agno_schedules`, fires due jobs, retries failures, and records every run in `agno_schedule_runs` next to ad-hoc runs.
+
+## Two ways to schedule
+
+| Pattern | When | Lives in |
+|---------|------|----------|
+| Agent-driven | Users ask the agent to schedule things in chat | The agent's own tool calls |
+| Startup-registered | Schedules that should always exist | The app's lifespan |
+
+### Agent-driven
+
+Give the agent `SchedulerTools` and it manages cron for you from chat.
+
+```python
+from agno.tools.scheduler import SchedulerTools
+
+agent = Agent(
+    model=OpenAIResponses(id="gpt-5.5"),
+    tools=[
+        SchedulerTools(
+            db=db,
+            default_endpoint="/agents/ops-agent/runs",
+            default_method="POST",
+            default_timezone="UTC",
+        ),
+    ],
+)
+# In Slack: "post a daily digest of open PRs at 9am ET"
+```
+
+### Startup-registered
+
+For jobs that must always exist, register them in the app lifespan. Re-registering with the same name updates in place, so restarts do not duplicate.
+
+```python
+from contextlib import asynccontextmanager
+
+from agno.scheduler import register_schedule
+
+
+@asynccontextmanager
+async def lifespan(app):
+    register_schedule(
+        name="daily_digest",
+        cron="0 9 * * 1-5",  # weekdays 9am
+        endpoint="/workflows/daily-digest/runs",
+    )
+    yield
+
+
+agent_os = AgentOS(agents=[agent], db=db, scheduler=True, lifespan=lifespan)
+```
+
+## The proactive ops loop
+
+Scheduled work is what turns an agent into operations. Coda ships three jobs by default:
+
+| Job | Cadence | What it does |
+|-----|---------|--------------|
+| Repo sync | Every 5 minutes | Pulls latest from every configured repo |
+| Daily digest | Each morning | Posts what merged, PRs waiting, issues opened, what is stale |
+| Issue triage | Daily | Reviews open issues against the actual code, labels them, posts a summary |
+
+The work nobody remembered to do is the work that mattered. A schedule makes it always-on.
+
+## Multi-step scheduled work
+
+A schedule fires one endpoint. When the job is multi-step, point it at a `Workflow`. `Loop` repeats until a condition holds, `Router` branches on input.
+
+```python
+from agno.workflow import Workflow, Step, Loop, Condition
+
+daily_digest = Workflow(
+    name="daily-digest",
+    steps=[
+        Step(name="collect", agent=collector),
+        Step(name="summarize", agent=summarizer),
+        Step(name="post", agent=slack_poster),
+    ],
+)
+```
+
+Scheduled runs are traced and persisted like any other run, so `agno_schedule_runs` joined with the trace tree tells you exactly what fired and what it did.
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| Gate the actions a job takes | [Taking action safely](/use-cases/agentic-automation/taking-action-safely) |
+| Compose the steps a job runs | [Multi-agent automation](/use-cases/agentic-automation/multi-agent-automation) |
+| See three jobs shipped | [Example: Coda](/use-cases/agentic-automation/example-coda) |
+
+## Developer Resources
+
+- [Scheduling](/runtime/scheduling)
+- [Scheduler in HA](/agent-os/scheduler/overview)

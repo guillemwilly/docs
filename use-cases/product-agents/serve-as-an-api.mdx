@@ -1,0 +1,105 @@
+---
+title: "Serve as an API"
+description: "Turn the agent into an HTTP service with streaming, sessions, and auth, then call it from any surface."
+---
+
+`AgentOS` wraps the agent in a FastAPI app. Every registered agent gets run, session, and memory endpoints. Your product surfaces call those endpoints.
+
+```python
+from agno.agent import Agent
+from agno.db.postgres import PostgresDb
+from agno.models.openai import OpenAIResponses
+from agno.os import AgentOS
+
+db = PostgresDb(db_url="postgresql+psycopg://ai:ai@localhost:5532/ai")
+
+agent = Agent(
+    id="copilot",
+    model=OpenAIResponses(id="gpt-5.5"),
+    db=db,
+    add_history_to_context=True,
+    update_memory_on_run=True,
+)
+
+agent_os = AgentOS(agents=[agent])
+app = agent_os.get_app()
+
+if __name__ == "__main__":
+    agent_os.serve(app="copilot:app", port=7777)
+```
+
+## Calling it from a surface
+
+Every run endpoint takes the same shape, whether the caller is a browser widget or a backend job.
+
+```bash
+curl -X POST http://localhost:7777/agents/copilot/runs \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Summarize this thread","user_id":"sarah@acme.com","session_id":"thread-42"}'
+```
+
+```json
+{
+  "run_id": "run_abc123",
+  "session_id": "thread-42",
+  "user_id": "sarah@acme.com",
+  "agent_id": "copilot",
+  "status": "completed",
+  "content": "..."
+}
+```
+
+| Want | Pass |
+|------|------|
+| Token stream for a live UI | `stream=true` (Server-Sent Events) |
+| Long job, poll later | `background=true` |
+| Per-user isolation | `user_id` and a per-thread `session_id` |
+
+## What you get without building it
+
+| Endpoint group | Covers |
+|-----------------|--------|
+| Runs | Create, stream, cancel, run in background, resume disconnected streams |
+| Sessions | Create, list, rename, delete, pull every run in a session, scoped per user |
+| Memory | Create, update, delete, search user memories |
+| Traces and metrics | Per-run spans, token usage, model breakdown |
+
+Browse the live OpenAPI spec at the `/docs` endpoint of your running AgentOS.
+
+## Custom routes
+
+`AgentOS` is a FastAPI app. Add routes for webhooks, dashboards, or product-specific endpoints. The agent is a regular Python object you can call from anywhere.
+
+```python
+app = agent_os.get_app()
+
+
+@app.post("/webhooks/stripe")
+async def handle_stripe(event: dict):
+    response = await agent.arun(f"Process Stripe event: {event}", user_id="system")
+    return {"ok": True, "response": response.content}
+```
+
+## Auth
+
+Set `authorization=True` and every endpoint except `/health` and `/openapi.json` requires a valid JWT.
+
+```python
+agent_os = AgentOS(agents=[agent], authorization=True)
+```
+
+AgentOS validates the token before any agent code runs. The `user_id`, `session_id`, and scope claims are read from the token and injected into the run, so a surface never passes identity in the request body. RBAC scopes are enforced per endpoint.
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| Drive product widgets off this API | [Agentic product surfaces](/use-cases/product-agents/agentic-product-surfaces) |
+| Add Slack or browser surfaces | [Interfaces](/use-cases/product-agents/interfaces) |
+| Lock down endpoints | [Security and auth](/runtime/security-and-auth) |
+
+## Developer Resources
+
+- [Serve as an API](/runtime/serve-as-api)
+- [AgentOS](/agent-os/connect-your-os)
+- [Deploy](/runtime/deploy)

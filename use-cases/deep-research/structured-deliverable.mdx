@@ -1,0 +1,73 @@
+---
+title: "Structured deliverable"
+description: "End the pipeline in a decision, not a wall of text: typed output, conviction, and citations."
+---
+
+Research that ends in prose is hard to act on and harder to audit. The last step of a research pipeline should produce a decision with a fixed shape: the call, the conviction, the reasoning, and what it was based on. Give the final agent an `output_schema` and it returns a validated object.
+
+```python
+from typing import List, Literal
+
+from agno.agent import Agent
+from agno.models.openai import OpenAIResponses
+from pydantic import BaseModel, Field
+
+
+class Decision(BaseModel):
+    call: Literal["BUY", "HOLD", "PASS"] = Field(..., description="The committee decision")
+    conviction: Literal["low", "medium", "high"] = Field(..., description="Confidence in the call")
+    allocation_usd: float = Field(..., description="Dollar allocation, 0 if not BUY")
+    rationale: str = Field(..., description="Why, referencing the analyst inputs")
+    citations: List[str] = Field(default_factory=list, description="Sources and prior memos used")
+
+
+chair = Agent(
+    name="Committee Chair",
+    model=OpenAIResponses(id="gpt-5.5"),
+    output_schema=Decision,
+    instructions=(
+        "Synthesize the analyst inputs into a decision. Every BUY needs a "
+        "dollar amount. Every decision must reference at least one risk."
+    ),
+)
+```
+
+The chair takes no tools. Its only job is to weigh the specialists' inputs and commit to a call. Constraining the output to a schema is what makes the result routable: a downstream system can act on `call` and `allocation_usd` without parsing prose.
+
+## Two artifacts, two purposes
+
+A research system usually produces both a machine-actionable decision and a human-readable memo.
+
+| Artifact | Form | Consumer |
+|----------|------|----------|
+| Decision | Typed object (`output_schema`) | Downstream automation, dashboards, audit |
+| Memo | Markdown written to disk | Humans, the next review's context |
+
+The memo is written by a dedicated agent with file tools and a fixed template, then archived. The next review reads it back as [prior work](/use-cases/deep-research/grounding-research). The decision is the row you store and act on.
+
+## Make it auditable
+
+| Field | Why it earns its place |
+|-------|------------------------|
+| `conviction` | Lets you threshold: act on high, queue medium for review |
+| `rationale` | The reasoning trail, required not optional |
+| `citations` | Ties the call back to grounded sources, not the model's prior |
+
+A decision without its citations is unverifiable. Require them in the schema and the instructions.
+
+## Gate the irreversible
+
+When a decision triggers a real action (moving capital, publishing a number), put a human in the loop on that step. Approve the call, then let automation act. See [human approval](/runtime/human-approval).
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| Carry the memo into the next run | [Grounding research](/use-cases/deep-research/grounding-research) |
+| Make decisions improve over time | [Institutional learning](/use-cases/deep-research/institutional-learning) |
+| Serve the decision to a surface | [Serve and embed](/use-cases/deep-research/serve-and-embed) |
+
+## Developer Resources
+
+- [Structured output](/input-output/structured-output/agent)
+- [Human approval](/runtime/human-approval)

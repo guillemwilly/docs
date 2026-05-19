@@ -1,0 +1,52 @@
+---
+title: "Example: Coda"
+description: "A code-ops teammate that triages issues, opens PRs, and runs scheduled jobs, putting every piece together."
+---
+
+[Coda](https://github.com/agno-agi/coda) is a working automation system you can clone and run. It lives in Slack and works against your codebase on disk: PR reviews, issue triage, feature planning, debugging. Coding agents write code. Coda handles the work around it. It is every page in this section, shipped.
+
+```bash
+git clone https://github.com/agno-agi/coda && cd coda
+cp example.env .env   # set OPENAI_API_KEY and GITHUB_ACCESS_TOKEN
+# edit repos.yaml to point at a repo (the agno repo is a fine first run)
+docker compose up -d --build
+curl http://localhost:8000/health   # {"status":"ok"}
+```
+
+Then ask: *"Walk me through the auth flow"* or *"Triage the open issues."*
+
+## Where each concept shows up
+
+| Concept | In Coda |
+|---------|---------|
+| [Taking action safely](/use-cases/agentic-automation/taking-action-safely) | The Coder works in a `coda/<branch>` worktree and opens a PR. A human merges. Coda never merges. |
+| [Proactive scheduling](/use-cases/agentic-automation/proactive-scheduling) | Three jobs ship by default: repo sync (5 min), daily digest, issue triage |
+| [Action tools and boundaries](/use-cases/agentic-automation/action-tools-and-boundaries) | Explorer is read-only; Coder writes only in a worktree; Triager touches issues, not code |
+| [Multi-agent automation](/use-cases/agentic-automation/multi-agent-automation) | Explorer, Coder, Planner, Researcher, Triager, behind a routing Leader |
+| [Learning your conventions](/use-cases/agentic-automation/learning-your-conventions) | Week 1 generic patterns; week 4 it follows your style via the LearningMachine |
+| [Serve and embed](/use-cases/agentic-automation/serve-and-embed) | Lives in Slack as a teammate; served by AgentOS |
+
+## The team
+
+| Member | Role | Boundary |
+|--------|------|----------|
+| Explorer | Reads code, traces call chains | Read-only |
+| Coder | Writes in an isolated worktree, opens PRs | Never merges |
+| Planner | Breaks features into ordered issues | Issues only |
+| Researcher | Web search for docs, APIs, CVEs | No write access |
+| Triager | Labels, comments, closes issues against the actual code | No code writes |
+| Leader | Routes the request, posts to Slack | Coordination only |
+
+## How it runs
+
+Code is searched on disk: grep, find, read against real files, synced every five minutes. No vector index, no stale embeddings. The Coder's worktrees clean up on restart. The irreversible step, merging, is always a human's. That is the whole safety model in one sentence: the agent does everything reversible freely and nothing irreversible without you.
+
+## Adapt it
+
+Point `repos.yaml` at your repositories and grant the GitHub token the scopes Coda needs. Swap the specialists and tools and the same shape automates other ops: incident response, release management, dependency upkeep, on-call triage. The teammate-with-boundaries pattern is the product; the domain is configuration.
+
+## Developer Resources
+
+- [Coda on GitHub](https://github.com/agno-agi/coda)
+- [Coda tutorial](/tutorials/coda/overview)
+- [Human-in-the-loop](/hitl/overview)

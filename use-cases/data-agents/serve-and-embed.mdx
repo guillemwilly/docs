@@ -1,0 +1,69 @@
+---
+title: "Serve and embed"
+description: "Put the data agent behind an API so a dashboard, a Slack channel, or a product widget can ask it questions."
+---
+
+A data agent that only runs in a notebook helps one analyst. Behind an API, it answers questions from a Slack channel, a BI dashboard's natural-language box, or an "explain this metric" widget in your product. `AgentOS` turns the agent into that API.
+
+```python
+from agno.agent import Agent
+from agno.db.postgres import PostgresDb
+from agno.models.openai import OpenAIResponses
+from agno.os import AgentOS
+from agno.tools.sql import SQLTools
+
+agent = Agent(
+    id="data-agent",
+    model=OpenAIResponses(id="gpt-5.5"),
+    db=PostgresDb(db_url="postgresql+psycopg://ai:ai@localhost:5532/ai"),
+    tools=[SQLTools(db_url="postgresql+psycopg://readonly@warehouse/analytics", read_only=True)],
+    learning=True,
+)
+
+agent_os = AgentOS(agents=[agent])
+app = agent_os.get_app()
+
+if __name__ == "__main__":
+    agent_os.serve(app="data_agent:app", port=7777)
+```
+
+Any surface calls the same endpoint:
+
+```bash
+curl -X POST http://localhost:7777/agents/data-agent/runs \
+  -H "Content-Type: application/json" \
+  -d '{"message":"MRR by plan, last 6 months","user_id":"ab@acme.com","session_id":"q4-review"}'
+```
+
+## Surfaces a data agent lives on
+
+| Surface | Shape |
+|---------|-------|
+| Slack channel | An interface maps a thread to a session; the team asks in plain English |
+| Dashboard NL box | A widget posts the question and renders the answer plus its SQL |
+| Scheduled digest | A cron job runs the agent and posts "yesterday's numbers" every morning |
+| Backend check | A pipeline calls the agent to sanity-check a metric before publishing |
+
+The serving model is identical to a [product agent](/use-cases/product-agents/serve-as-an-api). The difference is what the agent does, not how it is served. Sessions still scope per user, so each analyst's thread and learnings stay separate.
+
+## Learnings are shared, sessions are not
+
+A data agent's value compounds when corrections are shared across the team. Scope conversation threads per user with `session_id`, but keep learnings in a shared namespace so a fix one analyst's question triggered helps everyone.
+
+| State | Scope |
+|-------|-------|
+| Conversation thread | Per `user_id` and `session_id` |
+| Learnings about the warehouse | Shared namespace across users |
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| Add Slack or a browser surface | [Interfaces](/use-cases/product-agents/interfaces) |
+| See a served data agent | [Example: Dash](/use-cases/data-agents/example-dash) |
+| Lock down the endpoints | [Security and auth](/runtime/security-and-auth) |
+
+## Developer Resources
+
+- [Serve as an API](/runtime/serve-as-api)
+- [Product agents: serving](/use-cases/product-agents/serve-as-an-api)

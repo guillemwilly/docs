@@ -1,0 +1,68 @@
+---
+title: "Learning your conventions"
+description: "Automation that adapts: week 1 it follows generic patterns, week 4 it follows yours."
+---
+
+Generic automation is rejected automation. A code agent that opens PRs in the wrong style, names things the wrong way, or logs the wrong way creates review work instead of removing it. The agent has to learn how your team actually operates. Agno's `LearningMachine` captures conventions as it works and applies them on the next run.
+
+```python
+from agno.agent import Agent
+from agno.learn import LearnedKnowledgeConfig, LearningMachine, LearningMode
+from agno.models.openai import OpenAIResponses
+
+# Shared store, imported once, used by every specialist
+from agents.settings import team_learnings
+
+coder = Agent(
+    name="Coder",
+    model=OpenAIResponses(id="gpt-5.5"),
+    learning=LearningMachine(
+        knowledge=team_learnings,
+        learned_knowledge=LearnedKnowledgeConfig(
+            mode=LearningMode.AGENTIC,
+            namespace="global",
+        ),
+    ),
+    instructions="Match the conventions you have learned for this codebase.",
+)
+```
+
+Week 1 the agent follows generic patterns. By week 4 it follows your service-layer structure, error handling, naming, and logging, because it captured them from the PRs that got merged and the ones that got changed.
+
+## What conventions look like
+
+| The agent learns | From |
+|-------------------|------|
+| "This repo uses a service layer, not fat controllers" | Reviewed and merged PRs |
+| "Errors are wrapped in `AppError`, never raised raw" | Corrections on its own PRs |
+| "Issue labels follow `area/*` and `type/*`" | How a human relabeled its triage |
+| "Don't touch generated files in `migrations/`" | A rejected change |
+
+The signal is the human's edit. A merged PR confirms a pattern. A change to its PR is a correction worth keeping.
+
+## Shared, so the team improves together
+
+Use one `team_learnings` store with a global namespace. A convention the Coder learned is in the Triager's context too. The system's competence is institutional, not per-agent. This is the same machine the [data agent self-corrects with](/use-cases/data-agents/self-correcting-agents) and the [research committee compounds with](/use-cases/deep-research/institutional-learning), pointed at conventions instead of queries or insights.
+
+## Modes
+
+| Mode | Behavior | Use for |
+|------|----------|---------|
+| `ALWAYS` | Capture after every run | Steady accumulation of observed patterns |
+| `AGENTIC` | The agent decides what is a real convention | Automation, where noise becomes bad PRs |
+| `PROPOSE` | A human approves before it persists | Conventions that change how the agent writes code |
+
+`AGENTIC` is the default for automation: a one-off file is not a convention, and you do not want it learned as one.
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| Keep risky actions gated while it learns | [Taking action safely](/use-cases/agentic-automation/taking-action-safely) |
+| Share learning across specialists | [Multi-agent automation](/use-cases/agentic-automation/multi-agent-automation) |
+| See it adapt over weeks | [Example: Coda](/use-cases/agentic-automation/example-coda) |
+
+## Developer Resources
+
+- [Learning Machines](/learning/overview)
+- [Learning modes](/learning/learning-modes)

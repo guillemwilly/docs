@@ -1,0 +1,91 @@
+---
+title: "Grounding research"
+description: "Ground every agent in a mandate, a research library, and prior work, so conclusions are defensible."
+---
+
+Ungrounded research is confident and wrong. A research agent needs to know the rules it operates under, the body of knowledge it can draw on, and what was decided before. Agno layers these so each agent carries the right context without carrying everything.
+
+| Layer | Holds | Mechanism |
+|-------|-------|-----------|
+| Static context | The mandate, policy, and process that never change per query | Injected into every system prompt |
+| Research library | Company profiles, sector analyses, source documents | RAG over a vector database |
+| Prior work | Past decisions and memos | File navigation tools |
+
+## Layer 1: static context in the prompt
+
+Rules that apply to every question belong in the prompt, not in retrieval. Load them once and inject them into every agent.
+
+```python
+from pathlib import Path
+
+CONTEXT_DIR = Path(__file__).parent
+
+
+def load_context() -> str:
+    sections = [f.read_text() for f in sorted(CONTEXT_DIR.glob("*.md"))]
+    return "\n\n---\n\n".join(sections)
+
+
+COMMITTEE_CONTEXT = load_context()
+
+instructions = f"""\
+You are the Risk Officer on a $10M investment team.
+
+## Committee Rules (ALWAYS FOLLOW)
+
+{COMMITTEE_CONTEXT}
+
+## Your Role
+Enforce position limits and sector caps on every recommendation.
+"""
+```
+
+Mandate, risk policy, and process are markdown files. Every agent gets the identical rules verbatim, so no specialist can drift from the mandate.
+
+## Layer 2: the research library in RAG
+
+The corpus the agents reason over goes in a shared knowledge base, searched per query. Instantiate it once and import it everywhere, never recreate it per agent.
+
+```python
+from agno.agent import Agent
+from agno.models.openai import OpenAIResponses
+
+# Shared instance, imported from a settings module
+from agents.settings import team_knowledge
+
+analyst = Agent(
+    model=OpenAIResponses(id="gpt-5.5"),
+    knowledge=team_knowledge,
+    search_knowledge=True,
+    instructions="Search the research library before forming a view. Cite what you used.",
+)
+```
+
+`search_knowledge=True` lets the agent pull the relevant profiles and analyses per question instead of carrying the whole library in context.
+
+## Layer 3: prior work on disk
+
+Past memos and decisions are durable artifacts, not vectors. Give a read agent file tools so it can navigate the archive and ground new work in what was already concluded. The agent that writes new memos gets write access; the agent that reads them does not. Keep the boundary explicit.
+
+## Why three layers, not one
+
+| If you only had | You would lose |
+|-----------------|----------------|
+| The prompt | A corpus too large to inline |
+| RAG | Hard rules that must apply to every query, verbatim |
+| The archive | The reasoning trail behind past decisions |
+
+Each layer answers a different question: what are the rules, what do we know, what did we decide.
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| Make grounded research compound | [Institutional learning](/use-cases/deep-research/institutional-learning) |
+| End in an auditable artifact | [Structured deliverable](/use-cases/deep-research/structured-deliverable) |
+| See all three layers wired | [Example: Investment committee](/use-cases/deep-research/example-investment-committee) |
+
+## Developer Resources
+
+- [Knowledge](/knowledge/overview)
+- [Context engineering](/context/overview)

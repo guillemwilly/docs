@@ -1,0 +1,85 @@
+---
+title: "Self-correcting agents"
+description: "Turn every diagnosed error into a durable learning so the same mistake cannot recur."
+---
+
+This is the difference between a demo and a product. A demo gets a query wrong and you fix the prompt. A data agent gets a query wrong, diagnoses why, saves the fix as a learning, and the next time a similar question comes in, that fix is already in context. Agno's LearningMachine does this with one parameter.
+
+```python
+from agno.agent import Agent
+from agno.db.postgres import PostgresDb
+from agno.models.openai import OpenAIResponses
+from agno.tools.sql import SQLTools
+
+agent = Agent(
+    model=OpenAIResponses(id="gpt-5.5"),
+    db=PostgresDb(db_url="postgresql+psycopg://ai:ai@localhost:5532/ai"),
+    tools=[SQLTools(db_url="postgresql+psycopg://readonly@warehouse/analytics", read_only=True)],
+    learning=True,
+    instructions="When a query errors, diagnose the cause and record the correction.",
+)
+```
+
+`learning=True` enables capture and recall. The agent accumulates corrections across runs and pulls the relevant ones into context on future questions.
+
+## The loop
+
+1. The agent writes SQL and runs it.
+2. It errors, or returns a number a human flags as wrong.
+3. The agent diagnoses the cause (wrong column, stale table, a join that double-counts).
+4. The fix is saved as a learning.
+5. The next similar question retrieves that learning before generating SQL.
+
+After a few weeks of real use, the recurring errors stop recurring. The agent has written down what your warehouse's sharp edges are.
+
+## Choose how learning happens
+
+Each store takes a mode. For a data agent, you usually want errors captured automatically and schema changes proposed for review.
+
+```python
+from agno.learn import LearningMachine, LearningMode, UserMemoryConfig
+
+agent = Agent(
+    model=OpenAIResponses(id="gpt-5.5"),
+    db=db,
+    learning=LearningMachine(
+        user_memory=UserMemoryConfig(mode=LearningMode.ALWAYS),
+    ),
+)
+```
+
+| Mode | Behavior | Use for |
+|------|----------|---------|
+| `ALWAYS` | Capture runs automatically after each response | Query-error corrections |
+| `AGENTIC` | The agent decides what is worth saving | Nuanced domain insights |
+| `PROPOSE` | The agent proposes, a human approves before it persists | Anything that changes how numbers are computed |
+
+## Audit what it learned
+
+A data agent's learnings change the numbers it reports, so they need to be inspectable. The Decision Log records decisions with their reasoning. Pair it with the Curator to keep the store healthy.
+
+```python
+lm = agent.get_learning_machine()
+lm.curator.deduplicate(user_id="warehouse")
+lm.curator.prune(user_id="warehouse", max_age_days=180)
+```
+
+| Store | Why a data agent wants it |
+|-------|---------------------------|
+| Learned Knowledge | Corrections that transfer across users |
+| Decision Log | An audit trail of why a query shape changed |
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| Feed it curated context too | [Grounding in context](/use-cases/data-agents/grounding-in-context) |
+| Gate writes behind approval | [Safe data access](/use-cases/data-agents/safe-data-access) |
+| See the loop running | [Example: Dash](/use-cases/data-agents/example-dash) |
+
+## Developer Resources
+
+- [Learning Machines](/learning/overview)
+- [Learning modes](/learning/learning-modes)
+- [Decision Log store](/learning/stores/decision-log)
+- [Learning cookbook](https://github.com/agno-agi/agno/tree/main/cookbook/08_learning)

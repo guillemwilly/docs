@@ -1,0 +1,85 @@
+---
+title: "Deep Research & Analysis"
+sidebarTitle: "Overview"
+description: "Orchestrate specialist agents into grounded, auditable research with a structured deliverable at the end."
+---
+
+A single prompt is a demo. A research system is a product. The gap between them is orchestration, grounding, and an auditable deliverable. Agno is built for that gap.
+
+- Research is many specialist perspectives, so Agno gives you Teams and Workflows to orchestrate them.
+- Research must be defensible, so every agent is grounded in a mandate, a research library, and prior work.
+- Research has to ship a decision, so the pipeline ends in a structured, citable deliverable.
+- Research compounds, so a shared LearningMachine carries insights across every run.
+
+A deterministic research pipeline is a few lines. Each step feeds the next; the slow independent work runs in parallel.
+
+```python
+from agno.workflow import Parallel, Step, Workflow
+
+investment_workflow = Workflow(
+    id="investment-workflow",
+    name="Investment Review Pipeline",
+    steps=[
+        Step(name="Market Assessment", agent=market_analyst),
+        Parallel(
+            Step(name="Fundamental Analysis", agent=financial_analyst),
+            Step(name="Technical Analysis", agent=technical_analyst),
+            name="Deep Dive",
+        ),
+        Step(name="Risk Assessment", agent=risk_officer),
+        Step(name="Investment Memo", agent=memo_writer),
+        Step(name="Committee Decision", agent=committee_chair),
+    ],
+)
+```
+
+That is an auditable five-step review with a parallel deep-dive. Swap the agents and the mandate and the same shape researches anything.
+
+## Why Agno fits this shape
+
+| Reason | What it means for a research system |
+|--------|-------------------------------------|
+| Orchestration is native | Teams (route, coordinate, broadcast, task) and Workflows (deterministic pipelines) are first-class. |
+| Grounding is layered | Static mandate in the prompt, a research library in RAG, prior work on disk. |
+| The output is structured | The pipeline ends in a memo and a decision, not a wall of text. |
+| Research compounds | A shared `LearningMachine` means the next review starts from what the last one learned. |
+
+## The primitives
+
+| Concern | Page |
+|---------|------|
+| Pick the orchestration shape | [Orchestration patterns](/use-cases/deep-research/orchestration-patterns) |
+| Run specialists in parallel | [Parallel investigation](/use-cases/deep-research/parallel-investigation) |
+| Ground every agent | [Grounding research](/use-cases/deep-research/grounding-research) |
+| End in an auditable artifact | [Structured deliverable](/use-cases/deep-research/structured-deliverable) |
+| Make research compound | [Institutional learning](/use-cases/deep-research/institutional-learning) |
+| Put it behind a surface | [Serve and embed](/use-cases/deep-research/serve-and-embed) |
+
+## Explore
+
+<CardGroup cols={3}>
+  <Card title="Orchestration patterns" icon="diagram-project" href="/use-cases/deep-research/orchestration-patterns">
+    Route, coordinate, broadcast, task, and deterministic pipelines.
+  </Card>
+  <Card title="Parallel investigation" icon="arrows-split-up-and-left" href="/use-cases/deep-research/parallel-investigation">
+    Fan specialists out at once, synthesize the results.
+  </Card>
+  <Card title="Grounding research" icon="book-open" href="/use-cases/deep-research/grounding-research">
+    Mandate in the prompt, a library in RAG, prior work on disk.
+  </Card>
+  <Card title="Structured deliverable" icon="file-contract" href="/use-cases/deep-research/structured-deliverable">
+    End in a memo and a decision, with citations and conviction.
+  </Card>
+  <Card title="Institutional learning" icon="arrows-rotate" href="/use-cases/deep-research/institutional-learning">
+    Shared learnings so the next review starts ahead.
+  </Card>
+  <Card title="Example: Investment committee" icon="building-columns" href="/use-cases/deep-research/example-investment-committee">
+    A seven-analyst committee across five architectures.
+  </Card>
+</CardGroup>
+
+## Developer Resources
+
+- [Workflows](/workflows/overview)
+- [Teams](/teams/overview)
+- [Investment committee on GitHub](https://github.com/agno-agi/investment-team)
