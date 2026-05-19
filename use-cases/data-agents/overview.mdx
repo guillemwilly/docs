@@ -1,47 +1,12 @@
 ---
-title: "Data & Analytics Agents"
+title: "Data and analytics agents"
 sidebarTitle: "Overview"
-description: "Agents that answer questions from your database, ground every answer in business context, and stop repeating their mistakes."
+description: "Agents that work on your data, grounded in business context."
 ---
 
-Text-to-SQL is a demo. A data agent is a product. The gap between them is everything that happens after the model writes a query: grounding it in your schema and business rules, catching the error, and not making that error again next week. Agno is built for that gap. SQL tools, knowledge grounding, and a LearningMachine that turns every mistake into a durable correction.
+Every company with 30+ people is building an internal data agent. OpenAI, Vercel, Uber, LinkedIn, and Salesforce have each published theirs. The key themes are: ground the model in curated context, let it self-correct, enforce hard boundaries on writes.
 
-```python
-from agno.agent import Agent
-from agno.db.postgres import PostgresDb
-from agno.models.openai import OpenAIResponses
-from agno.tools.sql import SQLTools
-
-db = PostgresDb(db_url="postgresql+psycopg://ai:ai@localhost:5532/ai")
-
-analyst = Agent(
-    name="Analyst",
-    model=OpenAIResponses(id="gpt-5.5"),
-    db=db,
-    tools=[SQLTools(db_url="postgresql+psycopg://readonly@warehouse/analytics")],
-    learning=True,
-    instructions="Answer with the numbers and cite the SQL you ran.",
-)
-
-analyst.print_response("What's our current MRR?", user_id="ab@acme.com")
-```
-
-Read-only SQL access, persistent learning, and an answer that cites the query it ran. The hard parts (grounding, self-correction, write safety) are the rest of this section.
-
-## Why this is a category, not a feature
-
-Every company with 30+ people is building an internal data agent. OpenAI, Vercel, Uber, LinkedIn, and Salesforce have each published theirs. The shape is consistent: ground the model in curated context, let it self-correct, enforce hard boundaries on writes.
-
-## Why Agno fits this shape
-
-| Reason | What it means for a data agent |
-|--------|--------------------------------|
-| Self-correction is native | The [LearningMachine](/learning/overview) captures errors and fixes so the same mistake cannot recur. |
-| Grounding is native | Knowledge stores hold validated queries, table metadata, and business rules, retrieved per question. |
-| Boundaries are real | Read-only and read-write access enforced by the database engine, not by a prompt. |
-| It is an API | `AgentOS` serves the agent so any dashboard, Slack, or product surface can ask. |
-
-## The primitives
+## Learn how to
 
 | Concern | Page |
 |---------|------|
@@ -54,7 +19,7 @@ Every company with 30+ people is building an internal data agent. OpenAI, Vercel
 
 ## Explore
 
-<CardGroup cols={3}>
+<CardGroup cols={2}>
   <Card title="Querying your data" icon="database" href="/use-cases/data-agents/querying-your-data">
     SQL tools, schema introspection, and answers that cite the query.
   </Card>
@@ -70,12 +35,9 @@ Every company with 30+ people is building an internal data agent. OpenAI, Vercel
   <Card title="Materialization" icon="layer-group" href="/use-cases/data-agents/materialization">
     Repeat questions become reusable views.
   </Card>
-  <Card title="Example: Dash" icon="chart-line" href="/use-cases/data-agents/example-dash">
-    A full self-learning data agent over a SaaS dataset.
-  </Card>
 </CardGroup>
 
-## Developer Resources
+## Developer resources
 
 - [Learning Machines](/learning/overview)
 - [Dash tutorial](/tutorials/dash/overview)

@@ -1,9 +1,9 @@
 ---
 title: "Querying your data"
-description: "Give an agent read-only SQL access, schema introspection, and the discipline to cite the query it ran."
+description: "Give an agent read-only SQL access and schema introspection"
 ---
 
-`SQLTools` connects an agent to a database. Point it at a read-only connection and the agent can introspect the schema and run queries, but it cannot write.
+`SQLTools` connects an agent to a database. Point it at a read-only connection and the agent can introspect the schema and run queries.
 
 ```python
 from agno.agent import Agent
@@ -37,20 +37,6 @@ A data agent that guesses column names is wrong confidently. `SQLTools` ships `l
 | `list_tables` | Discover what exists before querying |
 | `describe_table` | Get exact column names and types |
 | `run_sql_query` | Execute the generated SQL |
-
-## Cite the query
-
-An answer without its SQL is unverifiable. Instruct the agent to return the query alongside the result so a human can check it and a downstream system can re-run it.
-
-```python
-instructions = """\
-For every answer:
-1. Introspect the relevant tables.
-2. Write and run the SQL.
-3. Return the number and the exact SQL in a fenced block.
-Never present a figure without the query that produced it.
-"""
-```
 
 ## Scope the connection
 

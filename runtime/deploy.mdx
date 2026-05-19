@@ -1,5 +1,5 @@
 ---
-title: Deploy
+title: "Deploying"
 description: "Ship AgentOS as a normal Python service. Container, Postgres, public hostname."
 ---
 
@@ -125,7 +125,3 @@ For the leader-election pattern with multiple replicas, see [Scheduler HA](/agen
 ## Updating your deployment
 
 Code changes: `git push` if CI auto-deploys, or `./scripts/railway_redeploy.sh`. Env changes: `./scripts/railway_env.sh` (Railway auto-redeploys when env values change). Database changes: AgentOS handles its own tables — schema changes are additive and forward-compatible, so no migration tool is required for stock AgentOS tables. Application tables you migrate however you like (Alembic, raw SQL, dbt, your call).
-
-## Next
-
-[Build a Product →](/runtime/build-a-product)

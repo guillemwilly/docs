@@ -1,60 +1,107 @@
 ---
-title: What is a Runtime?
-description: "A runtime turns your agent into a production service."
+title: "AgentOS runtime"
+description: "Turn your agent into a horizontally scalable, authenticated production service."
 ---
 
 <div className="text-center text-3xl font-mono my-10">
-  <span>Runtime</span>
+  <span>Agent Runtime</span>
   <span className="mx-3 text-orange-500">=</span>
   <span>Agent Server</span>
 </div>
 
-The runtime is one of three layers of an [agent platform](/agent-platform/overview): the SDK to build, the runtime to run, and the control plane to manage. To ship agents to real users, you need to run them as a horizontally scalable, durable service reachable over an API. That's what the runtime gives you.
+AgentOS turns your agents into a service: reachable over an API, durable across restarts, scaled across replicas, and authenticated per request.
 
-AgentOS turns the `Agent(...)` into a FastAPI app with persistent sessions, JWT-based authentication, observability, and interfaces for Slack, Telegram, and more.
+```python
+from agno.agent import Agent
+from agno.db.postgres import PostgresDb
+from agno.models.openai import OpenAIResponses
+from agno.os import AgentOS
+
+db = PostgresDb(db_url="postgresql://user:pass@host:5432/agno")
+
+agent = Agent(model=OpenAIResponses(id="gpt-5.5"), db=db)
+
+agent_os = AgentOS(agents=[agent], db=db)
+app = agent_os.get_app()
+
+if __name__ == "__main__":
+    agent_os.serve(app="my_app:app", reload=False)
+```
+
+AgentOS gives you a production-ready agent server. Persistent sessions, an HTTP API with streaming, JWT auth, tracing, and a scheduler, all from one stateless process.
 
 ## What the runtime gives you
 
 The runtime covers the ground between your agent code and a shipped service:
 
-| Concern               | How AgentOS handles it                                                  |
-| --------------------- | ----------------------------------------------------------------------- |
-| **HTTP API**          | Auto-generated endpoints for every registered agent, team, and workflow |
-| **State**             | Sessions and memory persisted to your `db`                              |
-| **Streaming**         | SSE on every run endpoint; tokens and tool calls stream as they happen  |
-| **Auth**              | JWT validation with RBAC scopes built-in                                |
-| **Scheduling**        | In-process cron that polls the database and fires due jobs              |
-| **Observability**     | OpenTelemetry tracing into the same `db`, queryable with SQL            |
-| **Interfaces**        | Slack, Telegram, WhatsApp, Discord, A2A, AG-UI                          |
-| **Human in the loop** | Pause runs for user confirmation, admin approval, or external execution |
+| Concern | How AgentOS handles it |
+|---------|------------------------|
+| HTTP API | Auto-generated endpoints for every registered agent, team, and workflow |
+| State | Sessions and memory persisted to your `db` |
+| Streaming | SSE on every run endpoint; tokens and tool calls stream as they happen |
+| Auth | JWT validation with RBAC scopes built-in |
+| Scheduling | In-process cron that polls the database and fires due jobs |
+| Observability | OpenTelemetry tracing into the same `db`, queryable with SQL |
+| Interfaces | Slack, Telegram, WhatsApp, A2A, AG-UI |
+| Human in the loop | Pause runs for user confirmation, admin approval, or external execution |
 
-The same `Agent(...)` runs in a script, a test, or an AgentOS service. AgentOS itself is stateless: state lives in `db`, so you can scale horizontally to handle load.
+The same `Agent(...)` runs in a script, a test, or an AgentOS service. AgentOS is stateless: state lives in `db`, so you scale horizontally by adding replicas.
 
 <Note>
-  AgentOS also runs teams and workflows, not only single agents. See [Build a
-  Product](/runtime/build-a-product).
+  AgentOS runs single agents, teams, and workflows.
 </Note>
 
 <Note>
-  AgentOS can also serve agents built with the Claude Agent SDK, LangGraph and
-  DSPy. See [Multi-Framework Support](/agent-os/multi-framework/overview).
+  AgentOS can also serve agents built with the Claude Agent SDK, LangGraph, and DSPy. See [Multi-framework support](/agent-os/multi-framework/overview).
 </Note>
 
-## What's in this section
+## The primitives
 
-| Page                                          | Covers                                                       |
-| --------------------------------------------- | ------------------------------------------------------------ |
-| [Serve as an API](/runtime/serve-as-api)      | The HTTP endpoints AgentOS generates and how to add your own |
-| [Storage](/runtime/storage)                   | Database backends and what gets stored                       |
-| [Context](/runtime/context)                   | Knowledge, dependencies, and live context providers          |
-| [Human Approval](/runtime/human-approval)     | Pausing runs for confirmation, approval, or external systems |
-| [Observability](/runtime/observability)       | Tracing, run history, audit logs                             |
-| [Security & Auth](/runtime/security-and-auth) | JWT, RBAC scopes, request isolation                          |
-| [Interfaces](/runtime/interfaces)             | Slack, Telegram, WhatsApp, A2A, AG-UI                        |
-| [Scheduling](/runtime/scheduling)             | Cron jobs and multi-step workflows                           |
-| [Deploy](/runtime/deploy)                     | Docker, Railway, AWS, GCP, scaling                           |
-| [Build a Product](/runtime/build-a-product)   | From a working AgentOS to a shipped product                  |
+| Concern | Page |
+|---------|------|
+| Run agents behind one HTTP API | [Serve as an API](/runtime/serve-as-api) |
+| Persist sessions, memory, knowledge, traces | [Storage](/runtime/storage) |
+| Give the agent knowledge, dependencies, and live sources | [Context](/runtime/context) |
+| Pause runs for confirmation or approval | [Human Approval](/runtime/human-approval) |
+| Trace every run and keep audit logs | [Observability](/runtime/observability) |
+| Authenticate, scope, and isolate every request | [Security & Auth](/runtime/security-and-auth) |
+| Meet users in Slack, Telegram, WhatsApp, the browser | [Interfaces](/runtime/interfaces) |
+| Run recurring and multi-step work | [Scheduling](/runtime/scheduling) |
+| Ship the service to production | [Deploying](/runtime/deploy) |
 
-## Next
+## Explore
 
-[Serve as an API →](/runtime/serve-as-api)
+<CardGroup cols={2}>
+  <Card title="Serve as an API" icon="server" href="/runtime/serve-as-api">
+    The HTTP endpoints AgentOS generates and how to add your own.
+  </Card>
+  <Card title="Storage" icon="database" href="/runtime/storage">
+    Database backends and what gets stored.
+  </Card>
+  <Card title="Context" icon="book" href="/runtime/context">
+    Knowledge, dependencies, and live data sources.
+  </Card>
+  <Card title="Human Approval" icon="user-check" href="/runtime/human-approval">
+    Pause runs for confirmation, approval, or external systems.
+  </Card>
+  <Card title="Observability" icon="chart-line" href="/runtime/observability">
+    Tracing, run history, and audit logs in your own database.
+  </Card>
+  <Card title="Security & Auth" icon="shield-halved" href="/runtime/security-and-auth">
+    JWT validation, RBAC scopes, and per-request isolation.
+  </Card>
+  <Card title="Interfaces" icon="comments" href="/runtime/interfaces">
+    Slack, Telegram, WhatsApp, A2A, and AG-UI.
+  </Card>
+  <Card title="Scheduling" icon="clock" href="/runtime/scheduling">
+    In-process cron and multi-step workflows.
+  </Card>
+  <Card title="Deploying" icon="rocket" href="/runtime/deploy">
+    Docker, Railway, AWS, GCP, and horizontal scaling.
+  </Card>
+</CardGroup>
+
+## Developer resources
+
+- [Agent platform](/agent-platform/overview)
+- [Multi-framework support](/agent-os/multi-framework/overview)

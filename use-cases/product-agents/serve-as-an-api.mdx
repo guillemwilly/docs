@@ -1,9 +1,9 @@
 ---
 title: "Serve as an API"
-description: "Turn agents into an HTTP service with streaming, sessions, and auth, then call it from any surface."
+description: "Turn agents into an HTTP service with streaming, sessions, and auth."
 ---
 
-`AgentOS` wraps the agent in a FastAPI app. Every registered agent gets run, session, and memory endpoints. Your product surfaces call those endpoints.
+`AgentOS` serves your agents as a FastAPI application. Every agent gets run, session, and memory endpoints. Your product surfaces call those endpoints.
 
 ```python
 from agno.agent import Agent
@@ -18,7 +18,7 @@ agent = Agent(
     model=OpenAIResponses(id="gpt-5.5"),
     db=db,
     add_history_to_context=True,
-    update_memory_on_run=True,
+    enable_agentic_memory=True,
 )
 
 agent_os = AgentOS(agents=[agent])
@@ -118,7 +118,7 @@ AgentOS validates the token before any agent code runs and injects `user_id`, `s
 | Add Slack or browser surfaces | [Interfaces](/use-cases/product-agents/interfaces) |
 | Lock down endpoints | [Security and auth](/runtime/security-and-auth) |
 
-## Developer resources
+## Developer Resources
 
 - [Serve as an API](/runtime/serve-as-api)
 - [AgentOS](/agent-os/connect-your-os)

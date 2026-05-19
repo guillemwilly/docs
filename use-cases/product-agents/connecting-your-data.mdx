@@ -1,9 +1,9 @@
 ---
 title: "Connecting your data"
-description: "Give the agent live access to Slack, Drive, databases, and MCP servers through context providers."
+description: "Give agents access to external sources using context providers."
 ---
 
-A product agent is only as useful as what it can see. Context providers give the agent live access to a source through two natural-language tools: `query_<source>` for reads and `update_<source>` for writes. A sub-agent behind each provider owns the source's quirks, so the main agent's context stays clean.
+An agent is only as good as the context it has access to. Context providers give the agent live access to a source through two natural-language tools: `query_<source>` for reads and `update_<source>` for writes. A sub-agent behind each provider owns the source's quirks, so the main agent's context stays clean.
 
 ```python
 from agno.agent import Agent
@@ -23,7 +23,9 @@ agent.run("What's the latest pricing for Anthropic's models?")
 
 ## Navigation over search
 
-The default playbook for a "company brain" is to ingest everything into a vector database and retrieve top-k chunks. The index goes stale and citations point at fragments. Context providers navigate the source at query time instead, the way a coding agent runs `ls`, `grep`, and `cat`.
+Context providers navigate the source at query time, the way a coding agent runs `ls`, `grep`, and `cat`. The state is always live and every citation is a path the user can open.
+
+The common "company brain" approach ingests everything into a vector database for top-k retrieval. That works for static corpora. For live product data, the index goes stale and citations point at fragments.
 
 | Win | Why it matters for your product |
 |-----|---------------------------------------------|
@@ -37,7 +39,7 @@ Attaching a source's twelve raw tools to the agent pollutes context and degrades
 
 | Problem with raw tools | What a context provider does |
 |------------------------|------------------------------|
-| Too many tools crowd the prompt | The agent sees `query_slack`, not Slack's full tool surface |
+| Too many tools crowd the prompt | The agent sees one tool: `query_slack` |
 | Overlapping scopes confuse routing | One sub-agent owns one scope; routing is one tool call |
 | Intermediate results bury the task | Pagination and lookups stay inside the sub-agent |
 
@@ -57,15 +59,10 @@ Attaching a source's twelve raw tools to the agent pollutes context and degrades
 
 Providers that can write take `write=False`, which removes the update tool so the agent cannot mutate the source under any prompt. A read-only source like the web has no write tool to begin with. This is how a style guide or a reference corpus stays immutable while still being queryable.
 
-## The closed loop
-
-Pair a read source with a writable wiki or CRM and the agent files what it learns. "Josh from Anthropic shared a paper" becomes a contact plus a linked wiki page, so the next query about Josh is faster. Scout's CRM and wiki are this pattern end to end.
-
 ## Next steps
 
 | Task | Guide |
 |------|-------|
-| See the full pattern in a real agent | [Example: Scout](/use-cases/product-agents/example-scout) |
 | Reach users where they work | [Interfaces](/use-cases/product-agents/interfaces) |
 | Persist what the agent learns | [Sessions and memory](/use-cases/product-agents/sessions-and-memory) |
 

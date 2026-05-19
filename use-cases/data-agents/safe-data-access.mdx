@@ -1,6 +1,6 @@
 ---
 title: "Safe data access"
-description: "Read-only and read-write boundaries enforced by the database engine, not by a prompt."
+description: "Enforce read and write boundaries via the database engine, not the prompt."
 ---
 
 A prompt that says "only run SELECT" is a suggestion. A connection that physically cannot write is a guarantee. A production data agent answers from a read-only engine and isolates any writes to a schema it owns. The boundary holds even when the model goes off-script.
@@ -65,7 +65,6 @@ Approval everywhere kills adoption. Gate the irreversible actions, not the reads
 |------|-------|
 | Let the Engineer build reusable views | [Materialization](/use-cases/data-agents/materialization) |
 | Approve sensitive actions | [Human approval](/runtime/human-approval) |
-| See the dual-schema split live | [Example: Dash](/use-cases/data-agents/example-dash) |
 
 ## Developer Resources
 

@@ -1,9 +1,9 @@
 ---
 title: "Interfaces"
-description: "Slack, Telegram, WhatsApp, and browser surfaces, each one line on the AgentOS."
+description: "Slack, Telegram, WhatsApp, and browser surfaces, all through the AgentOS."
 ---
 
-An interface adapts AgentOS to a surface where users already are. It receives events from Slack, Telegram, or the browser, maps them onto runs and sessions, and routes the response back to the right thread. The agent does not change.
+Interfaces plug your agent into Slack, Telegram, WhatsApp, and browser clients.
 
 ```python
 from agno.os import AgentOS
@@ -80,16 +80,15 @@ Slack hands you opaque IDs like `U07ABCXYZ`. Set `resolve_user_identity=True` on
 
 ## One-off webhooks
 
-For a single integration, do not write an interface. Add a route to the FastAPI app and call the agent directly. See [Serve as an API](/use-cases/product-agents/serve-as-an-api#custom-routes).
+For a one-off integration, a custom FastAPI route that calls the agent is enough. See [Serve as an API](/use-cases/product-agents/serve-as-an-api#custom-routes).
 
 ## Next steps
 
 | Task | Guide |
 |------|-------|
-| See interfaces in a shipped agent | [Example: Scout](/use-cases/product-agents/example-scout) |
 | Keep memory coherent per user | [Sessions and memory](/use-cases/product-agents/sessions-and-memory) |
 
-## Developer Resources
+## Developer resources
 
 - [Interfaces in the runtime](/runtime/interfaces)
 - [Interfaces cookbook](https://github.com/agno-agi/agno/tree/main/cookbook/05_agent_os/interfaces)

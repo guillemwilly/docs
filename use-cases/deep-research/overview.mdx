@@ -1,17 +1,10 @@
 ---
-title: "Deep Research & Analysis"
+title: "Deep research and analysis"
 sidebarTitle: "Overview"
-description: "Orchestrate specialist agents into grounded, auditable research with a structured deliverable at the end."
+description: "Orchestrate agents for grounded, auditable research and structured deliverables."
 ---
 
-A single prompt is a demo. A research system is a product. The gap between them is orchestration, grounding, and an auditable deliverable. Agno is built for that gap.
-
-- Research is many specialist perspectives, so Agno gives you Teams and Workflows to orchestrate them.
-- Research must be defensible, so every agent is grounded in a mandate, a research library, and prior work.
-- Research has to ship a decision, so the pipeline ends in a structured, citable deliverable.
-- Research compounds, so a shared LearningMachine carries insights across every run.
-
-A deterministic research pipeline is a few lines. Each step feeds the next; the slow independent work runs in parallel.
+The gap between an agent using tools and a deep research system is orchestration, grounding, and auditable deliverables. Agno lets you build a deterministic, step-based research pipeline in a few lines. Run steps in parallel, in loops, or one after the other.
 
 ```python
 from agno.workflow import Parallel, Step, Workflow
@@ -38,16 +31,7 @@ result = investment_workflow.run("Run a full investment review on NVDA")
 
 That is an auditable five-step review with a parallel deep-dive. Swap the agents and the mandate and the same shape researches anything.
 
-## Why Agno fits this shape
-
-| Reason | What it means for a research system |
-|--------|-------------------------------------|
-| Orchestration is native | Teams (route, coordinate, broadcast, task) and Workflows (deterministic pipelines) are first-class. |
-| Grounding is layered | Static mandate in the prompt, a research library in RAG, prior work on disk. |
-| The output is structured | The pipeline ends in a memo and a decision, not a wall of text. |
-| Research compounds | A shared `LearningMachine` means the next review starts from what the last one learned. |
-
-## The primitives
+## Learn how to
 
 | Concern | Page |
 |---------|------|
@@ -60,7 +44,7 @@ That is an auditable five-step review with a parallel deep-dive. Swap the agents
 
 ## Explore
 
-<CardGroup cols={3}>
+<CardGroup cols={2}>
   <Card title="Orchestration patterns" icon="diagram-project" href="/use-cases/deep-research/orchestration-patterns">
     Route, coordinate, broadcast, task, and deterministic pipelines.
   </Card>
@@ -76,12 +60,9 @@ That is an auditable five-step review with a parallel deep-dive. Swap the agents
   <Card title="Institutional learning" icon="arrows-rotate" href="/use-cases/deep-research/institutional-learning">
     Shared learnings so the next review starts ahead.
   </Card>
-  <Card title="Example: Investment committee" icon="building-columns" href="/use-cases/deep-research/example-investment-committee">
-    A seven-analyst committee across five architectures.
-  </Card>
 </CardGroup>
 
-## Developer Resources
+## Developer resources
 
 - [Workflows](/workflows/overview)
 - [Teams](/teams/overview)

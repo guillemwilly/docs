@@ -1,9 +1,9 @@
 ---
 title: "Grounding in context"
-description: "Ground every query in validated SQL, table metadata, and business rules so the agent answers in your terms, not the model's."
+description: "Ground every query in validated SQL, table metadata, and business rules."
 ---
 
-A model knows SQL. It does not know that `revenue` was replaced by `revenue_v2` last March, that "active" excludes trialing accounts, or that MRR is computed net of credits. Grounding supplies that. The agent retrieves the relevant context for each question before it writes a line of SQL.
+A model knows SQL but it does not know that `revenue` was replaced by `revenue_v2` last March, that "active" excludes trialing accounts, or that MRR is computed net of credits. Grounding provides the missing context. The agent retrieves the relevant context for each question before it writes a line of SQL.
 
 ```python
 from agno.agent import Agent
@@ -59,7 +59,6 @@ One known-good query for "monthly recurring revenue" is worth more than a page o
 |------|-------|
 | Capture fixes as durable context | [Self-correcting agents](/use-cases/data-agents/self-correcting-agents) |
 | Run the SQL safely | [Safe data access](/use-cases/data-agents/safe-data-access) |
-| See all six layers in one agent | [Example: Dash](/use-cases/data-agents/example-dash) |
 
 ## Developer Resources
 

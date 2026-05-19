@@ -1,9 +1,9 @@
 ---
 title: "Sessions and memory"
-description: "Persistent multi-turn conversations and per-user memory, with no state layer to build."
+description: "Persistent multi-turn conversations and per-user memory."
 ---
 
-A product agent needs two kinds of state: what was said in this thread, and what the agent knows about this user. Agno gives you both from a `db` connection. You do not build a conversation store or a retrieval layer.
+An agent needs two kinds of state: what was said in this thread, and what the agent knows about this user. Agno gives you both. You do not build a conversation store or a retrieval layer.
 
 ```python
 from agno.agent import Agent
@@ -17,7 +17,7 @@ agent = Agent(
     db=db,
     add_history_to_context=True,
     num_history_runs=5,
-    update_memory_on_run=True,
+    enable_agentic_memory=True,
 )
 
 agent.run(
@@ -39,9 +39,9 @@ They solve different problems. Use both.
 
 | | Session history | Memory |
 |---|---|---|
-| Holds | The messages in this conversation thread | Learned facts about the user |
+| Stores | The messages in this conversation thread | Learned facts about the user |
 | Scope | One `session_id` | One `user_id`, across all their sessions |
-| Enable with | `add_history_to_context=True` | `update_memory_on_run=True` |
+| Enable with | `add_history_to_context=True` | `enable_agentic_memory=True` or `update_memory_on_run=True` |
 | Answers | "What did we just discuss?" | "What do I know about this person?" |
 
 ## Identifiers
@@ -51,16 +51,14 @@ They solve different problems. Use both.
 | `user_id` | The person | Your auth subject (user ID, email) |
 | `session_id` | A conversation thread for that person | A chat tab, a Slack thread, a support case |
 
-Pass both on every run. The agent isolates threads per user and recalls memory per user.
+Pass both on every run. Threads are scoped by `session_id`. Memory is scoped by `user_id`.
 
 ## Memory: automatic or agentic
 
 | Mode | Set | Use when |
 |------|-----|----------|
-| Automatic | `update_memory_on_run=True` | Most products. Predictable, reliable. |
-| Agentic | `enable_agentic_memory=True` | The agent should decide what is worth remembering. |
-
-Do not enable both. `enable_agentic_memory` takes precedence if you do.
+| Automatic | `update_memory_on_run=True` | Compute memory after every run. |
+| Agentic | `enable_agentic_memory=True` | The agent decides using tool calls. |
 
 ## Reading memory back
 

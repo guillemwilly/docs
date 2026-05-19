@@ -1,9 +1,9 @@
 ---
 title: "Self-correcting agents"
-description: "Turn every diagnosed error into a durable learning so the same mistake cannot recur."
+description: "Turn every diagnosed error into a durable learning to prevent the same mistakes."
 ---
 
-This is the difference between a demo and a product. A demo gets a query wrong and you fix the prompt. A data agent gets a query wrong, diagnoses why, saves the fix as a learning, and the next time a similar question comes in, that fix is already in context. Agno's LearningMachine does this with one parameter.
+A demo gets a query wrong and you fix the prompt. A data-system gets a query wrong, diagnoses why, saves the fix as a learning, and the next time a similar question comes in, that fix is already in context. Agno's LearningMachine does this for your agents.
 
 ```python
 from agno.agent import Agent
@@ -79,7 +79,6 @@ lm.decision_log_store.print(agent_id=agent.id, limit=5)
 |------|-------|
 | Feed it curated context too | [Grounding in context](/use-cases/data-agents/grounding-in-context) |
 | Gate writes behind approval | [Safe data access](/use-cases/data-agents/safe-data-access) |
-| See the loop running | [Example: Dash](/use-cases/data-agents/example-dash) |
 
 ## Developer Resources
 

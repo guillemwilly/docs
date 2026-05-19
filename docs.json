@@ -127,7 +127,7 @@
                   "use-cases/product-agents/connecting-your-data",
                   "use-cases/product-agents/interfaces",
                   {
-                    "group": "Scout tutorial",
+                    "group": "Tutorial: Scout",
                     "pages": [
                       "tutorials/scout/overview",
                       "tutorials/scout/setup",
@@ -151,7 +151,7 @@
                   "use-cases/data-agents/materialization",
                   "use-cases/data-agents/serve-and-embed",
                   {
-                    "group": "Dash tutorial",
+                    "group": "Tutorial: Dash",
                     "pages": [
                       "tutorials/dash/overview",
                       "tutorials/dash/setup",
@@ -171,8 +171,7 @@
                   "use-cases/deep-research/grounding-research",
                   "use-cases/deep-research/structured-deliverable",
                   "use-cases/deep-research/institutional-learning",
-                  "use-cases/deep-research/serve-and-embed",
-                  "use-cases/deep-research/example-investment-committee"
+                  "use-cases/deep-research/serve-and-embed"
                 ]
               },
               {
@@ -187,7 +186,7 @@
                   "use-cases/agentic-automation/serve-and-embed",
                   "use-cases/agentic-automation/example-coda",
                   {
-                    "group": "Coda tutorial",
+                    "group": "Tutorial: Coda",
                     "pages": [
                       "tutorials/coda/overview",
                       "tutorials/coda/setup",
