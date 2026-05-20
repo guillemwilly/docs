@@ -1,0 +1,78 @@
+---
+title: Antigravity Environment Config (Interactions)
+---
+
+Two non-default ways to control the Antigravity sandbox:
+
+| Option | When to use |
+|--------|-------------|
+| Reuse by id (`"env_<id>"`) | Agent needs to build on prior work in the same sandbox (iterative project). Faster startup, state persists across runs. |
+| Full `EnvironmentConfig` dict | Need a specific source repo, package set, or network policy. |
+
+The dict shape mirrors the API's `EnvironmentConfig`. Only the keys you set are sent; the API applies defaults for the rest.
+
+## Code
+
+```python cookbook/90_models/google/gemini_interactions/antigravity_environment_config.py
+from agno.agent import Agent
+from agno.models.google import GeminiInteractions
+
+# Reuse an existing environment by id
+agent_reuse = Agent(
+    model=GeminiInteractions(
+        agent="antigravity-preview-05-2026",
+        environment="env_xxxxxxxx",
+    ),
+    markdown=True,
+)
+
+# Full EnvironmentConfig
+agent_custom = Agent(
+    model=GeminiInteractions(
+        agent="antigravity-preview-05-2026",
+        environment={
+            "type": "remote",
+            "sources": [
+                {"type": "git", "url": "https://github.com/agno-agi/agno"},
+            ],
+            "network": {"allow_internet_access": True},
+        },
+    ),
+    markdown=True,
+)
+
+if __name__ == "__main__":
+    agent_reuse.print_response(
+        "Continue the project we started last time and ship the next "
+        "iteration of the report."
+    )
+
+    agent_custom.print_response(
+        "Skim the repo we cloned, summarize the module layout, and save "
+        "the summary to STRUCTURE.md inside the sandbox."
+    )
+```
+
+## Usage
+
+<Steps>
+  <Snippet file="create-venv-step.mdx" />
+
+  <Step title="Set your API key">
+    ```bash
+    export GOOGLE_API_KEY=xxx
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    uv pip install -U "google-genai>=2.0" agno
+    ```
+  </Step>
+
+  <Step title="Run Agent">
+    ```bash
+    python cookbook/90_models/google/gemini_interactions/antigravity_environment_config.py
+    ```
+  </Step>
+</Steps>

@@ -1,0 +1,83 @@
+---
+title: Deep Research with File Search (Interactions)
+---
+
+Ground the Deep Research agent on your own documents. Create a File Search store, upload documents, then pass the store name to `file_search_store_names`. The agent searches that store alongside the public web.
+
+In production, create and populate the store once offline and reference it by name at query time.
+
+## Code
+
+```python cookbook/90_models/google/gemini_interactions/deep_research_file_search.py
+import tempfile
+import time
+from pathlib import Path
+
+from agno.agent import Agent
+from agno.models.google import GeminiInteractions
+from google import genai
+
+client = genai.Client()
+
+store = client.file_search_stores.create(
+    config={"display_name": "agno-deep-research-demo"}
+)
+print(f"Created store: {store.name}")
+
+sample = Path(tempfile.gettempdir()) / "agno_fy2025_summary.txt"
+sample.write_text(
+    "Agno FY2025 internal summary.\n"
+    "Revenue grew 240% year over year, driven by AgentOS adoption.\n"
+    "Headcount doubled. The flagship launch was the Antigravity integration.\n"
+)
+
+operation = client.file_search_stores.upload_to_file_search_store(
+    file_search_store_name=store.name,
+    file=str(sample),
+    config={"display_name": "fy2025-summary"},
+)
+print("Uploading + indexing document...")
+while not operation.done:
+    time.sleep(3)
+    operation = client.operations.get(operation)
+print("Document indexed.")
+
+agent = Agent(
+    model=GeminiInteractions(
+        agent="deep-research-preview-04-2026",
+        thinking_summaries="auto",
+        file_search_store_names=[store.name],
+    ),
+    markdown=True,
+)
+
+if __name__ == "__main__":
+    agent.print_response(
+        "Using our internal FY2025 summary, compare our reported growth drivers "
+        "against current public news about the AI agent framework market."
+    )
+```
+
+## Usage
+
+<Steps>
+  <Snippet file="create-venv-step.mdx" />
+
+  <Step title="Set your API key">
+    ```bash
+    export GOOGLE_API_KEY=xxx
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    uv pip install -U "google-genai>=2.0" agno
+    ```
+  </Step>
+
+  <Step title="Run Agent">
+    ```bash
+    python cookbook/90_models/google/gemini_interactions/deep_research_file_search.py
+    ```
+  </Step>
+</Steps>

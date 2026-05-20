@@ -85,6 +85,12 @@ This is transparent to the user. The `Agent` class handles `interaction_id` trac
   <Card title="Background Execution" icon="clock" href="#background-execution">
     Long-running tasks
   </Card>
+  <Card title="Deep Research" icon="magnifying-glass-chart" href="#deep-research">
+    Autonomous research with citations
+  </Card>
+  <Card title="Antigravity" icon="robot" href="#antigravity">
+    Autonomous sandboxed agent
+  </Card>
 </CardGroup>
 
 ## Multi-turn Conversations
@@ -215,6 +221,84 @@ agent = Agent(
 agent.print_response("Research the history of quantum computing.")
 ```
 
+## Managed Agents
+
+Setting `agent` instead of `id` switches `GeminiInteractions` to Google's managed agent path (`agent` + `agent_config` instead of `model` + `generation_config`). Two agents are supported:
+
+| Agent | Model ID | Description |
+|-------|----------|-------------|
+| Deep Research | `deep-research-preview-04-2026`, `deep-research-pro-preview-12-2025` | Autonomous research agent that plans, browses, and returns a report with citations. Runs in background. |
+| Antigravity | `antigravity-preview-05-2026` | General-purpose autonomous agent that plans, runs code, browses, and produces artifacts inside a managed Linux sandbox. Runs in foreground. |
+
+`agent` is mutually exclusive with `id`. Per-agent semantics (background execution, sandbox provisioning) are forced by the SDK based on the agent ID.
+
+### Deep Research
+
+Deep Research plans the task, searches the web, and returns a researched report with citations. The model forces `background=True` and `store=True`, and the non-streaming path polls until the result is ready.
+
+```python
+from agno.agent import Agent
+from agno.models.google import GeminiInteractions
+
+agent = Agent(
+    model=GeminiInteractions(
+        agent="deep-research-preview-04-2026",
+        thinking_summaries="auto",
+        visualization="auto",
+    ),
+    markdown=True,
+)
+
+agent.print_response(
+    "Research the current state of solid-state battery commercialization."
+)
+```
+
+Deep Research config knobs:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `collaborative_planning` | `bool` | Turn 1 returns a plan instead of executing. Flip to `False` to execute the approved plan. |
+| `thinking_summaries` | `"auto"` / `"none"` | Stream intermediate reasoning during execution. Required for streaming progress. |
+| `visualization` | `"auto"` / `"off"` | Allow the agent to generate charts and graphs. |
+| `agent_poll_interval` | `float` | Seconds between status polls. Default `10.0`. |
+| `mcp_servers` | `list[dict]` | Remote MCP servers the agent can call. |
+| `file_search_store_names` | `list[str]` | File Search store names to ground research on your own documents. |
+
+Read more about Deep Research [here](/models/providers/native/google/usage/interactions-deep-research).
+
+### Antigravity
+
+Antigravity is a general-purpose autonomous agent that plans, runs code, browses the web, and produces artifacts inside a managed Linux sandbox. Unlike Deep Research, it runs in the foreground.
+
+```python
+from agno.agent import Agent
+from agno.models.google import GeminiInteractions
+
+agent = Agent(
+    model=GeminiInteractions(
+        agent="antigravity-preview-05-2026",
+        environment="remote",
+    ),
+    markdown=True,
+)
+
+agent.print_response(
+    "Read Hacker News, summarize the top 5 stories, and save the summary "
+    "as a Markdown report."
+)
+```
+
+The `environment` parameter selects the sandbox:
+
+| Value | Behavior |
+|-------|----------|
+| `"remote"` | Fresh remote Linux sandbox. Default for new sessions. |
+| `"env_<id>"` | Reuse a previously provisioned sandbox. Faster startup, state persists. |
+| `dict` | Full `EnvironmentConfig` (sources, network rules, etc.). |
+
+Read more about Antigravity [here](/models/providers/native/google/usage/interactions-antigravity).
+
 ## Interactions API vs generateContent
 
 | Feature | GeminiInteractions | Gemini |
@@ -229,7 +313,8 @@ agent.print_response("Research the history of quantum computing.")
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `id` | `str` | `"gemini-3-flash-preview"` | The model identifier |
+| `id` | `str` | `"gemini-3-flash-preview"` | The model identifier. Mutually exclusive with `agent`. |
+| `agent` | `Optional[str]` | `None` | Managed agent ID (e.g. `"deep-research-preview-04-2026"`, `"antigravity-preview-05-2026"`). Mutually exclusive with `id`. |
 | `name` | `str` | `"GeminiInteractions"` | The name of the model |
 | `provider` | `str` | `"Google"` | The provider of the model |
 | `api_key` | `Optional[str]` | `None` | Google API key (defaults to `GOOGLE_API_KEY` env var) |
@@ -246,6 +331,13 @@ agent.print_response("Research the history of quantum computing.")
 | `url_context` | `bool` | `False` | Enable URL context extraction |
 | `code_execution` | `bool` | `False` | Enable code execution |
 | `service_tier` | `Optional[str]` | `None` | Inference tier: `"flex"`, `"standard"`, or `"priority"` |
+| `mcp_servers` | `Optional[list[dict]]` | `None` | Remote MCP server configs available to managed agents. |
+| `file_search_store_names` | `Optional[list[str]]` | `None` | File Search store names available to managed agents. |
+| `collaborative_planning` | `Optional[bool]` | `None` | Deep Research: return a plan on turn 1 instead of executing. |
+| `thinking_summaries` | `Optional[str]` | `None` | Deep Research: `"auto"` or `"none"`. Stream intermediate reasoning. |
+| `visualization` | `Optional[str]` | `None` | Deep Research: `"auto"` or `"off"`. Allow chart/graph generation. |
+| `environment` | `Optional[Union[str, Dict]]` | `None` | Antigravity sandbox: `"remote"`, `"env_<id>"`, or full `EnvironmentConfig` dict. |
+| `agent_poll_interval` | `float` | `10.0` | Seconds between status polls for background agents. |
 | `timeout` | `Optional[float]` | `None` | Request timeout in seconds |
 | `client_params` | `Optional[Dict[str, Any]]` | `None` | Additional client parameters |
 

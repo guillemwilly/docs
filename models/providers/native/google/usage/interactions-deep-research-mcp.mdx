@@ -1,0 +1,59 @@
+---
+title: Deep Research with MCP (Interactions)
+---
+
+Give the Deep Research agent access to external tools via remote MCP servers. Pass server configs through `mcp_servers`; the `type: "mcp_server"` field is added automatically.
+
+Only `url` is required. `name`, `headers`, and `allowed_tools` are optional. Custom Function Calling tools are not supported by Deep Research, but remote MCP servers are.
+
+## Code
+
+```python cookbook/90_models/google/gemini_interactions/deep_research_mcp.py
+from agno.agent import Agent
+from agno.models.google import GeminiInteractions
+
+agent = Agent(
+    model=GeminiInteractions(
+        agent="deep-research-preview-04-2026",
+        thinking_summaries="auto",
+        mcp_servers=[
+            {
+                "name": "Deployment Tracker",
+                "url": "https://mcp.example.com/mcp",
+                "headers": {"Authorization": "Bearer my-token"},
+                # "allowed_tools": ["get_status"],  # optionally restrict
+            }
+        ],
+    ),
+    markdown=True,
+)
+
+if __name__ == "__main__":
+    agent.print_response(
+        "Check the status of my last server deployment and summarize any issues."
+    )
+```
+
+## Usage
+
+<Steps>
+  <Snippet file="create-venv-step.mdx" />
+
+  <Step title="Set your API key">
+    ```bash
+    export GOOGLE_API_KEY=xxx
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    uv pip install -U "google-genai>=2.0" agno
+    ```
+  </Step>
+
+  <Step title="Run Agent">
+    ```bash
+    python cookbook/90_models/google/gemini_interactions/deep_research_mcp.py
+    ```
+  </Step>
+</Steps>

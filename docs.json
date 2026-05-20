@@ -1201,7 +1201,19 @@
                                   "models/providers/native/google/usage/interactions-multi-turn",
                                   "models/providers/native/google/usage/interactions-thinking",
                                   "models/providers/native/google/usage/interactions-search",
-                                  "models/providers/native/google/usage/interactions-structured-output"
+                                  "models/providers/native/google/usage/interactions-structured-output",
+                                  "models/providers/native/google/usage/interactions-deep-research",
+                                  "models/providers/native/google/usage/interactions-deep-research-streaming",
+                                  "models/providers/native/google/usage/interactions-deep-research-multi-turn",
+                                  "models/providers/native/google/usage/interactions-deep-research-collaborative-planning",
+                                  "models/providers/native/google/usage/interactions-deep-research-file-search",
+                                  "models/providers/native/google/usage/interactions-deep-research-mcp",
+                                  "models/providers/native/google/usage/interactions-deep-research-multimodal",
+                                  "models/providers/native/google/usage/interactions-deep-research-visualization",
+                                  "models/providers/native/google/usage/interactions-antigravity",
+                                  "models/providers/native/google/usage/interactions-antigravity-streaming",
+                                  "models/providers/native/google/usage/interactions-antigravity-multi-turn",
+                                  "models/providers/native/google/usage/interactions-antigravity-environment-config"
                                 ]
                               }
                             ]
@@ -2983,7 +2995,19 @@
                               "models/providers/native/google/usage/interactions-multi-turn",
                               "models/providers/native/google/usage/interactions-thinking",
                               "models/providers/native/google/usage/interactions-search",
-                              "models/providers/native/google/usage/interactions-structured-output"
+                              "models/providers/native/google/usage/interactions-structured-output",
+                              "models/providers/native/google/usage/interactions-deep-research",
+                              "models/providers/native/google/usage/interactions-deep-research-streaming",
+                              "models/providers/native/google/usage/interactions-deep-research-multi-turn",
+                              "models/providers/native/google/usage/interactions-deep-research-collaborative-planning",
+                              "models/providers/native/google/usage/interactions-deep-research-file-search",
+                              "models/providers/native/google/usage/interactions-deep-research-mcp",
+                              "models/providers/native/google/usage/interactions-deep-research-multimodal",
+                              "models/providers/native/google/usage/interactions-deep-research-visualization",
+                              "models/providers/native/google/usage/interactions-antigravity",
+                              "models/providers/native/google/usage/interactions-antigravity-streaming",
+                              "models/providers/native/google/usage/interactions-antigravity-multi-turn",
+                              "models/providers/native/google/usage/interactions-antigravity-environment-config"
                             ]
                           }
                         ]

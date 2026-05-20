@@ -1,0 +1,65 @@
+---
+title: Deep Research Multi-turn (Interactions)
+---
+
+Continue a Deep Research interaction across turns. Each response carries an `interaction_id`; the next turn references it via `previous_interaction_id` so only the new user message is sent on the wire. The server already has the prior research and its citations.
+
+Persisting the interaction ID requires a database. The assistant message stores it under `provider_data`, and the next turn reads it back.
+
+## Code
+
+```python cookbook/90_models/google/gemini_interactions/deep_research_multi_turn.py
+from agno.agent import Agent
+from agno.db.sqlite import SqliteDb
+from agno.models.google import GeminiInteractions
+
+agent = Agent(
+    model=GeminiInteractions(
+        agent="deep-research-preview-04-2026",
+        thinking_summaries="auto",
+    ),
+    add_history_to_context=True,
+    db=SqliteDb(db_file="tmp/data.db"),
+    markdown=True,
+)
+
+if __name__ == "__main__":
+    agent.print_response(
+        "Research the current state of solid-state battery commercialization "
+        "and summarize the leading approaches."
+    )
+
+    agent.print_response(
+        "Dive deeper into the sulfide-electrolyte approach: who the leading "
+        "labs and companies are, and what their reported milestones look like."
+    )
+
+    agent.print_response(
+        "Based on everything we've covered, which approach has the clearest "
+        "path to mass-market EV deployment in the next five years?"
+    )
+```
+
+## Usage
+
+<Steps>
+  <Snippet file="create-venv-step.mdx" />
+
+  <Step title="Set your API key">
+    ```bash
+    export GOOGLE_API_KEY=xxx
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    uv pip install -U "google-genai>=2.0" agno
+    ```
+  </Step>
+
+  <Step title="Run Agent">
+    ```bash
+    python cookbook/90_models/google/gemini_interactions/deep_research_multi_turn.py
+    ```
+  </Step>
+</Steps>

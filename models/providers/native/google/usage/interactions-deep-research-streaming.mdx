@@ -1,0 +1,59 @@
+---
+title: Deep Research Streaming (Interactions)
+---
+
+Stream real-time progress (thought summaries, text, generated images) from a Deep Research task instead of waiting for the final report. Set `thinking_summaries="auto"` to receive intermediate reasoning during streaming. Background execution is required for agents and is enabled automatically.
+
+## Code
+
+```python cookbook/90_models/google/gemini_interactions/deep_research_streaming.py
+import asyncio
+
+from agno.agent import Agent
+from agno.models.google import GeminiInteractions
+
+agent = Agent(
+    model=GeminiInteractions(
+        agent="deep-research-preview-04-2026",
+        thinking_summaries="auto",
+    ),
+    markdown=True,
+)
+
+if __name__ == "__main__":
+    agent.print_response(
+        "Research the history and impact of Google TPUs.",
+        stream=True,
+    )
+
+    asyncio.run(
+        agent.aprint_response(
+            "Research the current state of open-source LLM inference engines.",
+            stream=True,
+        )
+    )
+```
+
+## Usage
+
+<Steps>
+  <Snippet file="create-venv-step.mdx" />
+
+  <Step title="Set your API key">
+    ```bash
+    export GOOGLE_API_KEY=xxx
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    uv pip install -U "google-genai>=2.0" agno
+    ```
+  </Step>
+
+  <Step title="Run Agent">
+    ```bash
+    python cookbook/90_models/google/gemini_interactions/deep_research_streaming.py
+    ```
+  </Step>
+</Steps>

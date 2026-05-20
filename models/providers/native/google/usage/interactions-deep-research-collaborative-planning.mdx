@@ -1,0 +1,81 @@
+---
+title: Deep Research Collaborative Planning (Interactions)
+---
+
+Human-in-the-loop research: the agent proposes a plan, you refine it, then approve it to run the full research.
+
+The flow chains turns through `previous_interaction_id`:
+
+1. `collaborative_planning=True` → agent returns a research plan.
+2. `collaborative_planning=True` → refine the plan (optional).
+3. `collaborative_planning=False` → agent executes the approved plan.
+
+`collaborative_planning` is read fresh on every request, so flipping it on the model between turns switches plan-mode to execute-mode within the same conversation.
+
+## Code
+
+```python cookbook/90_models/google/gemini_interactions/deep_research_collaborative_planning.py
+from agno.agent import Agent
+from agno.db.sqlite import SqliteDb
+from agno.models.google import GeminiInteractions
+
+agent = Agent(
+    model=GeminiInteractions(
+        agent="deep-research-preview-04-2026",
+        collaborative_planning=True,
+        thinking_summaries="auto",
+        agent_poll_interval=5.0,
+    ),
+    add_history_to_context=True,
+    db=SqliteDb(db_file="tmp/deep_research_collab.db"),
+    markdown=True,
+)
+
+SESSION_ID = "deep-research-collab-1"
+
+if __name__ == "__main__":
+    agent.print_response(
+        "Do some research on Google TPUs.",
+        session_id=SESSION_ID,
+    )
+
+    agent.print_response(
+        "Focus more on the differences between Google TPUs and competitor "
+        "hardware, and less on the history.",
+        session_id=SESSION_ID,
+    )
+
+    agent.model.collaborative_planning = False
+    agent.print_response(
+        "Plan looks good!",
+        session_id=SESSION_ID,
+    )
+```
+
+<Note>
+Mutating `agent.model.collaborative_planning` mid-conversation is safe only when the model instance is not shared across concurrent runs. For concurrent use, prefer two separate agents (a planner and an executor) sharing a session.
+</Note>
+
+## Usage
+
+<Steps>
+  <Snippet file="create-venv-step.mdx" />
+
+  <Step title="Set your API key">
+    ```bash
+    export GOOGLE_API_KEY=xxx
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    uv pip install -U "google-genai>=2.0" agno
+    ```
+  </Step>
+
+  <Step title="Run Agent">
+    ```bash
+    python cookbook/90_models/google/gemini_interactions/deep_research_collaborative_planning.py
+    ```
+  </Step>
+</Steps>

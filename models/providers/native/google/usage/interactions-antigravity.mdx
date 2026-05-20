@@ -1,0 +1,57 @@
+---
+title: Antigravity (Interactions)
+---
+
+Run the Antigravity managed agent through the Gemini Interactions API. Antigravity is a general-purpose autonomous agent (Gemini 3.5 Flash) that plans, runs code, browses the web, and produces artifacts (PDFs, HTML, slides) inside a managed Linux sandbox.
+
+The `environment` parameter selects the sandbox:
+
+| Value | Behavior |
+|-------|----------|
+| `"remote"` | Fresh remote Linux sandbox. |
+| `"env_<id>"` | Reuse a previously provisioned sandbox. |
+| `dict` | Full `EnvironmentConfig` (sources, network rules). |
+
+Unlike Deep Research, Antigravity runs in the foreground. The model still forces `store=True` so the interaction is retrievable.
+
+## Code
+
+```python cookbook/90_models/google/gemini_interactions/antigravity.py
+from agno.agent import Agent
+from agno.models.google import GeminiInteractions
+
+agent = Agent(
+    model=GeminiInteractions(
+        agent="antigravity-preview-05-2026",
+        environment="remote",
+    ),
+    markdown=True,
+)
+
+if __name__ == "__main__":
+    agent.print_response("What is the capital of France?")
+```
+
+## Usage
+
+<Steps>
+  <Snippet file="create-venv-step.mdx" />
+
+  <Step title="Set your API key">
+    ```bash
+    export GOOGLE_API_KEY=xxx
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    uv pip install -U "google-genai>=2.0" agno
+    ```
+  </Step>
+
+  <Step title="Run Agent">
+    ```bash
+    python cookbook/90_models/google/gemini_interactions/antigravity.py
+    ```
+  </Step>
+</Steps>

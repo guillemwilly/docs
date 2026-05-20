@@ -1,0 +1,60 @@
+---
+title: Deep Research (Interactions)
+---
+
+Run the Deep Research managed agent through the Gemini Interactions API. The agent plans the task, searches the web, and returns a researched report with citations. The model forces `background=True` and `store=True`, and the non-streaming path polls until the result is ready.
+
+## Code
+
+```python cookbook/90_models/google/gemini_interactions/deep_research.py
+import asyncio
+
+from agno.agent import Agent
+from agno.models.google import GeminiInteractions
+
+agent = Agent(
+    model=GeminiInteractions(
+        agent="deep-research-preview-04-2026",
+        thinking_summaries="auto",
+        visualization="auto",
+    ),
+    markdown=True,
+)
+
+if __name__ == "__main__":
+    agent.print_response(
+        "Research the current state of solid-state battery commercialization "
+        "and summarize the leading approaches."
+    )
+
+    asyncio.run(
+        agent.aprint_response(
+            "Compare the major open-source vector databases on indexing and query latency.",
+            stream=True,
+        )
+    )
+```
+
+## Usage
+
+<Steps>
+  <Snippet file="create-venv-step.mdx" />
+
+  <Step title="Set your API key">
+    ```bash
+    export GOOGLE_API_KEY=xxx
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    uv pip install -U "google-genai>=2.0" agno
+    ```
+  </Step>
+
+  <Step title="Run Agent">
+    ```bash
+    python cookbook/90_models/google/gemini_interactions/deep_research.py
+    ```
+  </Step>
+</Steps>
