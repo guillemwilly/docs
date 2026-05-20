@@ -1,0 +1,87 @@
+---
+title: Gmail
+sidebarTitle: Gmail
+description: "Search, read, and send emails via Gmail."
+keywords: [context providers, gmail, email, google, oauth]
+---
+
+Search, read, and send emails. By default, exposes `query_gmail` for searching and reading. Enable `write=True` to also expose `update_gmail` for drafting and sending.
+
+```python
+from agno.agent import Agent
+from agno.context.gmail import GmailContextProvider
+
+gmail = GmailContextProvider()
+
+agent = Agent(
+    model=...,
+    tools=gmail.get_tools(),
+)
+
+agent.print_response("Do I have any unread emails from the engineering team?")
+```
+
+## Authentication
+
+Gmail requires Google OAuth or a service account with domain-wide delegation.
+
+<Tabs>
+  <Tab title="OAuth (Personal)">
+    Set these environment variables:
+    
+    ```shell
+    export GOOGLE_CLIENT_ID=...
+    export GOOGLE_CLIENT_SECRET=...
+    export GOOGLE_PROJECT_ID=...
+    ```
+    
+    Opens browser on first use. Token cached to `gmail_token.json`.
+  </Tab>
+  <Tab title="Service Account">
+    ```shell
+    export GOOGLE_SERVICE_ACCOUNT_FILE=/path/to/service-account.json
+    export GOOGLE_DELEGATED_USER=user@domain.com
+    ```
+    
+    `delegated_user` is required because service accounts have no inbox.
+  </Tab>
+</Tabs>
+
+## Configuration
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `id` | `str` | `"gmail"` | Tools become `query_<id>` and `update_<id>`. |
+| `model` | `Model` | `None` | Model for sub-agents. |
+| `read` | `bool` | `True` | Expose `query_gmail`. |
+| `write` | `bool` | `False` | Expose `update_gmail`. Disabled by default for safety. |
+| `mode` | `ContextMode` | `default` | See [Mode](/context-providers/overview#mode). |
+
+## Tools Exposed
+
+| Tool | Description |
+|------|-------------|
+| `query_gmail` | Search emails, get messages, get threads, list labels. Always exposed. |
+| `update_gmail` | Create drafts, send emails, send replies, manage labels. Requires `write=True`. |
+
+## Example queries
+
+For draft/send queries, enable writes: `GmailContextProvider(write=True)`
+
+| Query | What happens |
+|-------|--------------|
+| "Find emails from Alice about the Q4 report" | Searches with `from:alice subject:Q4 report` |
+| "Summarize the thread about the API outage" | Gets thread and synthesizes |
+| "Draft a reply saying I'll review it tomorrow" | Creates draft in thread |
+| "Send a quick update to the team about the fix" | Composes and sends |
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="GmailTools Reference" icon="wrench" href="/tools/toolkits/social/gmail">
+    All methods and OAuth setup
+  </Card>
+  <Card title="Cookbook Example" icon="book" href="https://github.com/agno-agi/agno/blob/main/cookbook/12_context/18_gmail.py">
+    Working example
+  </Card>
+</CardGroup>

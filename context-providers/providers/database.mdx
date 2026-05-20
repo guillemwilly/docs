@@ -1,0 +1,123 @@
+---
+title: Database
+sidebarTitle: Database
+description: "Read and write access to SQL databases with privilege separation via separate engines."
+keywords: [context providers, database, sql, sqlalchemy, postgres, mysql, readonly]
+---
+
+**DatabaseContextProvider** gives agents read/write access to any SQL database via SQLAlchemy. Two tools: `query_database` for reads, `update_database` for writes.
+
+## Prerequisites
+
+```shell
+uv pip install -U agno sqlalchemy
+# Plus your database driver:
+uv pip install -U psycopg2-binary  # PostgreSQL
+uv pip install -U pymysql          # MySQL
+```
+
+## Example
+
+```python
+from sqlalchemy import create_engine
+from agno.agent import Agent
+from agno.models.openai import OpenAIResponses
+from agno.context.database import DatabaseContextProvider
+
+# Two engines: one read-only, one writable
+readonly_engine = create_engine("postgresql://reader:pass@localhost/mydb")
+sql_engine = create_engine("postgresql://writer:pass@localhost/mydb")
+
+db = DatabaseContextProvider(
+    sql_engine=sql_engine,
+    readonly_engine=readonly_engine,
+    schema="public",
+)
+
+agent = Agent(
+    model=OpenAIResponses(id="gpt-5.4"),
+    tools=db.get_tools(),
+    instructions=db.instructions(),
+)
+
+agent.print_response("How many orders were placed last month?")
+```
+
+<Warning>
+**Both engines are required.** The read sub-agent uses `readonly_engine` exclusively. Even if the model tries to run a write query, the database connection physically cannot execute it.
+</Warning>
+
+## Provider Params
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `sql_engine` | `Engine` | required | SQLAlchemy engine for writes. |
+| `readonly_engine` | `Engine` | required | SQLAlchemy engine for reads. Use a read replica or a user with SELECT-only permissions. |
+| `schema` | `str \| None` | `None` | Scope queries to a specific schema. |
+| `id` | `str` | `"database"` | Provider ID. Tools become `query_<id>` and `update_<id>`. |
+| `name` | `str \| None` | `None` | Display name. Defaults to `id` ("database"). |
+| `read_instructions` | `str \| None` | `None` | Custom instructions for the read sub-agent. |
+| `write_instructions` | `str \| None` | `None` | Custom instructions for the write sub-agent. |
+| `mode` | `ContextMode` | `default` | Tool exposure mode. See [Architecture](/context-providers/overview#mode). |
+| `model` | `Model \| None` | `None` | Model for the sub-agents. Defaults to Agno's default model. |
+| `read` | `bool` | `True` | Expose `query_database` tool. |
+| `write` | `bool` | `True` | Expose `update_database` tool. |
+
+## Tools Exposed
+
+| Tool | Description |
+|------|-------------|
+| `query_database` | Run SELECT queries, describe tables, explore schema. Uses `readonly_engine`. |
+| `update_database` | Run INSERT/UPDATE/DELETE queries. Uses `sql_engine`. |
+
+## Privilege Separation
+
+The read and write sub-agents use **separate database connections**:
+
+```
+query_database  → readonly_engine → read replica / SELECT-only user
+update_database → sql_engine      → writable connection
+```
+
+This is infrastructure-level protection. The read sub-agent's connection cannot execute writes regardless of what SQL the model generates.
+
+## Multiple Databases
+
+Use different `id` values to expose multiple databases:
+
+```python
+orders_db = DatabaseContextProvider(
+    id="orders",
+    sql_engine=orders_write_engine,
+    readonly_engine=orders_read_engine,
+)
+
+inventory_db = DatabaseContextProvider(
+    id="inventory",
+    sql_engine=inventory_write_engine,
+    readonly_engine=inventory_read_engine,
+)
+
+agent = Agent(
+    model=...,
+    tools=[*orders_db.get_tools(), *inventory_db.get_tools()],
+)
+# Agent sees: query_orders, update_orders, query_inventory, update_inventory
+```
+
+## Read-only Mode
+
+```python
+db = DatabaseContextProvider(
+    sql_engine=engine,
+    readonly_engine=readonly_engine,
+    write=False,
+)
+# Agent only sees query_database
+```
+
+## Cookbook
+
+<Card title="Database Context Provider" icon="database" href="https://github.com/agno-agi/agno/blob/main/cookbook/12_context/04_database_read_write.py">
+  Read/write with separate engines
+</Card>

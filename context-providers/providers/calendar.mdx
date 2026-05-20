@@ -1,0 +1,83 @@
+---
+title: Google Calendar
+sidebarTitle: Calendar
+description: "Query events, check availability, and create meetings."
+keywords: [context providers, calendar, google, events, scheduling]
+---
+
+Query events, check availability, and create meetings. By default, exposes `query_calendar` for reading. Enable `write=True` to also expose `update_calendar` for creating and modifying events.
+
+```python
+from agno.agent import Agent
+from agno.context.calendar import GoogleCalendarContextProvider
+
+calendar = GoogleCalendarContextProvider()
+
+agent = Agent(
+    model=...,
+    tools=calendar.get_tools(),
+)
+
+agent.print_response("What meetings do I have tomorrow?")
+```
+
+## Authentication
+
+Same as Gmail - OAuth or service account.
+
+<Tabs>
+  <Tab title="OAuth (Personal)">
+    ```shell
+    export GOOGLE_CLIENT_ID=...
+    export GOOGLE_CLIENT_SECRET=...
+    export GOOGLE_PROJECT_ID=...
+    ```
+    
+    Token cached to `calendar_token.json`.
+  </Tab>
+  <Tab title="Service Account">
+    ```shell
+    export GOOGLE_SERVICE_ACCOUNT_FILE=/path/to/service-account.json
+    export GOOGLE_DELEGATED_USER=user@domain.com  # Optional
+    ```
+    
+    Without `delegated_user`, operates on the service account's own calendar.
+  </Tab>
+</Tabs>
+
+## Configuration
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `id` | `str` | `"calendar"` | Tools become `query_<id>` and `update_<id>`. |
+| `model` | `Model` | `None` | Model for sub-agents. |
+| `read` | `bool` | `True` | Expose `query_calendar`. |
+| `write` | `bool` | `False` | Expose `update_calendar`. Disabled by default for safety. |
+| `mode` | `ContextMode` | `default` | See [Mode](/context-providers/overview#mode). |
+
+## Tools Exposed
+
+| Tool | Description |
+|------|-------------|
+| `query_calendar` | List events, search events, check availability, find free slots. Always exposed. |
+| `update_calendar` | Create events, update events, delete events. Requires `write=True`. |
+
+## Example queries
+
+| Query | What happens |
+|-------|--------------|
+| "What's on my calendar this week?" | Lists events with time range |
+| "When am I free on Friday afternoon?" | Checks availability |
+| "Find all meetings about the product launch" | Searches event titles/descriptions |
+| "Schedule a 30-min sync with Alice tomorrow at 2pm" | Creates event (requires `write=True`) |
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="GoogleCalendarTools Reference" icon="wrench" href="/tools/toolkits/others/googlecalendar">
+    All methods and OAuth setup
+  </Card>
+  <Card title="Cookbook Example" icon="book" href="https://github.com/agno-agi/agno/blob/main/cookbook/12_context/19_calendar.py">
+    Working example
+  </Card>
+</CardGroup>

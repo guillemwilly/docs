@@ -1,0 +1,91 @@
+---
+title: Provider Catalog
+sidebarTitle: Overview
+description: "Browse all built-in context providers."
+---
+
+Agno includes providers for common data sources. Each provider wraps an external system and exposes it as `query_<id>` and optionally `update_<id>` tools.
+
+## Data Sources
+
+<CardGroup cols={2}>
+  <Card title="Filesystem" icon="folder" href="/context-providers/providers/filesystem">
+    Read files from a scoped local directory
+  </Card>
+  <Card title="Database" icon="database" href="/context-providers/providers/database">
+    Query and update any SQL database via SQLAlchemy
+  </Card>
+  <Card title="Web" icon="globe" href="/context-providers/providers/web">
+    Search and fetch from the web (Exa, Parallel, MCP)
+  </Card>
+  <Card title="MCP" icon="plug" href="/context-providers/providers/mcp">
+    Connect to any MCP server
+  </Card>
+</CardGroup>
+
+## Communication
+
+<CardGroup cols={2}>
+  <Card title="Slack" icon="slack" href="/context-providers/providers/slack">
+    Search, read, and send messages in Slack workspaces
+  </Card>
+  <Card title="Gmail" icon="envelope" href="/context-providers/providers/gmail">
+    Search, read, draft, and send emails
+  </Card>
+</CardGroup>
+
+## Google Workspace
+
+<CardGroup cols={2}>
+  <Card title="Google Calendar" icon="calendar" href="/context-providers/providers/calendar">
+    Query events, check availability, create meetings
+  </Card>
+  <Card title="Google Drive" icon="google-drive" href="/context-providers/providers/drive">
+    Search and read files (read-only)
+  </Card>
+</CardGroup>
+
+## Knowledge Management
+
+<CardGroup cols={2}>
+  <Card title="Wiki" icon="book" href="/context-providers/providers/wiki">
+    Git-backed markdown wiki with filesystem or git backend
+  </Card>
+</CardGroup>
+
+## Quick Reference
+
+| Provider | Import | Read | Write |
+|----------|--------|------|-------|
+| `SlackContextProvider` | `agno.context.slack` | Yes | Yes |
+| `GmailContextProvider` | `agno.context.gmail` | Yes | Yes |
+| `GoogleCalendarContextProvider` | `agno.context.calendar` | Yes | Yes |
+| `GoogleDriveContextProvider` | `agno.context.gdrive` | Yes | No |
+| `DatabaseContextProvider` | `agno.context.database` | Yes | Yes |
+| `FilesystemContextProvider` | `agno.context.fs` | Yes | No |
+| `WebContextProvider` | `agno.context.web` | Yes | No |
+| `MCPContextProvider` | `agno.context.mcp` | Yes | No |
+| `WikiContextProvider` | `agno.context.wiki` | Yes | Yes |
+
+## Cookbook Examples
+
+<CardGroup cols={2}>
+  <Card title="Filesystem" icon="folder" href="https://github.com/agno-agi/agno/blob/main/cookbook/12_context/00_filesystem.py">
+    Explore a codebase or docs folder
+  </Card>
+  <Card title="Database" icon="database" href="https://github.com/agno-agi/agno/blob/main/cookbook/12_context/04_database_read_write.py">
+    Read/write with separate engines
+  </Card>
+  <Card title="Multi-provider" icon="layer-group" href="https://github.com/agno-agi/agno/blob/main/cookbook/12_context/08_multi_provider.py">
+    Three sources, no collisions
+  </Card>
+  <Card title="Gmail" icon="envelope" href="https://github.com/agno-agi/agno/blob/main/cookbook/12_context/18_gmail.py">
+    Search, read, draft, send
+  </Card>
+  <Card title="Calendar" icon="calendar" href="https://github.com/agno-agi/agno/blob/main/cookbook/12_context/19_calendar.py">
+    Events and availability
+  </Card>
+  <Card title="Wiki (git)" icon="code-branch" href="https://github.com/agno-agi/agno/blob/main/cookbook/12_context/15_wiki_git.py">
+    Auto-committing prose memory
+  </Card>
+</CardGroup>

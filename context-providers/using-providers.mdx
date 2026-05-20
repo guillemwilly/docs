@@ -1,0 +1,202 @@
+---
+title: Using Providers
+sidebarTitle: Using Providers
+description: "Attach context providers to agents and configure them for your use case."
+---
+
+## Basic Usage
+
+Attach a provider by calling `get_tools()` and passing the result to your agent:
+
+```python
+from agno.agent import Agent
+from agno.models.openai import OpenAIResponses
+from agno.context.fs import FilesystemContextProvider
+
+fs = FilesystemContextProvider(id="docs", root="./documentation")
+
+agent = Agent(
+    model=OpenAIResponses(id="gpt-5.4"),
+    tools=fs.get_tools(),
+)
+
+agent.print_response("What files are in the docs folder?")
+```
+
+The agent now has a `query_docs` tool. Ask it questions about the filesystem and the provider's sub-agent handles file traversal and content extraction.
+
+## Adding Instructions
+
+Providers can generate usage hints. Include them in your agent's instructions:
+
+```python
+agent = Agent(
+    model=OpenAIResponses(id="gpt-5.4"),
+    tools=fs.get_tools(),
+    instructions=fs.instructions(),
+)
+```
+
+For multiple providers, combine their instructions:
+
+```python
+instructions = "\n".join([
+    fs.instructions(),
+    web.instructions(),
+    db.instructions(),
+])
+
+agent = Agent(
+    model=...,
+    tools=[*fs.get_tools(), *web.get_tools(), *db.get_tools()],
+    instructions=instructions,
+)
+```
+
+## Read/Write Control
+
+Restrict a provider to read-only or write-only:
+
+```python
+from agno.context.gmail import GmailContextProvider
+
+# Read-only: agent can search emails but not send
+gmail = GmailContextProvider(write=False)
+
+# Write-only: agent can send but not read inbox
+gmail = GmailContextProvider(read=False, write=True)
+```
+
+This is useful for:
+- Audit workflows where the agent should only observe
+- Notification agents that send but don't read
+- Sandboxed environments during development
+
+## Choosing a Mode
+
+The `mode` parameter controls how the provider exposes itself:
+
+<Tabs>
+  <Tab title="default">
+    The provider decides optimal exposure. Most read/write providers expose `query_<id>` + `update_<id>`.
+
+    ```python
+    from agno.context.slack import SlackContextProvider
+
+    slack = SlackContextProvider(id="slack")
+    # Agent sees: query_slack, update_slack
+    ```
+  </Tab>
+  <Tab title="agent">
+    Single `query_<id>` tool wrapping a sub-agent. Good for complex sources that need internal orchestration.
+
+    ```python
+    from agno.context.mode import ContextMode
+    from agno.context.slack import SlackContextProvider
+
+    slack = SlackContextProvider(id="slack", mode=ContextMode.agent)
+    # Agent sees: query_slack only
+    ```
+  </Tab>
+  <Tab title="tools">
+    Expose underlying tools directly. Your agent orchestrates raw tools itself.
+
+    ```python
+    from agno.context.mode import ContextMode
+    from agno.context.slack import SlackContextProvider
+
+    slack = SlackContextProvider(id="slack", mode=ContextMode.tools)
+    # Agent sees: search_messages, get_channel_history, get_thread, list_channels, etc.
+    ```
+
+    Use this when you need fine-grained control or want to combine tools from multiple providers in custom ways.
+  </Tab>
+</Tabs>
+
+## Sub-agent Model
+
+Override the model used by the provider's internal sub-agent:
+
+```python
+from agno.models.openai import OpenAIResponses
+from agno.context.database import DatabaseContextProvider
+
+db = DatabaseContextProvider(
+    sql_engine=write_engine,
+    readonly_engine=read_engine,
+    model=OpenAIResponses(id="gpt-5.4-mini"),  # Cheaper model for SQL generation
+)
+
+agent = Agent(
+    model=OpenAIResponses(id="gpt-5.4"),  # Stronger model for reasoning
+    tools=db.get_tools(),
+)
+```
+
+This pattern saves cost: the sub-agent does mechanical work (SQL generation, API calls) while your main agent does synthesis and reasoning.
+
+## Lifecycle Management
+
+Some providers hold async resources (MCP sessions, web backends). They require `asetup()` and `aclose()`:
+
+```python
+import asyncio
+from agno.agent import Agent
+from agno.context.mcp import MCPContextProvider
+
+async def main():
+    mcp = MCPContextProvider(
+        server_name="github",
+        transport="stdio",
+        command="npx",
+        args=["-y", "@modelcontextprotocol/server-github"],
+    )
+
+    await mcp.asetup()
+    try:
+        agent = Agent(model=..., tools=mcp.get_tools())
+        await agent.arun("List my recent PRs")
+    finally:
+        await mcp.aclose()
+
+asyncio.run(main())
+```
+
+**Providers requiring lifecycle management:**
+- `MCPContextProvider` - MCP server connection
+- `WebContextProvider` with MCP backends (ExaMCPBackend, ParallelMCPBackend) - MCP connection
+- `WikiContextProvider` with GitBackend - repo clone
+
+**Providers that don't need it:**
+- `SlackContextProvider`, `GmailContextProvider`, `GoogleCalendarContextProvider`, `GoogleDriveContextProvider` - lazy connection
+- `FilesystemContextProvider`, `DatabaseContextProvider` - sync resources
+
+## RunContext Propagation
+
+When a provider runs a sub-agent, it forwards auth and state from the caller:
+
+```
+Calling Agent
+  ↓ tool call with run_context
+Provider._query_tool()
+  ↓ extracts user_id, session_id, metadata, dependencies
+Sub-agent.arun(question, user_id=..., session_id=..., ...)
+```
+
+This ensures:
+- **Per-user auth tokens** reach the sub-agent's tools
+- **Framework-injected state** (e.g., Slack's `action_token`) survives the hop
+- **User/session isolation** works across provider boundaries
+
+Message history and `session_state` stay with the outer agent. Sub-agents run isolated.
+
+## Next
+
+<CardGroup cols={2}>
+  <Card title="Build Custom Providers" icon="code" href="/context-providers/custom-providers">
+    Create your own provider for any data source
+  </Card>
+  <Card title="Provider Catalog" icon="box-open" href="/context-providers/providers/overview">
+    Browse all built-in providers
+  </Card>
+</CardGroup>

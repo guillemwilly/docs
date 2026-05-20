@@ -67,7 +67,7 @@ def update_task_status(session_state: dict, task_id: int, status: str) -> str:
     return f"Task #{task_id} not found"
 ```
 
-`session_state` gets injected into tool functions automatically (same way `RunContext` does for [Injector](/demo-os/context-providers)). Mutations persist.
+`session_state` gets injected into tool functions automatically (same way `RunContext` does for [Injector](/demo-os/dependencies)). Mutations persist.
 
 ## When to use session state
 

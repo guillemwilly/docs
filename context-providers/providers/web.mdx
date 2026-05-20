@@ -1,0 +1,122 @@
+---
+title: Web
+sidebarTitle: Web
+description: "Search and fetch content from the web."
+keywords: [context providers, web, search, exa, fetch]
+---
+
+Search and fetch content from the web. The provider exposes one tool: `query_web`. You choose the backend (Exa, Parallel, or MCP).
+
+```python
+from agno.agent import Agent
+from agno.context.web import WebContextProvider, ExaBackend
+
+web = WebContextProvider(backend=ExaBackend())
+
+agent = Agent(
+    model=...,
+    tools=web.get_tools(),
+)
+
+agent.print_response("What are the latest developments in AI agents?")
+```
+
+<Note>
+WebContextProvider is **read-only**. There is no `update_web` tool.
+</Note>
+
+## Backends
+
+<Tabs>
+  <Tab title="Exa">
+    Neural search engine. Best for semantic queries.
+    
+    ```python
+    from agno.context.web import WebContextProvider, ExaBackend
+    
+    web = WebContextProvider(backend=ExaBackend())
+    ```
+    
+    Requires `EXA_API_KEY` environment variable.
+  </Tab>
+  <Tab title="Exa MCP">
+    Exa via MCP protocol.
+    
+    ```python
+    from agno.context.web import WebContextProvider, ExaMCPBackend
+    
+    web = WebContextProvider(backend=ExaMCPBackend())
+    ```
+    
+    Requires lifecycle setup with `await web.asetup()`.
+  </Tab>
+  <Tab title="Parallel">
+    Parallel search across multiple sources.
+    
+    ```python
+    from agno.context.web import WebContextProvider, ParallelBackend
+    
+    web = WebContextProvider(backend=ParallelBackend())
+    ```
+  </Tab>
+  <Tab title="Parallel MCP">
+    Parallel search via MCP protocol.
+    
+    ```python
+    from agno.context.web import WebContextProvider, ParallelMCPBackend
+    
+    web = WebContextProvider(backend=ParallelMCPBackend())
+    ```
+    
+    Requires lifecycle setup with `await web.asetup()`.
+  </Tab>
+</Tabs>
+
+## Configuration
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `backend` | `ContextBackend` | required | Search backend (ExaBackend, ExaMCPBackend, ParallelBackend, ParallelMCPBackend). |
+| `id` | `str` | `"web"` | Tool becomes `query_<id>`. |
+| `model` | `Model` | `None` | Model for the sub-agent. |
+| `mode` | `ContextMode` | `default` | See [Mode](/context-providers/overview#mode). |
+
+## Tools Exposed
+
+| Tool | Description |
+|------|-------------|
+| `query_web` | Search the web, fetch pages, synthesize answers with citations. |
+
+## Lifecycle
+
+WebContextProvider requires setup and teardown for the backend connection:
+
+```python
+web = WebContextProvider(backend=ExaMCPBackend())
+
+await web.asetup()
+try:
+    agent = Agent(model=..., tools=web.get_tools())
+    await agent.arun("Search for...")
+finally:
+    await web.aclose()
+```
+
+## Example queries
+
+| Query | What happens |
+|-------|--------------|
+| "What is the current state of WebGPU support?" | Searches, fetches recent articles, synthesizes |
+| "Find documentation on Python 3.12 new features" | Searches docs, returns summary with links |
+| "Research competitors to Stripe Atlas" | Multi-source search and synthesis |
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="Exa Tools Reference" icon="wrench" href="/tools/toolkits/search/exa">
+    ExaTools methods
+  </Card>
+  <Card title="Cookbook Example" icon="book" href="https://github.com/agno-agi/agno/blob/main/cookbook/12_context/web.py">
+    Working example
+  </Card>
+</CardGroup>

@@ -1,0 +1,127 @@
+---
+title: Wiki
+sidebarTitle: Wiki
+description: "Read and write to a Git-backed markdown wiki."
+keywords: [context providers, wiki, markdown, git, knowledge base]
+---
+
+Read and write to a directory of markdown files. The provider exposes two tools: `query_wiki` for reading, `update_wiki` for writing. With a Git backend, writes auto-commit and push.
+
+```python
+from os import getenv
+from agno.agent import Agent
+from agno.context.wiki import WikiContextProvider
+from agno.context.wiki.backend import GitBackend
+
+wiki = WikiContextProvider(
+    backend=GitBackend(
+        repo_url="https://github.com/org/wiki.git",
+        branch="main",
+        github_token=getenv("GITHUB_TOKEN"),
+    )
+)
+
+await wiki.asetup()
+
+agent = Agent(
+    model=...,
+    tools=wiki.get_tools(),
+)
+
+await agent.arun("Add a page about our deployment process")
+await wiki.aclose()
+```
+
+## Backends
+
+<Tabs>
+  <Tab title="Git">
+    Auto-commits and pushes changes.
+    
+    ```python
+    from os import getenv
+    from agno.context.wiki.backend import GitBackend
+    
+    backend = GitBackend(
+        repo_url="https://github.com/org/wiki.git",
+        branch="main",
+        github_token=getenv("GITHUB_TOKEN"),
+    )
+    wiki = WikiContextProvider(backend=backend)
+    ```
+  </Tab>
+  <Tab title="Filesystem">
+    Local directory, no Git.
+    
+    ```python
+    from agno.context.wiki.backend import FileSystemBackend
+    
+    backend = FileSystemBackend(path="./wiki")
+    wiki = WikiContextProvider(backend=backend)
+    ```
+  </Tab>
+</Tabs>
+
+## Configuration
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `backend` | `WikiBackend` | required | GitBackend or FileSystemBackend. |
+| `id` | `str` | `"wiki"` | Tools become `query_<id>` and `update_<id>`. |
+| `web` | `ContextBackend` | `None` | Optional web backend for ingestion (fetch URL → write page). |
+| `model` | `Model` | `None` | Model for sub-agents. |
+| `read` | `bool` | `True` | Expose `query_wiki`. |
+| `write` | `bool` | `True` | Expose `update_wiki`. |
+
+## Tools Exposed
+
+| Tool | Description |
+|------|-------------|
+| `query_wiki` | Search pages, read content, list structure. |
+| `update_wiki` | Create pages, edit content. Auto-commits with Git backend. |
+
+## Web Ingestion
+
+Add a web backend to let the agent fetch URLs and write them as wiki pages:
+
+```python
+from agno.context.web import ExaBackend
+
+wiki = WikiContextProvider(
+    backend=GitBackend(...),
+    web=ExaBackend(),
+)
+
+# Agent can now: "Add this article to the wiki: https://..."
+```
+
+## Lifecycle Management
+
+WikiContextProvider with GitBackend **requires** setup/teardown:
+
+```python
+await wiki.asetup()   # Clone repo
+try:
+    # Use the provider
+finally:
+    await wiki.aclose()
+```
+
+## Example queries
+
+| Query | What happens |
+|-------|--------------|
+| "What do we have documented about authentication?" | Searches wiki content |
+| "Create a page about the new API endpoints" | Creates markdown file, commits |
+| "Update the deployment guide with the new steps" | Edits file, commits |
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="File Tools Reference" icon="wrench" href="/tools/toolkits/local/file">
+    Underlying file operations
+  </Card>
+  <Card title="Cookbook Example" icon="book" href="https://github.com/agno-agi/agno/blob/main/cookbook/12_context/15_wiki_git.py">
+    Git-backed wiki example
+  </Card>
+</CardGroup>

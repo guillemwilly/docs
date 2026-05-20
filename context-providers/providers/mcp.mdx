@@ -1,0 +1,122 @@
+---
+title: MCP
+sidebarTitle: MCP
+description: "Connect to any MCP server as a context provider."
+keywords: [context providers, mcp, model context protocol, server]
+---
+
+Connect to any MCP (Model Context Protocol) server. The provider wraps the server's tools in a sub-agent, exposing them as `query_mcp_<name>`.
+
+```python
+from agno.agent import Agent
+from agno.context.mcp import MCPContextProvider
+
+github = MCPContextProvider(
+    server_name="github",
+    transport="stdio",
+    command="npx",
+    args=["-y", "@modelcontextprotocol/server-github"],
+)
+
+await github.asetup()
+
+agent = Agent(
+    model=...,
+    tools=github.get_tools(),
+)
+
+await agent.arun("List my recent pull requests")
+await github.aclose()
+```
+
+<Note>
+MCPContextProvider is **read-only** by default. The tool name includes the server name: `query_mcp_github`.
+</Note>
+
+## Transport Options
+
+<Tabs>
+  <Tab title="stdio">
+    Run a local process.
+    
+    ```python
+    mcp = MCPContextProvider(
+        server_name="github",
+        transport="stdio",
+        command="npx",
+        args=["-y", "@modelcontextprotocol/server-github"],
+    )
+    ```
+  </Tab>
+  <Tab title="sse">
+    Connect to an SSE endpoint.
+    
+    ```python
+    mcp = MCPContextProvider(
+        server_name="my-server",
+        transport="sse",
+        url="http://localhost:8080/sse",
+    )
+    ```
+  </Tab>
+  <Tab title="streamable-http">
+    Connect to an HTTP endpoint with streaming.
+    
+    ```python
+    mcp = MCPContextProvider(
+        server_name="my-server",
+        transport="streamable-http",
+        url="http://localhost:8080/mcp",
+        headers={"Authorization": "Bearer ..."},
+    )
+    ```
+  </Tab>
+</Tabs>
+
+## Configuration
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `server_name` | `str` | required | Name of the MCP server. Used in tool name. |
+| `transport` | `str` | required | `"stdio"`, `"sse"`, or `"streamable-http"`. |
+| `command` | `str` | `None` | Command to run (stdio transport). |
+| `args` | `list[str]` | `None` | Command arguments (stdio transport). |
+| `url` | `str` | `None` | Server URL (sse/http transports). |
+| `headers` | `dict` | `None` | HTTP headers (sse/http transports). |
+| `env` | `dict` | `None` | Environment variables for the subprocess. |
+| `timeout_seconds` | `int` | `30` | Connection timeout. |
+| `id` | `str` | `"mcp_<name>"` | Tool becomes `query_<id>`. |
+| `model` | `Model` | `None` | Model for the sub-agent. |
+
+## Tools Exposed
+
+| Tool | Description |
+|------|-------------|
+| `query_mcp_<name>` | Query the MCP server. Sub-agent calls the server's tools internally. |
+
+## Lifecycle Management
+
+MCPContextProvider **requires** explicit setup and teardown:
+
+```python
+mcp = MCPContextProvider(...)
+
+await mcp.asetup()   # Connect to server
+try:
+    # Use the provider
+    agent = Agent(model=..., tools=mcp.get_tools())
+    await agent.arun("...")
+finally:
+    await mcp.aclose()  # Disconnect
+```
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="MCPTools Reference" icon="wrench" href="/tools/mcp/overview">
+    MCP tools and server setup
+  </Card>
+  <Card title="MCP Servers" icon="server" href="https://github.com/modelcontextprotocol/servers">
+    Available MCP servers
+  </Card>
+</CardGroup>

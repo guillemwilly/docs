@@ -1,0 +1,127 @@
+---
+title: Slack
+sidebarTitle: Slack
+description: "Search Slack conversations, read threads, and post messages."
+keywords: [context providers, slack, messaging, workspace, search, threads]
+---
+
+Two tools: `query_slack` for searching and reading, `update_slack` for posting messages.
+
+```python
+from agno.agent import Agent
+from agno.context.slack import SlackContextProvider
+
+slack = SlackContextProvider()
+
+agent = Agent(
+    model=...,
+    tools=slack.get_tools(),
+)
+
+agent.print_response("What did the team discuss about the auth migration?")
+```
+
+The agent calls `query_slack("auth migration")`. Behind the scenes, a sub-agent searches messages, fetches relevant threads, and returns a synthesized answer.
+
+## When to use this vs SlackTools
+
+| Use SlackContextProvider when... | Use SlackTools directly when... |
+|----------------------------------|--------------------------------|
+| Slack is one of several context sources | Slack is the primary task surface |
+| You want to reduce tool clutter (2 tools vs 12) | You need fine control over individual API calls |
+| The agent should ask questions, not orchestrate API calls | You're building a Slack-specific agent |
+
+## Setup
+
+```shell
+export SLACK_BOT_TOKEN=xoxb-...
+```
+
+Or pass directly: `SlackContextProvider(token="xoxb-...")`.
+
+See [SlackTools](/tools/toolkits/social/slack#prerequisites) for OAuth scope requirements.
+
+## Example queries
+
+Queries that work well give the provider a topic to search and context to narrow results:
+
+| Query | Why it works |
+|-------|--------------|
+| "What did the team decide about billing migration?" | Topic-driven search with synthesis |
+| "Summarize the thread where Alex discussed OAuth scopes" | Combines search + thread reading |
+| "What open questions came up in #launch this week?" | Channel + time constraints |
+| "Post a short update to #support saying the issue is resolved" | Clear channel + action |
+
+Queries that are too vague:
+
+| Less effective | Better |
+|----------------|--------|
+| "Search Slack" | "Search for recent discussion about webhook retries" |
+| "What happened?" | "What happened in #incidents about the API outage?" |
+| "Post it" | "Post this summary to #engineering" |
+
+## Configuration
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `id` | `str` | `"slack"` | Changes tool names to `query_<id>` and `update_<id>`. |
+| `model` | `Model` | `None` | Model for the sub-agents. Defaults to Agno's default model. |
+| `read` | `bool` | `True` | Expose `query_slack`. |
+| `write` | `bool` | `True` | Expose `update_slack`. |
+| `enable_media_tools` | `bool` | `False` | Enables `download_file` for read tools and `upload_file` for write tools. |
+| `mode` | `ContextMode` | `default` | `default` exposes both tools. `tools` exposes read-only SlackTools. |
+
+## Read/write modes
+
+Control what the agent can do:
+
+```python
+# Research agent: can search but not post
+slack = SlackContextProvider(write=False)
+
+# Notification agent: can post but not search
+slack = SlackContextProvider(read=False)
+```
+
+Use `write=False` for research, triage, audit, and eval agents. The read sub-agent physically cannot post because `send_message` isn't in its toolkit.
+
+## Multi-provider example
+
+The main value of context providers is reducing tool surface when an agent has multiple sources:
+
+```python
+from agno.context.slack import SlackContextProvider
+from agno.context.gdrive import GoogleDriveContextProvider
+
+slack = SlackContextProvider(write=False)
+drive = GoogleDriveContextProvider()
+
+agent = Agent(
+    model=...,
+    tools=[*slack.get_tools(), *drive.get_tools()],
+    instructions="Use Slack for team discussion, Drive for docs. Note when they disagree.",
+)
+
+agent.print_response("What's the current auth spec and did engineering raise concerns?")
+```
+
+The agent sees 2 tools (`query_slack`, `query_gdrive`) instead of 20+.
+
+## Tips
+
+- **Token naming**: `SLACK_BOT_TOKEN` is preferred; `SLACK_TOKEN` is a fallback.
+- **Private channels**: The bot must be invited to access private channel history.
+- **Thread context**: Ask for "the thread" or "the decision," not just the parent message.
+- **Channel names**: Natural names like `#general` work. The sub-agent resolves them to IDs.
+- **Write clarity**: "Post this to #team" is safer than vague "send it."
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="SlackTools Reference" icon="wrench" href="/tools/toolkits/social/slack">
+    All 12 methods and OAuth scope requirements
+  </Card>
+  <Card title="Cookbook Example" icon="book" href="https://github.com/agno-agi/agno/blob/main/cookbook/12_context/slack.py">
+    Working example with search and posting
+  </Card>
+</CardGroup>

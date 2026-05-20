@@ -1983,6 +1983,29 @@
                 ]
               },
               {
+                "group": "Context Providers",
+                "pages": [
+                  "context-providers/overview",
+                  "context-providers/using-providers",
+                  {
+                    "group": "Providers",
+                    "pages": [
+                      "context-providers/providers/overview",
+                      "context-providers/providers/slack",
+                      "context-providers/providers/gmail",
+                      "context-providers/providers/calendar",
+                      "context-providers/providers/drive",
+                      "context-providers/providers/database",
+                      "context-providers/providers/filesystem",
+                      "context-providers/providers/web",
+                      "context-providers/providers/mcp",
+                      "context-providers/providers/wiki"
+                    ]
+                  },
+                  "context-providers/custom-providers"
+                ]
+              },
+              {
                 "group": "Tools",
                 "pages": [
                   "tools/overview",

@@ -1,0 +1,99 @@
+---
+title: Google Drive
+sidebarTitle: Drive
+description: "Search and read files from Google Drive."
+keywords: [context providers, drive, google, files, documents]
+---
+
+Search and read files from Google Drive, including Docs, Sheets, and uploaded files. The provider exposes one tool: `query_gdrive`.
+
+```python
+from agno.agent import Agent
+from agno.context.gdrive import GoogleDriveContextProvider
+
+drive = GoogleDriveContextProvider()
+
+agent = Agent(
+    model=...,
+    tools=drive.get_tools(),
+)
+
+agent.print_response("Find the Q4 planning doc and summarize the key milestones")
+```
+
+<Note>
+GoogleDriveContextProvider is **read-only**. There is no `update_gdrive` tool.
+</Note>
+
+## Authentication
+
+OAuth or service account. For service accounts, share folders with the service account email.
+
+<Tabs>
+  <Tab title="OAuth (Personal)">
+    ```shell
+    export GOOGLE_CLIENT_ID=...
+    export GOOGLE_CLIENT_SECRET=...
+    export GOOGLE_PROJECT_ID=...
+    ```
+    
+    Token cached to `gdrive_token.json`.
+  </Tab>
+  <Tab title="Service Account">
+    ```shell
+    export GOOGLE_SERVICE_ACCOUNT_FILE=/path/to/service-account.json
+    ```
+    
+    Share folders/files with the service account email to grant access.
+  </Tab>
+</Tabs>
+
+## Configuration
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `id` | `str` | `"gdrive"` | Tool becomes `query_<id>`. |
+| `corpora` | `str` | `"allDrives"` | Search scope: `"user"`, `"domain"`, `"drive"`, or `"allDrives"`. |
+| `drive_id` | `str` | `None` | Required when `corpora="drive"` (single Shared Drive). |
+| `model` | `Model` | `None` | Model for the sub-agent. |
+| `mode` | `ContextMode` | `default` | See [Mode](/context-providers/overview#mode). |
+
+## Tools Exposed
+
+| Tool | Description |
+|------|-------------|
+| `query_gdrive` | Search files, list folders, read file contents (including Google Docs/Sheets). |
+
+## Shared Drive Support
+
+By default, `corpora="allDrives"` searches everything the user can access. Narrow the scope:
+
+```python
+# Personal Drive only
+drive = GoogleDriveContextProvider(corpora="user")
+
+# Single Shared Drive
+drive = GoogleDriveContextProvider(corpora="drive", drive_id="0ABcd...")
+
+# All files shared to domain
+drive = GoogleDriveContextProvider(corpora="domain")
+```
+
+## Example queries
+
+| Query | What happens |
+|-------|--------------|
+| "Find the product roadmap document" | Searches by title |
+| "What spreadsheets were modified this week?" | Searches with time filter |
+| "Read the meeting notes from the design review" | Gets file content |
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="GoogleDriveTools Example" icon="book" href="/examples/tools/google-drive">
+    All methods and OAuth setup
+  </Card>
+  <Card title="Cookbook Example" icon="book" href="https://github.com/agno-agi/agno/blob/main/cookbook/12_context/gdrive.py">
+    Working example
+  </Card>
+</CardGroup>
