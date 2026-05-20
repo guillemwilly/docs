@@ -1,0 +1,138 @@
+---
+title: "Contracts"
+description: "Parties, dates, and a clause-level breakdown for legal review queues."
+---
+
+Contracts are denser than invoices. A header (parties, effective date, term) plus a clause list with stable categories that downstream review tooling can filter on.
+
+```python
+from typing import List, Literal, Optional
+
+from agno.agent import Agent
+from agno.media import File
+from agno.models.openai import OpenAIResponses
+from pydantic import BaseModel, Field
+
+
+ClauseCategory = Literal[
+    "term_and_termination",
+    "payment",
+    "confidentiality",
+    "indemnification",
+    "limitation_of_liability",
+    "warranty",
+    "ip_assignment",
+    "governing_law",
+    "dispute_resolution",
+    "non_compete",
+    "other",
+]
+
+
+class Clause(BaseModel):
+    category: ClauseCategory
+    heading: Optional[str] = Field(None, description="Section heading as printed")
+    text: str = Field(..., description="Clause text, verbatim")
+    page: Optional[int] = Field(None, description="1-indexed page where the clause begins")
+
+
+class Party(BaseModel):
+    name: str
+    role: Optional[str] = Field(None, description="e.g. Customer, Vendor, Licensor")
+    address: Optional[str] = None
+
+
+class Contract(BaseModel):
+    title: Optional[str] = None
+    contract_type: Optional[str] = Field(None, description="e.g. MSA, SOW, NDA, EULA")
+    parties: List[Party] = Field(default_factory=list)
+    effective_date: Optional[str] = None
+    term: Optional[str] = Field(None, description="Stated term, e.g. '3 years from Effective Date'")
+    governing_law: Optional[str] = None
+    clauses: List[Clause] = Field(default_factory=list)
+
+
+agent = Agent(
+    model=OpenAIResponses(id="gpt-5.5"),
+    instructions=(
+        "Extract the contract header and every clause from the attached PDF. "
+        "Clause text must be verbatim from the document. Assign each clause "
+        "to the closest category; use 'other' if nothing fits. Do not "
+        "summarize, paraphrase, or skip clauses."
+    ),
+    output_schema=Contract,
+)
+
+contract = agent.run(
+    "Extract this contract.",
+    files=[File(url="https://example.com/msa-acme.pdf")],
+).content
+# Contract(title='Master Services Agreement', contract_type='MSA',
+#          parties=[Party(name='Acme Corp', role='Customer'),
+#                   Party(name='Beta Labs', role='Vendor')],
+#          effective_date='2026-01-15', term='3 years from Effective Date',
+#          governing_law='State of Delaware',
+#          clauses=[Clause(category='term_and_termination', ...), ...])
+```
+
+The `Literal` on `category` is what makes the output usable. Downstream review queues filter by category, so the categories must be a closed set. Free-text categories are unfilterable.
+
+## Review queues by clause type
+
+Once clauses carry a category, route them by team. Indemnification and limitation-of-liability go to legal; payment and term go to finance.
+
+```python
+def route_for_review(contract: Contract) -> dict[str, list[Clause]]:
+    legal = {"indemnification", "limitation_of_liability", "warranty", "ip_assignment"}
+    finance = {"payment", "term_and_termination"}
+
+    buckets: dict[str, list[Clause]] = {"legal": [], "finance": [], "other": []}
+    for clause in contract.clauses:
+        if clause.category in legal:
+            buckets["legal"].append(clause)
+        elif clause.category in finance:
+            buckets["finance"].append(clause)
+        else:
+            buckets["other"].append(clause)
+    return buckets
+```
+
+The agent does the extraction. The routing is plain Python, against a typed object. The split is auditable because each clause keeps its verbatim `text` and `page`.
+
+## Diff against a template
+
+For contract review, the question is often "what changed from our standard?" Extract both the incoming contract and your template into the same `Contract` schema, then diff by category.
+
+```python
+incoming = agent.run("Extract.", files=[File(url=incoming_url)]).content
+template = agent.run("Extract.", files=[File(filepath="templates/msa-v3.pdf")]).content
+
+incoming_by_cat = {c.category: c for c in incoming.clauses}
+template_by_cat = {c.category: c for c in template.clauses}
+
+deltas = [
+    (cat, incoming_by_cat.get(cat), template_by_cat.get(cat))
+    for cat in set(incoming_by_cat) | set(template_by_cat)
+    if (incoming_by_cat.get(cat) and incoming_by_cat[cat].text)
+       != (template_by_cat.get(cat) and template_by_cat[cat].text)
+]
+```
+
+For a richer comparison, hand both contracts to a reviewer agent with `output_schema` set to a `ClauseDelta` model and let the model summarize the differences.
+
+## Long contracts and chunking
+
+`OpenAIResponses(id="gpt-5.5")` handles contract-length PDFs in a single call. For documents over the model's context, split by section in your own code and run the agent per chunk. The schema is the same; you concatenate the `clauses` lists at the end.
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| Schedule a nightly contract intake run | [Batch and durability](/use-cases/document-processing/batch-and-durability) |
+| Send risky clauses to a human reviewer | [Human routing and eval](/use-cases/document-processing/human-routing-and-eval) |
+| Apply the same shape to intake forms | [Forms and intake](/use-cases/document-processing/forms-and-intake) |
+
+## Developer Resources
+
+- [Document extraction cookbook](https://github.com/agno-agi/agno/tree/main/cookbook/data_labeling/_16_document_extraction)
+- [Structured output](/input-output/structured-output/agent)

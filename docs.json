@@ -173,6 +173,17 @@
                   "use-cases/deep-research/institutional-learning",
                   "use-cases/deep-research/serve-and-embed"
                 ]
+              },
+              {
+                "group": "Document Processing",
+                "pages": [
+                  "use-cases/document-processing/overview",
+                  "use-cases/document-processing/invoices-and-receipts",
+                  "use-cases/document-processing/contracts",
+                  "use-cases/document-processing/forms-and-intake",
+                  "use-cases/document-processing/batch-and-durability",
+                  "use-cases/document-processing/human-routing-and-eval"
+                ]
               }
             ]
           },

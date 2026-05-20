@@ -1,0 +1,123 @@
+---
+title: "Invoices and receipts"
+description: "Header fields, line items, and the path from PDF to a database row."
+---
+
+The shape AP teams need: a header (vendor, totals, dates) and a list of line items. The schema is the contract with downstream systems.
+
+```python
+from typing import List, Optional
+
+from agno.agent import Agent
+from agno.media import File
+from agno.models.openai import OpenAIResponses
+from pydantic import BaseModel, Field
+
+
+class LineItem(BaseModel):
+    description: str = Field(..., description="Line description as printed")
+    quantity: Optional[float] = None
+    unit_price: Optional[float] = None
+    amount: Optional[float] = Field(None, description="Line total in invoice currency")
+
+
+class Invoice(BaseModel):
+    invoice_number: Optional[str] = None
+    vendor: Optional[str] = None
+    vendor_tax_id: Optional[str] = None
+    bill_to: Optional[str] = None
+    invoice_date: Optional[str] = Field(None, description="ISO 8601 if possible")
+    due_date: Optional[str] = None
+    currency: Optional[str] = Field(None, description="ISO 4217, e.g. USD, EUR")
+    subtotal: Optional[float] = None
+    tax: Optional[float] = None
+    total: Optional[float] = None
+    lines: List[LineItem] = Field(default_factory=list)
+
+
+agent = Agent(
+    model=OpenAIResponses(id="gpt-5.5"),
+    instructions=(
+        "Extract every field and every line item from the attached invoice. "
+        "Numbers stay as numbers. Use ISO 8601 for dates when the format is "
+        "unambiguous. Null for missing fields. Do not invent line items."
+    ),
+    output_schema=Invoice,
+)
+
+invoice = agent.run(
+    "Extract this invoice.",
+    files=[File(url="https://example.com/invoice-1042.pdf")],
+).content
+# Invoice(invoice_number='1042', vendor='Acme Corp', invoice_date='2026-04-12',
+#         total=1296.0, currency='USD', lines=[LineItem(description='Pro plan',
+#         quantity=12, unit_price=99.0, amount=1188.0), LineItem(...)])
+```
+
+The hard part is the missing-field discipline. A hallucinated `total` corrupts the AP ledger. Two lines in the instructions ("use exactly what the document shows", "null if missing") cut the hallucination rate substantially on noisy scans.
+
+## Persist the row
+
+The agent's job ends at a validated `Invoice`. The next step is a normal INSERT. Pydantic `.model_dump()` gives you a dict you can hand to any driver.
+
+```python
+from sqlalchemy import create_engine, text
+
+engine = create_engine("postgresql+psycopg://ai:ai@localhost:5532/ap")
+
+with engine.begin() as conn:
+    invoice_id = conn.execute(
+        text(
+            "INSERT INTO invoices (invoice_number, vendor, invoice_date, "
+            "due_date, currency, subtotal, tax, total) "
+            "VALUES (:invoice_number, :vendor, :invoice_date, :due_date, "
+            ":currency, :subtotal, :tax, :total) RETURNING id"
+        ),
+        invoice.model_dump(exclude={"lines"}),
+    ).scalar_one()
+
+    for line in invoice.lines:
+        conn.execute(
+            text(
+                "INSERT INTO invoice_lines (invoice_id, description, "
+                "quantity, unit_price, amount) "
+                "VALUES (:invoice_id, :description, :quantity, "
+                ":unit_price, :amount)"
+            ),
+            {"invoice_id": invoice_id, **line.model_dump()},
+        )
+```
+
+Two writes per invoice. The schema decides the table layout; the agent decides the values.
+
+## Receipts
+
+Receipts are invoices with a thinner header. Drop `due_date`, `vendor_tax_id`, and `bill_to`. Keep the same line-item shape. The same agent and the same instructions work; only `output_schema` changes.
+
+```python
+class Receipt(BaseModel):
+    merchant: Optional[str] = None
+    purchase_date: Optional[str] = None
+    currency: Optional[str] = None
+    total: Optional[float] = None
+    lines: List[LineItem] = Field(default_factory=list)
+```
+
+For phone-camera receipts (skewed, low light), the input becomes an image rather than a PDF. See [multimodal inputs](/use-cases/data-labeling/multimodal-inputs) for the input argument.
+
+## Confidence on noisy scans
+
+Production AP sees faxed copies, partial scans, and mixed-language invoices. When you need a flag for "send this to a human", wrap each value in a confidence carrier. The pattern is identical to the [data labeling pattern](/use-cases/data-labeling/structured-extraction#per-field-confidence) and feeds the routing logic in [human routing and eval](/use-cases/document-processing/human-routing-and-eval).
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| Process a folder of invoices | [Batch and durability](/use-cases/document-processing/batch-and-durability) |
+| Route low-confidence invoices to AP review | [Human routing and eval](/use-cases/document-processing/human-routing-and-eval) |
+| Extract contract clauses with the same primitive | [Contracts](/use-cases/document-processing/contracts) |
+
+## Developer Resources
+
+- [Document extraction cookbook](https://github.com/agno-agi/agno/tree/main/cookbook/data_labeling/_16_document_extraction)
+- [Structured output](/input-output/structured-output/agent)

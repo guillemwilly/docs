@@ -1,0 +1,123 @@
+---
+title: "Forms and intake"
+description: "Resumes, applications, KYC. Lists inside lists, same File() plumbing."
+---
+
+Forms and intake documents bring a different shape: a person identity at the top, then several parallel lists (employment, education, skills, references). The agent fills out the nested structure in one pass.
+
+```python
+from typing import List, Optional
+
+from agno.agent import Agent
+from agno.media import File
+from agno.models.openai import OpenAIResponses
+from pydantic import BaseModel, Field
+
+
+class Employment(BaseModel):
+    company: str
+    title: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = Field(None, description="Null if current")
+    summary: Optional[str] = Field(None, description="Bullet points joined into one string")
+
+
+class Education(BaseModel):
+    institution: str
+    degree: Optional[str] = None
+    field_of_study: Optional[str] = None
+    graduation_year: Optional[int] = None
+
+
+class Resume(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    location: Optional[str] = None
+    headline: Optional[str] = Field(None, description="Top-of-page summary line")
+    employment: List[Employment] = Field(default_factory=list)
+    education: List[Education] = Field(default_factory=list)
+    skills: List[str] = Field(default_factory=list)
+
+
+agent = Agent(
+    model=OpenAIResponses(id="gpt-5.5"),
+    instructions=(
+        "Extract every field from the attached resume PDF. Preserve the "
+        "candidate's wording for titles and summaries. Use null when a "
+        "field is missing. Do not infer skills that are not on the page."
+    ),
+    output_schema=Resume,
+)
+
+resume = agent.run(
+    "Extract this resume.",
+    files=[File(url="https://example.com/resume-sjohnson.pdf")],
+).content
+# Resume(full_name='Sarah Johnson', email='sarah@example.com',
+#        headline='Senior Platform Engineer',
+#        employment=[Employment(company='Acme Corp', title='Staff Engineer',
+#                               start_date='2023-02', end_date=None, ...),
+#                    Employment(company='Beta Labs', title='Senior Engineer',
+#                               start_date='2019-06', end_date='2023-01', ...)],
+#        education=[Education(institution='University of Texas',
+#                             degree='B.S.', field_of_study='Computer Science',
+#                             graduation_year=2018)],
+#        skills=['Python', 'PostgreSQL', 'Kubernetes', 'Terraform'])
+```
+
+The same shape covers job applications and KYC intake. Swap the schema's outer model and the instructions; the `File()` plumbing and the agent definition do not change.
+
+## KYC intake
+
+Identity verification forms add typed fields the downstream system has to accept verbatim (passport numbers, dates of birth, addresses). The schema should be conservative about types: keep IDs as strings to preserve leading zeros and country-specific formats.
+
+```python
+class KYCSubmission(BaseModel):
+    full_name: str
+    date_of_birth: Optional[str] = Field(None, description="ISO 8601")
+    country_of_residence: Optional[str] = Field(None, description="ISO 3166-1 alpha-2")
+    national_id_type: Optional[str] = Field(None, description="passport, driver_license, national_id")
+    national_id_number: Optional[str] = Field(None, description="As printed, including any leading zeros")
+    address: Optional[str] = None
+    declared_source_of_funds: Optional[str] = None
+```
+
+For KYC, every field is review-worthy. Combine this schema with the [confidence pattern](/use-cases/data-labeling/structured-extraction#per-field-confidence) so the downstream queue knows what to send to a compliance reviewer.
+
+## Multi-page applications
+
+Job applications often arrive as multi-page PDFs with attachments. `File(url=...)` handles a single combined PDF. For loose attachments (cover letter, resume, references), run the agent once per attachment, each with the right `output_schema`, and merge.
+
+```python
+class Application(BaseModel):
+    candidate: Resume
+    cover_letter: Optional[str] = None
+    references: List[str] = Field(default_factory=list)
+```
+
+For the resume and the references list, two `agent.run(...)` calls return typed objects. Compose them into an `Application` in plain Python.
+
+## Schema-shape comparison
+
+| Workload | Header | Repeated structure | Notes |
+|----------|--------|---------------------|-------|
+| Invoice | Vendor, totals, dates | `List[LineItem]` | Numbers stay numeric |
+| Contract | Parties, dates, governing law | `List[Clause]` with category Literal | Verbatim clause text |
+| Resume | Identity, headline | Parallel lists: employment, education, skills | Preserve candidate wording |
+| KYC | Identity | Few sub-lists; conservative typing | Keep IDs as strings |
+
+The agent code is the same across all four. The schema decides the workload.
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| Process every PDF in a Drive folder | [Batch and durability](/use-cases/document-processing/batch-and-durability) |
+| Flag low-confidence KYC fields for review | [Human routing and eval](/use-cases/document-processing/human-routing-and-eval) |
+| Validate extraction against a labeled set | [Human routing and eval](/use-cases/document-processing/human-routing-and-eval) |
+
+## Developer Resources
+
+- [Document extraction cookbook](https://github.com/agno-agi/agno/tree/main/cookbook/data_labeling/_16_document_extraction)
+- [Structured output](/input-output/structured-output/agent)

@@ -1,0 +1,205 @@
+---
+title: "Human routing and eval"
+description: "Confidence-gated approval and accuracy tracking against a golden set."
+---
+
+Two production concerns the labeling docs leave open: routing low-confidence fields to a human, and tracking accuracy as the system runs over time. Both are short patterns on top of the same extraction agent.
+
+## Per-field confidence
+
+Wrap each field in a confidence carrier so a downstream check can decide what needs review. The schema is identical to the one in [data labeling](/use-cases/data-labeling/structured-extraction#per-field-confidence); the routing logic is the part that lives here.
+
+```python
+from typing import Literal, Optional
+
+from agno.agent import Agent
+from agno.media import File
+from agno.models.openai import OpenAIResponses
+from pydantic import BaseModel
+
+
+Confidence = Literal["high", "medium", "low"]
+
+
+class ConfidentField(BaseModel):
+    value: Optional[str] = None
+    confidence: Confidence
+
+
+class Invoice(BaseModel):
+    invoice_number: ConfidentField
+    vendor: ConfidentField
+    invoice_date: ConfidentField
+    total: ConfidentField
+
+
+agent = Agent(
+    model=OpenAIResponses(id="gpt-5.5"),
+    instructions=(
+        "Extract invoice fields. For each field, report confidence: "
+        "high (explicit on the document), medium (inferred from structure), "
+        "low (guessed, partly obscured, or ambiguous). Be conservative."
+    ),
+    output_schema=Invoice,
+)
+
+invoice = agent.run(
+    "Extract this invoice.",
+    files=[File(url="https://example.com/scan-low-quality.pdf")],
+).content
+# Invoice(invoice_number=ConfidentField(value='1042', confidence='high'),
+#         vendor=ConfidentField(value='Acme Corp', confidence='high'),
+#         invoice_date=ConfidentField(value=None, confidence='low'),
+#         total=ConfidentField(value='1296.0', confidence='medium'))
+```
+
+## Route on low confidence
+
+The trigger is plain Python. Walk the fields, find anything below threshold, and decide what to do with it.
+
+```python
+def low_confidence_fields(invoice: Invoice) -> list[str]:
+    return [
+        name
+        for name, field in invoice.model_dump().items()
+        if field.get("confidence") == "low"
+    ]
+
+
+flagged = low_confidence_fields(invoice)
+if flagged:
+    send_to_human_queue(invoice, flagged)
+else:
+    write_to_database(invoice)
+```
+
+The model returns confidence. Your code decides the threshold and the action. Two declaratives, no model-side branching.
+
+## Gate the next action with `requires_confirmation`
+
+For a tighter loop, wrap the downstream action (the database write, the ERP push) in a tool that requires approval, and only invoke it when confidence is high. The agent pauses on low confidence and a human can release the run.
+
+```python
+from agno.agent import Agent
+from agno.db.sqlite import SqliteDb
+from agno.models.openai import OpenAIResponses
+from agno.tools import tool
+
+
+@tool(requires_confirmation=True)
+def post_to_erp(invoice_id: str, vendor: str, total: float) -> str:
+    """Post an extracted invoice to the AP ledger."""
+    # ...real ERP call...
+    return f"Posted {invoice_id} for {vendor}: {total}"
+
+
+writer = Agent(
+    model=OpenAIResponses(id="gpt-5.5"),
+    tools=[post_to_erp],
+    db=SqliteDb(db_file="tmp/extraction.db"),
+    instructions=(
+        "Given a parsed invoice, post it to the ERP with post_to_erp. "
+        "If any value is unclear, call the tool with what you have and "
+        "wait for human confirmation."
+    ),
+)
+
+run = writer.run(
+    f"Post this invoice: {invoice.model_dump_json()}"
+)
+
+if run.is_paused:
+    for requirement in run.active_requirements:
+        if requirement.needs_confirmation:
+            # Surface this to a reviewer UI; here we approve directly.
+            print(f"Approve: {requirement.tool_execution.tool_name}")
+            requirement.confirm()
+
+    run = writer.continue_run(
+        run_id=run.run_id,
+        requirements=run.requirements,
+    )
+```
+
+The pause is durable. `run.run_id` is persisted in `db`, so the approval can come from a different process minutes or hours later. See [human approval](/runtime/human-approval) for the full surface, including async variants and listing pending approvals from the database.
+
+## Accuracy against a golden set
+
+Confidence routes individual documents. Eval tells you whether the system as a whole is still extracting what it should. Build a small golden set (50 to a few hundred labeled documents) and grade the agent against it.
+
+```python
+from agno.agent import Agent
+from agno.eval.accuracy import AccuracyEval
+from agno.media import File
+from agno.models.openai import OpenAIResponses
+
+agent = Agent(
+    model=OpenAIResponses(id="gpt-5.5"),
+    instructions="Extract invoice fields. Null if missing.",
+    output_schema=Invoice,
+)
+
+evaluation = AccuracyEval(
+    name="invoice-extraction-golden",
+    model=OpenAIResponses(id="gpt-5.5"),
+    agent=agent,
+    input=lambda: agent.run(
+        "Extract this invoice.",
+        files=[File(url="https://example.com/golden/invoice-001.pdf")],
+    ),
+    expected_output=(
+        "Invoice number 1042, vendor Acme Corp, dated 2026-04-12, "
+        "total 1296.00 USD."
+    ),
+    num_iterations=3,
+)
+
+result = evaluation.run(print_results=True)
+# AccuracyResult(name='invoice-extraction-golden', avg_score=9.0, ...)
+assert result is not None and result.avg_score >= 8
+```
+
+`AccuracyEval` runs the agent `num_iterations` times against the same input, asks a grader model to score each run against the expected output, and reports the average. Loop the call over your golden set to get a per-document score.
+
+```python
+results = []
+for doc in golden_set:
+    eval_ = AccuracyEval(
+        name=f"invoice-{doc.id}",
+        model=OpenAIResponses(id="gpt-5.5"),
+        agent=agent,
+        input=lambda doc=doc: agent.run(
+            "Extract this invoice.",
+            files=[File(filepath=doc.path)],
+        ),
+        expected_output=doc.expected_description,
+        num_iterations=1,
+    )
+    results.append(eval_.run(print_results=False))
+```
+
+Persist the per-document score to the same `db` you use for runs, and you have a regression signal. A drop in average score after a model swap or prompt change tells you the new configuration is worse before it reaches production. See the [evals cookbook](https://github.com/agno-agi/agno/tree/main/cookbook/09_evals/accuracy) for `db_logging` and the team variant.
+
+## Two patterns, one job
+
+| Pattern | What it answers | When it fires |
+|---------|------------------|---------------|
+| Confidence routing | "Which fields on this document need a human?" | Every run, per document |
+| Approval-gated tools | "Should we let the agent take the next action?" | At a specific tool boundary |
+| AccuracyEval over a golden set | "Is the extractor still as accurate as last week?" | On CI, after a prompt or model change, on a schedule |
+
+The first two protect a single document. The third protects the system.
+
+## Next steps
+
+| Task | Guide |
+|------|-------|
+| Schedule the eval to run nightly | [Batch and durability](/use-cases/document-processing/batch-and-durability) |
+| Approve from an external UI | [Human approval](/runtime/human-approval) |
+| Add a two-labeler review step | [Quality pipeline](/use-cases/data-labeling/quality-pipeline) |
+
+## Developer Resources
+
+- [Approval cookbook](https://github.com/agno-agi/agno/tree/main/cookbook/02_agents/11_approvals)
+- [Accuracy eval cookbook](https://github.com/agno-agi/agno/tree/main/cookbook/09_evals/accuracy)
+- [Human approval](/runtime/human-approval)

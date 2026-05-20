@@ -1,0 +1,102 @@
+---
+title: "Document processing"
+sidebarTitle: "Overview"
+description: "Turn PDFs and scanned documents into typed rows for your production systems."
+---
+
+Every business runs on documents. Invoices land in AP, contracts go to legal, claims hit operations, resumes route to recruiting. Agno turns each of those into a typed Python object you can persist, route, or hand to the next system.
+
+Define the schema, pass the PDF, get a validated object back.
+
+```python
+from typing import List, Optional
+
+from agno.agent import Agent
+from agno.media import File
+from agno.models.openai import OpenAIResponses
+from pydantic import BaseModel, Field
+
+
+class LineItem(BaseModel):
+    description: str
+    quantity: Optional[float] = None
+    unit_price: Optional[float] = None
+    amount: Optional[float] = None
+
+
+class Invoice(BaseModel):
+    invoice_number: Optional[str] = Field(None, description="As printed on the invoice")
+    vendor: Optional[str] = None
+    invoice_date: Optional[str] = None
+    due_date: Optional[str] = None
+    subtotal: Optional[float] = None
+    tax: Optional[float] = None
+    total: Optional[float] = None
+    currency: Optional[str] = Field(None, description="ISO 4217, e.g. USD, EUR")
+    lines: List[LineItem] = Field(default_factory=list)
+
+
+agent = Agent(
+    model=OpenAIResponses(id="gpt-5.5"),
+    instructions=(
+        "Extract invoice fields and line items from the attached PDF. "
+        "Use exactly what the document shows. If a field is missing, "
+        "leave it null. Do not guess."
+    ),
+    output_schema=Invoice,
+)
+
+result = agent.run(
+    "Extract the invoice.",
+    files=[File(url="https://example.com/invoice-1042.pdf")],
+).content
+# Invoice(invoice_number='1042', vendor='Acme Corp', invoice_date='2026-04-12',
+#         due_date='2026-05-12', subtotal=1200.0, tax=96.0, total=1296.0,
+#         currency='USD', lines=[LineItem(...), LineItem(...)])
+```
+
+`result` is a validated `Invoice`. The next line in your code is an `INSERT`, an ERP call, or a queue message. The model has done its job.
+
+## Workloads
+
+| Workload | Page |
+|----------|------|
+| Invoices, receipts, statements | [Invoices and receipts](/use-cases/document-processing/invoices-and-receipts) |
+| Contracts, MSAs, policies | [Contracts](/use-cases/document-processing/contracts) |
+| Resumes, applications, KYC intake | [Forms and intake](/use-cases/document-processing/forms-and-intake) |
+
+## Production concerns
+
+| You need to | Page |
+|-------------|------|
+| Process a folder or a queue of documents | [Batch and durability](/use-cases/document-processing/batch-and-durability) |
+| Schedule a nightly run that retries on failure | [Batch and durability](/use-cases/document-processing/batch-and-durability) |
+| Route low-confidence fields to a human | [Human routing and eval](/use-cases/document-processing/human-routing-and-eval) |
+| Track accuracy against a labeled golden set | [Human routing and eval](/use-cases/document-processing/human-routing-and-eval) |
+
+## Explore
+
+<CardGroup cols={2}>
+  <Card title="Invoices and receipts" icon="file-invoice-dollar" href="/use-cases/document-processing/invoices-and-receipts">
+    Header fields, line items, and the path from PDF to a database row.
+  </Card>
+  <Card title="Contracts" icon="file-signature" href="/use-cases/document-processing/contracts">
+    Parties, dates, and a clause-level breakdown for review queues.
+  </Card>
+  <Card title="Forms and intake" icon="clipboard-list" href="/use-cases/document-processing/forms-and-intake">
+    Resumes, applications, KYC. Lists inside lists, same `File()` plumbing.
+  </Card>
+  <Card title="Batch and durability" icon="layer-group" href="/use-cases/document-processing/batch-and-durability">
+    Workflows over a folder, background runs, scheduled jobs with retries.
+  </Card>
+  <Card title="Human routing and eval" icon="user-check" href="/use-cases/document-processing/human-routing-and-eval">
+    Confidence-gated approval and accuracy tracking against a golden set.
+  </Card>
+</CardGroup>
+
+## Developer Resources
+
+- [Document extraction cookbook](https://github.com/agno-agi/agno/tree/main/cookbook/data_labeling/_16_document_extraction)
+- [Structured output](/input-output/structured-output/agent)
+- [Workflows](/workflows/overview)
+- [Scheduler cookbook](https://github.com/agno-agi/agno/tree/main/cookbook/05_agent_os/scheduler)
