@@ -67,8 +67,7 @@
       "display": "swap"
     }
   },
-  "scripts": ["/global.css"],
-  "integrations": {
+    "integrations": {
     "gtm": {
       "tagId": "GTM-WBTFNG7M"
     }
