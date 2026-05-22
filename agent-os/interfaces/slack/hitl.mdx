@@ -33,7 +33,6 @@ def get_top_hackernews_stories(num_stories: int) -> str:
 db = SqliteDb(
     db_file="tmp/hitl_simple.db",
     session_table="agent_sessions",
-    approvals_table="approvals",  # only needed for AgentOS admin-gated approvals
 )
 
 agent = Agent(
