@@ -1,63 +1,80 @@
 ---
 title: Agent SDK
-description: "Build your agent platform in pure python."
+description: "Build your agent platform in pure Python."
 ---
 
-If you're building an agent platform, you need an SDK designed for long-running sessions.
+Agno gives you three primitives and a large set of capabilities you can attach to each.
 
-Agno gives you three reliable primitives and a large set of capabilities you can attach to each.
+Add session persistence and durability using storage providers (databases, files). Add memory, knowledge, and learning so your agents remember conversations, ground answers in your data, and improve over time. Connect agents to external tools using MCP, context providers, or 100+ built-in toolkits.
 
-You can build:
-
-1. Single-purpose agents with storage, memory, and knowledge. Great product copilots.
-2. Multi-agent teams, with each agent or sub-team bringing independent expertise.
-3. Step-based workflows, so you can orchestrate agents, teams, and vanilla Python functions into the perfect agentic pipeline.
-
-Connect any agent to external tools and context providers. Agno comes with 100+ toolkits ready to use. Add session persistence and durability to any primitive with storage providers: any database, local folder, or cloud storage.
-
-Add memory, learnings, and knowledge (vector search) for a more customized experience. With the [agno mcp](/coding-agents#option-1-add-the-docs-as-an-mcp-server) installed on your coding agent, you can build any agentic workflow imaginable.
+With the [agno mcp](/coding-agents#option-1-add-the-docs-as-an-mcp-server) installed, you can build any agentic workflow imaginable.
 
 Everything is pure Python. No new DSL to learn, no YAML to manage.
 
-## Components
+## Primitives
 
-Your agent platform is made of hundreds, sometimes thousands, of components. Each component combines:
-
-1. A primitive
-2. Its capabilities
-3. Its configuration
-
-### Primitives
-
-| Primitive | Use it to |
+| Primitive | Description |
 |-----------|-----------|
 | [Agent](/agents/overview) | Simple autonomous programs with a model, tools, and instructions |
 | [Team](/teams/overview) | Multiple agents working together to achieve complex tasks |
 | [Workflow](/workflows/overview) | Produce deterministic output through ordered steps |
 
-### Capabilities
+## Capabilities
+
+### Model and tools
 
 | Capability | What it adds |
 |------------|--------------|
 | [Models](/models/overview) | 30+ providers behind one API |
 | [Tools](/tools/overview) | 100+ integrations and the ability to write your own |
+| [Skills](/skills/overview) | Composable abilities you can attach to agents and teams |
 | [Multimodal](/multimodal/overview) | Image, audio, and video input and output |
-| [Storage](/storage/overview) | Session persistence and durability on any database |
+| [Structured I/O](/input-output/overview) | Type-safe input and output with Pydantic schemas |
+
+### Memory and context
+
+| Capability | What it adds |
+|------------|--------------|
+| [Storage](/database/overview) | Durability and persistence on any database |
+| [Sessions](/sessions/overview) | Multi-turn session management with summaries, history, and metrics |
+| [State](/state/overview) | Session and agentic state agents can read and update mid-run |
 | [Memory](/memory/overview) | Per-user and per-session memory |
-| [Knowledge](/knowledge/concepts/overview) | RAG over documents, URLs, and databases |
+| [Knowledge](/knowledge/overview) | Search over documents, URLs, and databases |
+| [Learning](/learning/overview) | Agents that improve over time with learned behavior and decisions |
+| [Compression](/compression/overview) | Keep long sessions inside the model's context window |
+| [Context Providers](/context-providers/overview) | Inject live data from Calendar, Gmail, Drive, GitHub, Slack, MCP, and more |
+
+### Control and safety
+
+| Capability | What it adds |
+|------------|--------------|
 | [Guardrails](/guardrails/overview) | Validate input and output |
+| [Hooks](/hooks/overview) | Lifecycle hooks for input, output, and state |
 | [Human-in-the-Loop](/hitl/overview) | Pause runs for approval, input, or external execution |
 
-### Build components three ways
+### Operations
 
-You build and manage components three ways. All three operate on the same components, stored in your AgentOS database, so a component is the same entity however you create it.
+| Capability | What it adds |
+|------------|--------------|
+| [Background execution](/background-execution/overview) | Long-running runs that don't block your API |
+| [Evals](/evals/overview) | Measure accuracy, performance, and reliability; agent-as-judge |
+| [Observability](/observability/overview) | Tracing with Langfuse, Logfire, Arize, and 12+ providers |
+| [Scheduler](/scheduler/overview) | Run agents on a recurring schedule |
 
-1. **In code.** Define agents, teams, and workflows in pure Python with the SDK. Version controlled alongside the rest of your codebase.
+## Components
+
+A primitive + capabilities + configuration becomes a component in your agent platform.
+
+You can create components in code, through a no-code UI or via the AgentOS API. Components created in code are single-version. But components created via the API or no-code UI can be versioned, checkpointed and reverted as needed. The Components API lets you build, version, and operate components over HTTP.
+
+Here's how you do each:
+
+1. **In code.** Define agents, teams, and workflows using the SDK. Version controlled alongside the rest of your codebase.
 2. **In the no-code UI.** Build visually in [AgentOS Studio](/agent-os/studio/introduction). Drag components from the [Registry](/agent-os/studio/registry), wire them together, test in the [Control Plane](/agent-os/control-plane), and publish.
 3. **Through the API.** Use the [`/components` endpoints](/reference-api/schema/components/list-components) on your AgentOS to create, read, update, and version components programmatically. The same endpoints are available through the [AgentOS MCP](/agent-os/mcp/mcp), so a coding agent can build components for you.
 
 ### Configuration and versions
 
-Every component carries a versioned configuration. You save a draft, test it, then publish. Each published version gets its own API endpoint. Set any version as **current** to make it the default for production, and roll back by setting an earlier version as current.
+When components are created via the API, they carry a versioned configuration. Published versions are immutable, and each gets its own endpoint so you can pin clients to a specific version. A `current` pointer decides which version your production API serves: set it to a newer version to promote, or an earlier one to roll back.
 
 This is what makes a platform manageable at scale. Tune a component's instructions, swap its model, or adjust its tools, ship it as a new version, and roll back in one call if it regresses. Versioned configs are also the foundation for an improvement loop: measure a component in production, propose a new config, publish it, and promote or roll back based on results.
