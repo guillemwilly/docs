@@ -1,11 +1,15 @@
 ---
 title: "Agent Runtime"
-description: "Run your agents as a stateless, secure, observable service."
+description: "Run your agents as a stateless, secure service."
 ---
+
+You build your agents, teams, and workflows with the Agent SDK. AgentOS takes it live by serving it behind an HTTP API.
 
 AgentOS runs your platform as a secure, scalable service. Reachable over an API, durable across restarts, scaled across replicas, and authenticated per request.
 
-```python Minimal AgentOS
+Here's the smallest possible AgentOS example:
+
+```python
 from agno.agent import Agent
 from agno.db.postgres import PostgresDb
 from agno.models.openai import OpenAIResponses
@@ -22,7 +26,7 @@ if __name__ == "__main__":
     agent_os.serve(app="my_app:app", reload=False)
 ```
 
-This gives you a production-grade agent server. Persistent sessions, streaming, JWT auth, tracing, and a scheduler, all using a stateless FastAPI process that you can scale horizontally.
+This script starts a production-grade agent server. Persistent sessions, streaming, JWT auth, tracing, and a scheduler, all built on a stateless FastAPI process that you can scale horizontally.
 
 ## What the runtime gives you
 
@@ -39,30 +43,20 @@ The runtime covers the ground between your agent code and a production service:
 | Interfaces | Slack, Telegram, WhatsApp, A2A, AG-UI |
 | Human in the loop | Pause runs for user confirmation, admin approval, or external execution |
 
-The same `Agent(...)` runs in a script, a test, or an AgentOS service.
-
-AgentOS is stateless: state lives in `db`, so you scale horizontally by adding replicas.
-
-<Note>
+<Tip>
   AgentOS can also serve agents built with the Claude Agent SDK, LangGraph, and DSPy.
 
   See [Multi-framework support](/agent-os/multi-framework/overview).
-</Note>
+</Tip>
 
 ## Explore
 
 <CardGroup cols={2}>
-  <Card title="Serve as an API" icon="server" href="/features/api">
-    The HTTP endpoints AgentOS generates and how to add your own.
+  <Card title="Agent API" icon="server" href="/features/api">
+    Run your agent platform as an API.
   </Card>
-  <Card title="Storage" icon="database" href="/features/storage">
-    Database backends and what gets stored.
-  </Card>
-  <Card title="Context" icon="book" href="/features/context">
-    Knowledge, dependencies, and live data sources.
-  </Card>
-  <Card title="Human in the loop" icon="user-check" href="/features/human-approval">
-    Pause runs for confirmation, approval, or external systems.
+  <Card title="Agent Storage" icon="database" href="/features/storage">
+    Add durability and persistence.
   </Card>
   <Card title="Observability" icon="chart-line" href="/features/observability">
     Tracing, run history, and audit logs in your own database.
@@ -76,12 +70,4 @@ AgentOS is stateless: state lives in `db`, so you scale horizontally by adding r
   <Card title="Scheduling" icon="clock" href="/features/scheduling">
     In-process cron and multi-step workflows.
   </Card>
-  <Card title="Deploying" icon="rocket" href="/features/deploy">
-    Docker, Railway, AWS, GCP, and horizontal scaling.
-  </Card>
 </CardGroup>
-
-## Developer resources
-
-- [Agent platform](/agent-platform/overview)
-- [Multi-framework support](/agent-os/multi-framework/overview)

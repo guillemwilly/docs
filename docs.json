@@ -103,6 +103,18 @@
             ]
           },
           {
+            "group": "Features",
+            "pages": [
+              "features/sdk",
+              "features/runtime",
+              "features/api",
+              "features/storage",
+              "features/observability",
+              "features/security-and-auth",
+              "features/scheduling"
+            ]
+          },
+          {
             "group": "Use Cases",
             "pages": [
               {
@@ -184,22 +196,6 @@
                   "use-cases/document-processing/human-routing-and-eval"
                 ]
               }
-            ]
-          },
-          {
-            "group": "Features",
-            "pages": [
-              "features/sdk",
-              "features/runtime",
-              "features/api",
-              "features/storage",
-              "features/observability",
-              "features/context",
-              "features/human-approval",
-              "features/security-and-auth",
-              "features/interfaces",
-              "features/scheduling",
-              "features/deploy"
             ]
           }
         ]
