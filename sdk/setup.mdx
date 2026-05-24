@@ -1,0 +1,228 @@
+---
+title: Setup & First Agent
+description: "Set up your dev environment. Install, configure, and run your first agent."
+---
+
+Let's get our dev environment setup for Agno. We'll need:
+1. A virtual environment
+2. Agno installed
+3. API key set
+4. First agent run
+5. A path to running our agent as a service
+
+If you just want the fastest possible quickstart, see [Build Your First Agent](/first-agent). This page is the slower walkthrough that prepares you to work through the rest of the docs and tutorials.
+
+## 1. Python virtual environment
+
+Agno requires Python 3.10 or newer. We recommend [`uv`](https://docs.astral.sh/uv/), but `pip` works fine too.
+
+<CodeGroup>
+
+```bash uv
+uv venv --python 3.12
+source .venv/bin/activate
+```
+
+```bash pip (Mac/Linux)
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+```bash pip (Windows)
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+</CodeGroup>
+
+## 2. Install Agno
+
+Install the agno SDK plus the OpenAI provider.
+
+<CodeGroup>
+
+```bash uv
+uv pip install -U agno openai
+```
+
+```bash pip
+pip install -U agno openai
+```
+
+</CodeGroup>
+
+## 3. Export your API key
+
+Don't have one? [Get a key from platform.openai.com](https://platform.openai.com/api-keys).
+
+<CodeGroup>
+
+```bash Mac/Linux
+export OPENAI_API_KEY=sk-***
+```
+
+```bash Windows
+setx OPENAI_API_KEY sk-***
+```
+
+</CodeGroup>
+
+Any model provider works — Anthropic, Gemini, Groq, Mistral, Cohere, Ollama, and 25+ others. Set the corresponding API key and swap the `model=` argument. See [Models](/models/overview) for the full list.
+
+## 4. Your first agent
+
+Save this as `sorting_hat.py`. The agent walks your current directory, decides how to organize it, and prints a tidy summary.
+
+```python sorting_hat.py
+from pathlib import Path
+
+from agno.agent import Agent
+from agno.tools.workspace import Workspace
+
+folder = Path(__file__).parent
+
+sorting_hat = Agent(
+    name="Sorting Hat",
+    model="openai:gpt-5.5",
+    tools=[Workspace(root=str(folder), allowed=["read", "list", "search", "shell"])],
+    instructions=(
+        "Walk the folder, figure out what's there, and propose a clean organization. "
+        "Decide the categories yourself. Use shell commands when they help (e.g. `file`, "
+        "`pdftotext`). Return a tidy summary, a category breakdown, and a folder tree."
+    ),
+    markdown=True,
+)
+
+sorting_hat.print_response(f"Inventory and organize {folder}", stream=True)
+```
+
+Run it:
+
+```bash
+python sorting_hat.py
+```
+
+You should see the agent reason through the folder, call tools, and return a structured summary. That's your first agent built using agno: a model, tools, and instructions.
+
+## 5. Run it as a service
+
+The script above is fine as a one-off. To make the agent reachable over HTTP, with session storage, memory, and tracing, run it using **AgentOS**.
+
+Install the runtime extras:
+
+<CodeGroup>
+
+```bash uv
+uv pip install -U 'agno[os]'
+```
+
+```bash pip
+pip install -U 'agno[os]'
+```
+
+</CodeGroup>
+
+Save this as `workbench.py`:
+
+```python workbench.py
+from agno.agent import Agent
+from agno.db.sqlite import SqliteDb
+from agno.os import AgentOS
+from agno.tools.workspace import Workspace
+
+workbench = Agent(
+    name="Workbench",
+    model="openai:gpt-5.5",
+    db=SqliteDb(db_file="workbench.db"),
+    tools=[Workspace(".")],
+    enable_agentic_memory=True,
+    add_history_to_context=True,
+    num_history_runs=3,
+)
+
+agent_os = AgentOS(agents=[workbench], tracing=True)
+app = agent_os.get_app()
+```
+
+Run it:
+
+```bash
+fastapi dev workbench.py
+```
+
+Your AgentOS is now running at `http://localhost:8000`. Open [http://localhost:8000/docs](http://localhost:8000/docs) for the OpenAPI spec, or connect the UI:
+
+1. Open [os.agno.com](https://os.agno.com) and sign in.
+2. Click **Add OS** → **Local**.
+3. Enter `http://localhost:8000`, name it, and connect.
+
+You now have sessions, memory, tracing, and a chat UI.
+
+## Wire up your coding agent
+
+Agno is designed to be used with coding agents. The docs are exposed as an MCP server so your coding agent has live access to the surface area.
+
+For Claude Code:
+
+```bash
+claude mcp add agno-docs https://docs.agno.com/mcp
+```
+
+You can also drop a `.mcp.json` in the repo:
+
+```json .mcp.json
+{
+  "mcpServers": {
+    "agno-docs": {
+      "type": "http",
+      "url": "https://docs.agno.com/mcp"
+    }
+  }
+}
+```
+
+For full setup, see: **[Using Agno with Coding Agents →](/coding-agents)**
+
+## A note on Postgres
+
+Many examples and tutorials in this documentation use **Postgres + pgvector** instead of SQLite. Postgres is what we recommend for production, and `pgvector` lets you keep relational data and embeddings on the same engine.
+
+The fastest way to run both locally is Docker:
+
+```bash
+docker run -d \
+  --name agno-postgres \
+  -e POSTGRES_USER=ai \
+  -e POSTGRES_PASSWORD=ai \
+  -e POSTGRES_DB=ai \
+  -p 5432:5432 \
+  -v agno-pgdata:/var/lib/postgresql/data \
+  agnohq/pgvector:18
+```
+
+That's Postgres 18 with `pgvector` preinstalled. Swap your `db=` argument from `SqliteDb` to `PostgresDb(db_url="postgresql://ai:ai@localhost:5432/ai")` and the rest of your code is unchanged.
+
+## You're ready
+
+You have an agent running locally, a path to serving it, your coding agent wired in, and Postgres ready when you need it. From here:
+
+<CardGroup cols={3}>
+  <Card title="Agents" icon="robot" iconType="duotone" href="/agents/overview">
+    Go deeper on the Agent primitive.
+  </Card>
+  <Card title="Teams" icon="users" iconType="duotone" href="/teams/overview">
+    Coordinate multiple agents on a single task.
+  </Card>
+  <Card title="Workflows" icon="diagram-project" iconType="duotone" href="/workflows/overview">
+    Deterministic, step-based pipelines.
+  </Card>
+  <Card title="Tutorials" icon="map" iconType="duotone" href="/tutorials/overview">
+    Build Scout, Dash, or Coda end-to-end.
+  </Card>
+  <Card title="Examples" icon="book" iconType="duotone" href="/examples/overview">
+    Worked patterns for common use cases.
+  </Card>
+  <Card title="Agent Runtime" icon="server" iconType="duotone" href="/features/runtime">
+    Take your agent live as a scalable service.
+  </Card>
+</CardGroup>

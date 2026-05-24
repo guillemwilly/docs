@@ -1,0 +1,71 @@
+---
+title: Agent Observability
+description: "Store traces, run history, and audit logs in your database."
+---
+
+AgentOS comes with a built-in tracing provider that routes traces to your database. Every run produces a trace tree: spans for the LLM call, each tool, hook, retrieval, and team delegation. These can be stored in `agno_traces` and `agno_spans` in the same `db` you use for sessions.
+
+```python
+from agno.os import AgentOS
+
+agent_os = AgentOS(
+    agents=[agent],
+    db=db,
+    tracing=True,
+)
+```
+
+## Multi-database tracing
+
+Traces are high-volume and write-heavy. For production deployments, you'll often want them in a separate database from sessions and memory.
+
+Traces generally have a different cost profile, different retention and different access patterns:
+
+```python
+from agno.db.postgres import PostgresDb
+
+primary_db = PostgresDb(db_url="postgresql://primary/...")
+trace_db = PostgresDb(db_url="postgresql://traces/...")
+
+agent_os = AgentOS(
+    agents=[agent],
+    db=primary_db,
+    tracing=True,
+    trace_db=trace_db,
+)
+```
+
+See [Multi-DB tracing](/agent-os/tracing/usage/tracing-with-multi-db-scenario) for the full setup.
+
+## What gets captured
+
+| Span | Attributes |
+|------|------------|
+| **Run** | `agent_id`, `user_id`, `session_id`, `model`, latency, status |
+| **LLM call** | Model, prompt tokens, completion tokens, temperature, tool calls returned |
+| **Tool** | Tool name, arguments, result, duration, exception (if any) |
+| **Pre/post hook** | Hook name, duration, modified input/output |
+| **Retrieval** | Query, vector store, k, returned docs, scores |
+| **Team delegation** | Member name, mode, sub-run trace |
+
+Traces follow OpenTelemetry semantic conventions and you can query them directly:
+
+```sql
+-- Top-10 slowest span types by average duration
+SELECT
+    name,
+    AVG(duration_ms) AS avg_ms,
+    COUNT(*) AS calls
+FROM agno_spans
+GROUP BY name
+ORDER BY avg_ms DESC
+LIMIT 10;
+```
+
+## In the AgentOS UI
+
+The [control plane](https://os.agno.com) renders the same traces visually. Click a run and see the full tree: LLM hops, tool calls with their inputs and outputs, hooks, sub-agent traces. Filter by user, session, time range.
+
+## External providers
+
+Send traces to Langfuse, Langsmith, Arize, or any OpenTelemetry endpoint by adding an exporter. Check out the [Observability section](/observability/agentops): [Langfuse](/observability/langfuse), [Langsmith](/observability/langsmith), [Arize](/observability/arize), [Logfire](/observability/logfire), [MLflow](/observability/mlflow).

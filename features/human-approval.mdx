@@ -11,7 +11,7 @@ Every agent action falls into one of three buckets:
 | **User approval** | The person asking the agent | Sending an email, writing to a file, running a shell command, modifying a record |
 | **Admin approval** | A designated approver, not the user | Issuing a refund, granting permissions, deploying to prod, deleting customer data |
 
-Most agent actions belong in the first bucket. Putting approval gates on reads slows you down for no reason. The interesting work is getting the second and third tiers right.
+Most agent actions belong in the first bucket. Approval gates on reads slow you down for nothing. The interesting work is getting the second and third tiers right.
 
 ## User confirmation
 
@@ -78,9 +78,9 @@ These are different things, and they need different storage:
 | **Access pattern** | High volume, infrequent reads | Low volume, audited reads |
 | **Storage** | `agno_traces`, `agno_spans` | `agno_approvals` plus your own audit table |
 
-If you treat them as one thing, you'll either delete audit logs too early (compliance risk) or pay to keep traces forever. AgentOS keeps them in separate tables for this reason. For high-volume deployments, traces can also live in a [separate database](/runtime/storage#splitting-concerns-across-databases) so audit storage stays cheap and durable.
+If you treat them as one thing, you'll either delete audit logs too early (compliance risk) or pay to keep traces forever. AgentOS keeps them in separate tables for this reason. For high-volume deployments, traces can also live in a [separate database](/features/storage#splitting-concerns-across-databases) so audit storage stays cheap and durable.
 
-For custom audit shapes (regulatory, internal SOX-style), add a post-hook that writes to your own audit table. See [Observability](/runtime/observability#audit-logs-via-post-hooks).
+For custom audit shapes (regulatory, internal SOX-style), add a post-hook that writes to your own audit table. See [Observability](/features/observability#audit-logs-via-post-hooks).
 
 ## Two related primitives
 
@@ -190,4 +190,4 @@ agent = Agent(model=..., post_hooks=[audit_log])
 
 ## Next
 
-[Observability →](/runtime/observability)
+[Observability →](/features/observability)

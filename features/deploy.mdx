@@ -97,10 +97,10 @@ AgentOS is stateless. State lives in `db`. Scale horizontally:
 |---------|----------|
 | Throughput | Add app replicas behind a load balancer |
 | LLM rate limits | Use a queue or rate limiter in front of the model client |
-| Long-running runs | Use `background=true` on the run endpoint, then poll for completion (see [Serve as an API](/runtime/serve-as-api)) |
+| Long-running runs | Use `background=true` on the run endpoint, then poll for completion (see [Serve as an API](/features/api)) |
 | Side effects without blocking the response | Background hooks with `run_in_background=True` |
 | Schedule fan-out | The scheduler runs on a single replica's lifespan; for HA, use leader election or pin scheduling to one replica |
-| Trace volume | Use a separate `trace_db` to keep the primary lean (see [Observability](/runtime/observability)) |
+| Trace volume | Use a separate `trace_db` to keep the primary lean (see [Observability](/features/observability)) |
 
 For the leader-election pattern with multiple replicas, see [Scheduler HA](/agent-os/scheduler/overview).
 
@@ -108,7 +108,7 @@ For the leader-election pattern with multiple replicas, see [Scheduler HA](/agen
 
 **Auth and secrets**
 - `RUNTIME_ENV=prd` enables JWT auth
-- `JWT_VERIFICATION_KEY` set (see [Security & Auth](/runtime/security-and-auth))
+- `JWT_VERIFICATION_KEY` set (see [Security & Auth](/features/security-and-auth))
 - `OPENAI_API_KEY` and other model keys in a secret manager, not in source
 
 **Infrastructure**
@@ -118,8 +118,8 @@ For the leader-election pattern with multiple replicas, see [Scheduler HA](/agen
 
 **Operational**
 - Tracing on (`tracing=True`) so you can debug bad runs
-- At least one [interface](/runtime/interfaces) wired up
-- [Pre-hooks](/runtime/human-approval) for PII or injection guarding if you handle untrusted input
+- At least one [interface](/features/interfaces) wired up
+- [Pre-hooks](/features/human-approval) for PII or injection guarding if you handle untrusted input
 - `requires_confirmation=True` on irreversible tools
 
 ## Updating your deployment

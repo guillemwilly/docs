@@ -1,10 +1,21 @@
 ---
 title: "What is AgentOS?"
 sidebarTitle: "Introduction"
-description: "The runtime and control plane that runs your agent platform."
+description: "The runtime for your agent platform."
 ---
 
-**AgentOS is the runtime and control plane layers of an Agno-built agent platform.** Together with the [Agno SDK](/sdk/introduction), they form the three layers of the platform: SDK to build, Runtime to run, Control Plane to manage.
+**AgentOS is a FastAPI application that runs your agent platform.**
+
+Its a live service that:
+1. Runs agents on demand, via API requests or interfaces like Slack, Telegram, and others.
+2. Maintains long-running sessions that last from minutes to days to weeks.
+3. Is durable across restarts, replicas, and infrastructure failures.
+4. Is secure against unauthenticated access.
+5. Logs every run and action taken.
+
+Build your agents using the [Agno SDK](/sdk/introduction), run them using the AgentOS runtime.
+
+Key features:
 
 - **Production API**: 50+ ready to use endpoints with SSE-compatible streaming.
 - **Data Ownership**: Sessions, memory, knowledge, and traces stored in your database.

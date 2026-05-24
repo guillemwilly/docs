@@ -1,0 +1,102 @@
+---
+title: "Agent Storage"
+description: "Store sessions, memory, knowledge, traces in any database backend."
+---
+
+Agents can persist every data point they generate and use in a database, set by the `db` param. We can store sessions, memory, knowledge, traces, schedules, approvals, learnings and even usage metrics.
+
+The primitives (agents, teams, workflows) and the AgentOS accept a `db` param. Pick from JSON files (local or cloud), embedded (SQLite), relational (Postgres, MySQL), document (MongoDB), key-value (Redis, DynamoDB, Firestore), or distributed (SingleStore).
+
+```python
+from agno.db.postgres import PostgresDb
+from agno.os import AgentOS
+
+db = PostgresDb(db_url="postgresql://user:pass@host:5432/agno")
+
+agent_os = AgentOS(agents=[agent], db=db)
+```
+
+When we set the `db` param, AgentOS creates the tables and indexes on first boot.
+
+## What gets stored
+
+| Table | Holds |
+|-------|-------|
+| `agno_sessions` | Conversation history per `(user_id, session_id)` |
+| `agno_memories` | User memories the agent decides to keep |
+| `agno_knowledge` | Embeddings |
+| `agno_traces`, `agno_spans` | OpenTelemetry traces |
+| `agno_approvals` | Pending and resolved HITL requests |
+| `agno_schedules`, `agno_schedule_runs` | Cron jobs |
+| `agno_metrics`, `agno_eval_runs` | Metrics and eval results |
+
+- Backend-specific names may vary.
+- Schema changes are generally additive.
+
+## Pick a backend
+
+`PostgresDb` is the default for most tutorials and the recommended production database. It pairs well with `PgVector` to keep relational data and embeddings on the same engine.
+
+| Backend | When to use |
+|---------|-------------|
+| [`PostgresDb`](/database/postgres) | Production. Vector + relational on one box. |
+| [`SqliteDb`](/database/sqlite) | Local dev, single-user demos, edge deployments |
+| [`MongoDb`](/database/mongodb) | Already on Mongo |
+| [`MySQLDb`](/database/mysql) | Already on MySQL |
+| [`SingleStoreDb`](/database/singlestore) | Vector + analytics on one engine, high-throughput |
+| [`RedisDb`](/database/redis) | Cache-friendly, ephemeral sessions |
+| [`DynamoDb`](/database/dynamodb) | AWS-native, serverless |
+| [`FirestoreDb`](/database/firestore) | GCP-native, serverless |
+| [`GCSJsonDb`](/database/gcs) | Cheap cold storage, knowledge as JSON in Cloud Storage |
+| [`InMemoryDb`](/database/in-memory) | Tests, ephemeral demos |
+
+Postgres-compatible managed services like [Neon](/database/neon) and [Supabase](/database/supabase) work with `PostgresDb` directly. Point `db_url` at the managed instance. Async variants (`AsyncPostgresDb`, `AsyncSqliteDb`, `AsyncMongoDb`, `AsyncMySQLDb`) are documented under [Database](/database/overview).
+
+## Vector storage
+
+Knowledge needs a vector store and agno supports every vector database out of the box.
+
+```python
+from agno.knowledge import Knowledge
+from agno.vectordb.pgvector import PgVector
+
+agent = Agent(
+    db=db,
+    knowledge=Knowledge(
+        vector_db=PgVector(
+            table_name="my_kb",
+            db_url=DB_URL,
+            search_type="hybrid",   # vector + BM25
+        ),
+    ),
+)
+```
+
+Other options: LanceDB, Qdrant, Weaviate, Pinecone, Chroma, MongoDB Atlas, Cosmos, Cassandra, ClickHouse, SurrealDB, Milvus. See [Vector Stores](/knowledge/vector-stores/index).
+
+For most production AgentOS deployments, **PgVector + PostgresDb on the same Postgres** is the right default. One database, hybrid search, transactional reads, no extra service to operate.
+
+## Splitting concerns across databases
+
+Every agent, team, and workflow can take its own `db`, overriding the AgentOS default.
+
+Use the AgentOS `db` for shared state and hand individual components a separate database when they need isolation:
+
+```python
+shared_db = PostgresDb(db_url="postgresql://shared/...")
+tenant_db = PostgresDb(db_url="postgresql://tenant-a/...")
+
+tenant_agent = Agent(name="tenant-a-support", db=tenant_db, ...)
+internal_agent = Agent(name="ops", db=shared_db, ...)
+
+agent_os = AgentOS(
+    agents=[tenant_agent, internal_agent],
+    db=shared_db,
+)
+```
+
+Common splits: per-tenant DBs for strict isolation, a high-traffic agent on its own engine, or routing one workflow's session history to a cheaper backend.
+
+## File and blob storage
+
+For media that doesn't belong in the relational store (generated images, audio, large PDFs), store them in object storage and reference paths in `agno_knowledge` or `agno_sessions`.

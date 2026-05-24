@@ -1,18 +1,26 @@
 ---
-title: "Data labeling and evaluation"
+title: "Data labeling and classification"
 sidebarTitle: "Overview"
-description: "Turn text, images, audio, video, and PDFs into structured data."
+description: "Label and classify text, images, audio, video, and PDFs."
 ---
 
-Turn any input (text, audio, image, video, or file) into structured, reviewed data. Agno is natively multi-modal and type-safe, so a labeling stack is a few lines of Python.
+Agents can now:
+- Turn text, images, audio, video, and PDFs into structured records.
+- Assign labels, label sets, taxonomy paths, and labeled spans.
+- Score and rank model outputs for evals and preference data.
+- Add a reviewer and an adjudicator when label quality matters.
 
-Add an `output_schema` and the agent returns data in that shape:
+Each task follows a similar pattern: an agent with an `output_schema`.
+
+Agno is natively multimodal and type-safe, so the full labeling stack can be built in pure python.
+
+## Example
+
+Here's a quick example classifying reviews into `{positive, negative, neutral}` using `gemini-3.5-flash`. The agent outputs a valid `Classification` object.
 
 ```python cookbook/data_labeling/_01_text_classification/basic.py
 from typing import Literal
-
 from agno.agent import Agent
-from agno.models.google import Gemini
 from pydantic import BaseModel, Field
 
 
@@ -23,7 +31,7 @@ class Classification(BaseModel):
 
 
 agent = Agent(
-    model=Gemini(id="gemini-3.5-flash"),
+    model="google:gemini-3.5-flash",
     instructions="You classify product reviews by sentiment.",
     output_schema=Classification,
 )
@@ -32,43 +40,35 @@ result = agent.run("Broken on arrival, total waste of money.").content
 # Classification(label='negative')
 ```
 
-The output is a valid `Classification` object. Swap the schema and instructions and the same pattern covers extraction, span labeling, scoring, and preference ranking.
+Swap the schema and instructions and the same pattern covers data extraction, span labeling, scoring, and preference ranking.
+
+<Tip>
+
+If you're looking to jump straight into code - the [data labeling cookbook](https://github.com/agno-agi/agno/tree/main/cookbook/data_labeling) contains 40+ runnable recipes across 18 data labeling patterns.
+
+</Tip>
 
 ## Data labeling workflows
 
-Pick the page that matches the shape of label you need.
+Pick the page that matches what you need.
 
 | Workload | Input | Output | Page |
 |----------|-------|--------|------|
-| Structured extraction | Any modality | Typed Pydantic object | [Structured extraction](/use-cases/data-labeling/structured-extraction) |
+| Data extraction | Any modality | Typed Pydantic object | [Data extraction](/use-cases/data-labeling/structured-extraction) |
 | Classification | Any modality | One label, label set, or spans | [Classification](/use-cases/data-labeling/classification) |
 | Scoring / evaluation | Prompt + response | Rubric scores | [LLM as judge](/use-cases/data-labeling/llm-as-judge) |
 | Preference ranking | Prompt + two responses | Winner + rationale | [Preference data](/use-cases/data-labeling/preference-data) |
 | Non-text input | Image, audio, video, PDF | Any of the above | [Multimodal inputs](/use-cases/data-labeling/multimodal-inputs) |
 | Reviewed labels | Any input | Adjudicated label + audit trail | [Quality pipeline](/use-cases/data-labeling/quality-pipeline) |
 
-## Guided paths
-
-| You have | You want | Start with |
-|----------|----------|------------|
-| Free-form text or documents | Typed records for a warehouse | [Structured extraction](/use-cases/data-labeling/structured-extraction) |
-| Model outputs to grade | A score per output | [LLM as judge](/use-cases/data-labeling/llm-as-judge) |
-| Response pairs | RLHF / DPO training data | [Preference data](/use-cases/data-labeling/preference-data) |
-| Quality requirements | Two-model agreement and adjudication | [Quality pipeline](/use-cases/data-labeling/quality-pipeline) |
-
 ## Model choice
 
-`gemini-3.5-flash` handles every modality natively — text, image, audio, video, and PDF — so the cookbook defaults to it across the board. Swap models per workload when cost, latency, or output quality say so.
-
-| Modality | Default in the cookbook |
-|----------|-------------------------|
-| Text, image, audio, video, document/PDF | `gemini-3.5-flash` |
-| Second labeler in the quality pipeline | `claude-opus-4-7` |
+We use `gemini-3.5-flash` across the cookbooks because it handles text, image, audio, video, and PDF. Agno is model-agnostic, so you can swap models as needed.
 
 ## Explore
 
 <CardGroup cols={2}>
-  <Card title="Structured extraction" icon="brackets-curly" href="/use-cases/data-labeling/structured-extraction">
+  <Card title="Data extraction" icon="brackets-curly" href="/use-cases/data-labeling/structured-extraction">
     Turn any modality into a typed object, with optional per-field confidence.
   </Card>
   <Card title="Classification" icon="tags" href="/use-cases/data-labeling/classification">

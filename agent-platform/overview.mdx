@@ -10,11 +10,13 @@ Every team building agents builds the same system from scratch:
 - A database for sessions, runs, traces, and memory.
 - Auth and RBAC, validated via JWT on every request.
 
-That system is the agent platform. Build the foundation once and every new agent slots into the same runtime, storage, and connectors. This guide builds it with **FastAPI and Postgres**.
+This system is called the agent platform. Our goal is to build the foundation once so every new agent slots into the same runtime, storage, and connectors.
+
+This guide shows you how to build an agent platform with **FastAPI and Postgres**.
 
 ## Managed by coding agents
 
-Everything lives in one place: agent code, logs, traces, evals, and the live service. Claude Code manages the full lifecycle: create an agent, improve it, extend it, and evaluate it.
+Because everything lives in one place: agent code, logs, traces, evals, and the live service. Claude Code manages the full lifecycle: create an agent, improve it, extend it, and evaluate it.
 
 ## Build it step by step
 

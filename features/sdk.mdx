@@ -1,0 +1,82 @@
+---
+title: Agent SDK
+description: "Build your agent platform in pure python."
+---
+
+Agno is a python SDK for building multi-agent systems. It comes with three primitives (agents, teams and workflows) and a large set of capabilities you can attach to them (storage, memory, knowledge, learnings, compression). A primitive + capabilities becomes a component in your agent platform. Everything is pure Python. No new DSL to learn, no YAML to manage.
+
+## Primitives
+
+| Primitive | Description |
+|-----------|-----------|
+| [Agent](/agents/overview) | Simple autonomous programs with a model, tools, and instructions |
+| [Team](/teams/overview) | Multiple agents working together as a team |
+| [Workflow](/workflows/overview) | Step-based workflow orchestration for deterministic output |
+
+## Capabilities
+
+### Model and tools
+
+| Capability | What it adds |
+|------------|--------------|
+| [Models](/models/overview) | 30+ providers behind one API |
+| [Tools](/tools/overview) | 100+ integrations and the ability to write your own |
+| [Skills](/skills/overview) | Composable abilities you can attach to agents and teams |
+| [Multimodal](/multimodal/overview) | Image, audio, and video input and output |
+| [Structured I/O](/input-output/overview) | Type-safe input and output with Pydantic schemas |
+
+### Memory and context
+
+| Capability | What it adds |
+|------------|--------------|
+| [Storage](/database/overview) | Durability and persistence on any database |
+| [Sessions](/sessions/overview) | Multi-turn session management with summaries, history, and metrics |
+| [State](/state/overview) | Session and agentic state agents can read and update mid-run |
+| [Memory](/memory/overview) | Per-user and per-session memory |
+| [Knowledge](/knowledge/overview) | Search over documents, URLs, and databases |
+| [Learning](/learning/overview) | Agents that improve over time with learned behavior and decisions |
+| [Compression](/compression/overview) | Keep long sessions inside the model's context window |
+| [Context Providers](/context-providers/overview) | Inject live data from Calendar, Gmail, Drive, GitHub, Slack, MCP, and more |
+
+### Control and safety
+
+| Capability | What it adds |
+|------------|--------------|
+| [Guardrails](/guardrails/overview) | Validate input and output |
+| [Hooks](/hooks/overview) | Lifecycle hooks for input, output, and state |
+| [Human-in-the-Loop](/hitl/overview) | Pause runs for approval, input, or external execution |
+
+### Operations
+
+| Capability | What it adds |
+|------------|--------------|
+| [Background execution](/background-execution/overview) | Long-running runs that don't block your API |
+| [Evals](/evals/overview) | Measure accuracy, performance, and reliability; agent-as-judge |
+| [Observability](/observability/overview) | Tracing with Langfuse, Logfire, Arize, and 12+ providers |
+| [Scheduler](/scheduler/overview) | Run agents on a recurring schedule |
+
+## Components
+
+A primitive + capabilities + configuration becomes a live **component** of your agent platform.
+
+Components are the building blocks of your agent platform. You can create components in code, through a no-code UI or via the AgentOS API. Components created in code are final. Components created via the API or no-code UI can be versioned, checkpointed and reverted as needed. The `/components` API lets you build, version, and operate components over HTTP.
+
+### Versioned components
+
+When components are created via the API, they carry a versioned configuration. Published versions are immutable, and each gets its own endpoint so you can pin clients to a specific version. A `current` pointer decides which version your production API serves: set it to a newer version to promote, or an earlier one to roll back.
+
+This is what makes a platform manageable at scale. Tune a component's instructions, swap its model, or adjust its tools, ship it as a new version, and roll back in one call if it regresses. Versioned configs are also the foundation for an improvement loop: measure a component in production, propose a new config, publish it, and promote or roll back based on results.
+
+## Learn more
+
+<CardGroup cols={3}>
+  <Card title="SDK Introduction" icon="rocket" href="/sdk/introduction">
+    Get started with the Agent SDK.
+  </Card>
+  <Card title="Build Agents" icon="users" href="/agents/overview">
+    Build Agents using the Agent SDK.
+  </Card>
+  <Card title="Build Agent Platform" icon="layer-group" href="/agent-platform/overview">
+    Build an Agent Platform using the Agent SDK.
+  </Card>
+</CardGroup>

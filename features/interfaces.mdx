@@ -3,7 +3,7 @@ title: Interfaces
 description: "Slack, Telegram, WhatsApp, Discord, plus protocol interfaces for agents and browsers."
 ---
 
-An interface is an adapter between AgentOS and a surface where users live. It receives events from Slack, Telegram, WhatsApp, or other channels, maps them onto AgentOS's run and session model, and routes responses back to the right thread, channel, or user.
+An interface is an adapter between AgentOS and a surface where users already are. It receives events from Slack, Telegram, WhatsApp, or other channels, maps them onto AgentOS's run and session model, and routes responses back to the right thread, channel, or user.
 
 The agent doesn't change. The same `Agent` instance answers a Slack DM, a Telegram message, and an AG-UI browser stream. Memory carries across all of them, scoped per `(user_id, session_id)`.
 
@@ -140,4 +140,4 @@ A custom interface is for surfaces you'll reuse across agents and OS instances. 
 
 ## Next
 
-[Scheduling →](/runtime/scheduling)
+[Scheduling →](/features/scheduling)

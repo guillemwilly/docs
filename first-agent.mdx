@@ -4,7 +4,7 @@ description: "Build and run your first agent in 20 lines of code."
 keywords: [agno, agent, quickstart, tutorial]
 ---
 
-Let's create an agent that categorizes and organizes a messy folder. It walks through the folder, classifies the files and proposes a clean layout.
+Let's create an agent that categorizes and organizes a messy folder.
 
 ## Create your Agent
 
@@ -56,7 +56,7 @@ sorting_hat.print_response(f"Inventory and organize {folder}", stream=True)
   </Step>
   <Step title="Export your OpenAI API key">
 
-    Don't have one? [Get a key from platform.openai.com](https://platform.openai.com/api-keys).
+    Don't have one? [Get a key from platform.openai.com](https://platform.openai.com/api-keys)
 
     <CodeGroup>
     ```bash Mac
@@ -77,9 +77,9 @@ sorting_hat.print_response(f"Inventory and organize {folder}", stream=True)
 
 ## Run your Agent as a Service
 
-The code above is a one-run python script. If we need our agent to do anything useful, we need to run it as a service. We should also:
+The code above is an ad-hoc python script. If we need our agent to do anything useful, we need to run it as a service. We should also:
 1. **Add session storage**, so we can have a conversation with our agent. Agno automatically manages session read, write and context injection for you.
-2. **Add memory**, so our agent learns from our usage patterns. Agno automatically handles memory management and exposes an `update_user_memory` tool to the agent.
+2. **Add memory**, so our agent learns from usage patterns. Agno automatically handles memory management and exposes an `update_user_memory` tool to the agent.
 
 Save the following code as `workbench.py`:
 
