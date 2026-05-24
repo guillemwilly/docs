@@ -1,0 +1,70 @@
+---
+title: Coding
+description: "CodingTools gives an agent four core file/shell tools to perform any coding task in a scoped directory."
+---
+
+`CodingTools` is a minimal toolkit for coding agents. Four core tools (read, edit, write, shell) let an agent run tests, use git, install packages, and edit code. Three exploration tools (grep, find, ls) are opt-in.
+
+## Example
+
+```python cookbook/91_tools/coding_tools/01_basic_usage.py
+from agno.agent import Agent
+from agno.models.openai import OpenAIResponses
+from agno.tools.coding import CodingTools
+
+agent = Agent(
+    model=OpenAIResponses(id="gpt-5.4"),
+    tools=[CodingTools(base_dir=".")],
+    instructions="You are a coding assistant. Use the coding tools to help the user.",
+    markdown=True,
+)
+
+agent.print_response(
+    "List the files in the current directory and read the README.md file if it exists.",
+    stream=True,
+)
+```
+
+<Warning>
+`CodingTools` can run arbitrary shell commands. By default `restrict_to_base_dir=True` scopes file and shell operations to `base_dir` and only allows commands in `allowed_commands`. Keep human supervision for untrusted prompts, and run inside a sandbox (container, VM, or [Daytona](/tools/toolkits/others/daytona)) for untrusted code execution.
+</Warning>
+
+## Toolkit Params
+
+| Parameter             | Type                  | Default        | Description                                                          |
+| --------------------- | --------------------- | -------------- | -------------------------------------------------------------------- |
+| `base_dir`            | `Optional[Path\|str]` | `cwd`          | Root directory for file operations.                                  |
+| `restrict_to_base_dir`| `bool`                | `True`         | When True, file and shell operations cannot escape `base_dir`.       |
+| `max_lines`           | `int`                 | `2000`         | Maximum lines returned before truncating.                            |
+| `max_bytes`           | `int`                 | `50000`        | Maximum bytes returned before truncating.                            |
+| `shell_timeout`       | `int`                 | `120`          | Timeout in seconds for shell commands.                               |
+| `enable_read_file`    | `bool`                | `True`         | Enable the `read_file` tool.                                         |
+| `enable_edit_file`    | `bool`                | `True`         | Enable the `edit_file` tool.                                         |
+| `enable_write_file`   | `bool`                | `True`         | Enable the `write_file` tool.                                        |
+| `enable_run_shell`    | `bool`                | `True`         | Enable the `run_shell` tool.                                         |
+| `enable_grep`         | `bool`                | `False`        | Enable the `grep` tool.                                              |
+| `enable_find`         | `bool`                | `False`        | Enable the `find` tool.                                              |
+| `enable_ls`           | `bool`                | `False`        | Enable the `ls` tool.                                                |
+| `all`                 | `bool`                | `False`        | Enable all tools regardless of individual flags.                     |
+| `allowed_commands`    | `Optional[List[str]]` | sensible set   | Allowed shell command names when `restrict_to_base_dir` is True.     |
+
+## Toolkit Functions
+
+| Function     | Description                                                       |
+| ------------ | ----------------------------------------------------------------- |
+| `read_file`  | Read a file with line numbers and pagination (`offset`, `limit`). |
+| `edit_file`  | Exact text find-and-replace, returns a diff.                      |
+| `write_file` | Create or overwrite a file.                                       |
+| `run_shell`  | Execute a shell command with a timeout.                           |
+| `grep`       | Search file contents (opt-in).                                    |
+| `find`       | Find files by glob pattern (opt-in).                              |
+| `ls`         | List directory contents (opt-in).                                 |
+
+All functions have sync and async variants.
+
+## Developer Resources
+
+- [Tools source](https://github.com/agno-agi/agno/blob/main/libs/agno/agno/tools/coding.py)
+- [Basic usage](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/coding_tools/01_basic_usage.py)
+- [All tools](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/coding_tools/02_all_tools.py)
+- [Workspace toolkit](/tools/toolkits/local/workspace) for a confirmation-gated alternative

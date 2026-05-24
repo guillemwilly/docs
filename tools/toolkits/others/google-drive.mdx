@@ -1,0 +1,103 @@
+---
+title: Google Drive
+description: "GoogleDriveTools let an Agent list, search, read, upload, and download Google Drive files, with smart export of Workspace documents."
+---
+
+`GoogleDriveTools` give an Agent access to Google Drive. Reading tools (`list_files`, `search_files`, `read_file`) are enabled by default. Writing tools (`upload_file`, `download_file`) are off by default and must be opted into. Workspace files (Docs, Sheets, Slides) are auto-exported to text the LLM can consume.
+
+## Getting Started
+
+<Steps>
+  <Step title="Install dependencies">
+    ```shell
+    uv pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
+    ```
+  </Step>
+  <Step title="Setup Google Cloud project">
+    Enable the [Google Drive API](https://console.cloud.google.com/apis/enableflow?apiid=drive.googleapis.com), create OAuth credentials, and download the client JSON. First run opens a browser for consent and saves a token for reuse.
+  </Step>
+</Steps>
+
+## Example
+
+```python cookbook/91_tools/google/drive_tools.py
+from agno.agent import Agent
+from agno.models.openai import OpenAIResponses
+from agno.tools.google.drive import GoogleDriveTools
+
+# Read-only agent (default: upload and download disabled)
+read_only_agent = Agent(
+    model=OpenAIResponses(id="gpt-5.4"),
+    tools=[GoogleDriveTools()],
+    markdown=True,
+)
+
+# Full-access agent with upload and download enabled
+full_agent = Agent(
+    model=OpenAIResponses(id="gpt-5.4"),
+    tools=[GoogleDriveTools(upload_file=True, download_file=True)],
+    markdown=True,
+)
+```
+
+## Authentication
+
+| Method          | How                                                                                            |
+| --------------- | ---------------------------------------------------------------------------------------------- |
+| OAuth           | Pass `creds_path` (client JSON) and `token_path`, or use the default `credentials.json`.       |
+| Service account | Pass `service_account_path` (or set `GOOGLE_SERVICE_ACCOUNT_FILE`). Use `delegated_user` for domain-wide delegation. |
+| Pre-built creds | Pass a `Credentials` object directly via `creds`.                                              |
+
+Scopes are auto-inferred from the enabled tools (read-only by default, write scope added when `upload_file=True`). Override with `scopes`.
+
+## Shared Drives
+
+Set the Drive API passthrough params to search across Shared Drives:
+
+```python
+GoogleDriveTools(
+    corpora="drive",          # "user" | "domain" | "drive" | "allDrives"
+    drive_id="0AB...",        # required when corpora="drive"
+    supports_all_drives=True,
+    include_items_from_all_drives=True,
+)
+```
+
+## Toolkit Params
+
+| Parameter              | Type                  | Default        | Description                                                       |
+| ---------------------- | --------------------- | -------------- | ----------------------------------------------------------------- |
+| `list_files`           | `bool`                | `True`         | Enable the `list_files` tool.                                     |
+| `search_files`         | `bool`                | `True`         | Enable the `search_files` tool.                                   |
+| `read_file`            | `bool`                | `True`         | Enable the `read_file` tool.                                      |
+| `upload_file`          | `bool`                | `False`        | Enable the `upload_file` tool.                                    |
+| `download_file`        | `bool`                | `False`        | Enable the `download_file` tool.                                  |
+| `download_dir`         | `Path`                | `.`            | Save location for `download_file`. Writes are sandboxed here.     |
+| `include_trashed`      | `bool`                | `False`        | Include trashed files in search/list results.                     |
+| `max_read_size`        | `int`                 | `10485760`     | Max file size (bytes) `read_file` loads for non-Workspace files.  |
+| `scopes`               | `Optional[List[str]]` | auto-inferred  | OAuth scopes. Inferred from enabled tools when `None`.            |
+| `creds_path`           | `Optional[str]`       | `None`         | OAuth client credentials JSON path.                               |
+| `token_path`           | `Optional[str]`       | `None`         | OAuth token file path.                                            |
+| `service_account_path` | `Optional[str]`       | `None`         | Service account JSON path. Alternative to OAuth.                  |
+| `delegated_user`       | `Optional[str]`       | `None`         | User to impersonate via domain-wide delegation.                   |
+| `corpora`              | `str`                 | `"user"`       | Shared Drive scope: `user`/`domain`/`drive`/`allDrives`.          |
+| `drive_id`             | `Optional[str]`       | `None`         | Shared Drive ID. Required when `corpora="drive"`.                 |
+
+## Toolkit Functions
+
+| Function        | Description                                                              |
+| --------------- | ------------------------------------------------------------------------ |
+| `list_files`    | List files, optionally filtered by a Drive query.                        |
+| `search_files`  | Search files by Drive query, returns metadata and links.                 |
+| `read_file`     | Read a file's content. Workspace files are exported to text/CSV.         |
+| `upload_file`   | Upload a local file to Drive.                                            |
+| `download_file` | Download a file to `download_dir`. Workspace files export to native formats. |
+
+All functions have sync and async variants.
+
+## Developer Resources
+
+- [Tools source](https://github.com/agno-agi/agno/blob/main/libs/agno/agno/tools/google/drive.py)
+- [Drive tools example](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/google/drive_tools.py)
+- [File search example](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/google/drive_file_search.py)
+- [Google Drive context provider](/context-providers/providers/drive)

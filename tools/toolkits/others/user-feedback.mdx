@@ -1,0 +1,75 @@
+---
+title: User Feedback
+description: "UserFeedbackTools lets an agent pause and ask the user structured questions with predefined options."
+---
+
+`UserFeedbackTools` exposes a single `ask_user` tool. The agent presents structured questions with predefined options (single or multi-select), the run pauses, and execution resumes once the user provides their selections. This is a [human-in-the-loop](/hitl/overview) pattern for clarifying intent mid-run.
+
+## Example
+
+```python cookbook/02_agents/10_human_in_the_loop/user_feedback.py
+from agno.agent import Agent
+from agno.db.sqlite import SqliteDb
+from agno.models.openai import OpenAIResponses
+from agno.tools.user_feedback import UserFeedbackTools
+
+agent = Agent(
+    model=OpenAIResponses(id="gpt-5.4"),
+    tools=[UserFeedbackTools()],
+    instructions=[
+        "You are a helpful travel assistant.",
+        "When the user asks you to plan a trip, use the ask_user tool to clarify their preferences.",
+    ],
+    db=SqliteDb(db_file="tmp/user_feedback.db"),
+    markdown=True,
+)
+
+run_response = agent.run("Help me plan a vacation")
+```
+
+## Resolving the Pause
+
+When the agent calls `ask_user`, the run pauses with a `user_feedback_schema`. Collect the user's selections and continue the run:
+
+```python
+while run_response.is_paused:
+    for requirement in run_response.active_requirements:
+        if requirement.needs_user_feedback:
+            selections = {}
+            for question in requirement.user_feedback_schema:
+                # present question.header, question.question, question.options
+                # collect selected option labels (multi if question.multi_select)
+                selections[question.question] = [...]
+            requirement.provide_user_feedback(selections)
+
+    run_response = agent.continue_run(
+        run_id=run_response.run_id,
+        requirements=run_response.requirements,
+    )
+```
+
+## Question Schema
+
+`ask_user` accepts a list of `AskUserQuestion` objects:
+
+| Field          | Type                  | Description                                                |
+| -------------- | --------------------- | ---------------------------------------------------------- |
+| `question`     | `str`                 | The question. Must end with a question mark.               |
+| `header`       | `str`                 | Short label (max 12 chars), e.g. `"Destination"`.          |
+| `options`      | `List[AskUserOption]` | 2-4 options to choose from.                                |
+| `multi_select` | `bool`                | If True, the user can select multiple options.             |
+
+Each `AskUserOption` has a `label` (1-5 words) and an optional `description`.
+
+## Toolkit Params
+
+| Parameter          | Type            | Default  | Description                                          |
+| ------------------ | --------------- | -------- | ---------------------------------------------------- |
+| `instructions`     | `Optional[str]` | defaults | Override the default LLM instructions.               |
+| `add_instructions` | `bool`          | `True`   | Add the instructions to the agent's system message.  |
+
+## Developer Resources
+
+- [Tools source](https://github.com/agno-agi/agno/blob/main/libs/agno/agno/tools/user_feedback.py)
+- [Cookbook example](https://github.com/agno-agi/agno/blob/main/cookbook/02_agents/10_human_in_the_loop/user_feedback.py)
+- [Human-in-the-Loop overview](/hitl/overview)

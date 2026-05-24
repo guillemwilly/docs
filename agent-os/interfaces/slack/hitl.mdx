@@ -1,0 +1,88 @@
+---
+title: Human-in-the-Loop
+sidebarTitle: Human-in-the-Loop
+description: "Pause agents and teams for approval directly in Slack, rendered as interactive TaskCards."
+keywords: [slack, hitl, human-in-the-loop, approval, confirmation, task cards]
+---
+
+When an agent or team pauses for [human-in-the-loop](/hitl/overview), the Slack interface renders the pause as an interactive TaskCard in the channel. The user resolves it with buttons and inputs, and the run resumes. All four pause types are supported.
+
+## Example
+
+A paused run is persisted to the database and resumed by `run_id` when the user resolves the TaskCard, so the Slack interface needs a `db`.
+
+```python cookbook/05_agent_os/interfaces/slack/hitl_simple.py
+import json
+import httpx
+from agno.agent import Agent
+from agno.db.sqlite import SqliteDb
+from agno.models.openai import OpenAIResponses
+from agno.os import AgentOS
+from agno.os.interfaces.slack import Slack
+from agno.tools import tool
+
+
+@tool(requires_confirmation=True)
+def get_top_hackernews_stories(num_stories: int) -> str:
+    """Fetch top stories from Hacker News."""
+    response = httpx.get("https://hacker-news.firebaseio.com/v0/topstories.json")
+    story_ids = response.json()
+    return json.dumps(story_ids[:num_stories])
+
+
+db = SqliteDb(
+    db_file="tmp/hitl_simple.db",
+    session_table="agent_sessions",
+)
+
+agent = Agent(
+    name="HN Agent",
+    id="hn-agent",
+    model=OpenAIResponses(id="gpt-5.4"),
+    tools=[get_top_hackernews_stories],
+    db=db,
+)
+
+agent_os = AgentOS(
+    agents=[agent],
+    db=db,
+    interfaces=[Slack(agent=agent, reply_to_mentions_only=True)],
+)
+app = agent_os.get_app()
+
+if __name__ == "__main__":
+    agent_os.serve(app="hitl_simple:app", reload=True, port=7777)
+```
+
+## Pause Types
+
+Each pause type renders a different TaskCard:
+
+| Pause type            | Slack UI                                                                 | Trigger                                              |
+| --------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------- |
+| Confirmation          | Approve / Reject buttons. Multiple pending tools render as separate rows. | `@tool(requires_confirmation=True)`                  |
+| User input            | Text fields, or dropdowns for `Literal`/`Enum`-typed fields.             | `@tool(requires_user_input=True)`                    |
+| User feedback         | Option buttons from a structured question.                               | [`UserFeedbackTools`](/tools/toolkits/others/user-feedback) |
+| External execution    | Confirm button. The tool runs outside the agent, result is fed back.     | `@tool(external_execution=True)`                     |
+
+Rejections collect a reason where applicable, which is passed back to the agent so it can adjust.
+
+## Teams and Workflows
+
+The same TaskCards work for teams and workflows. When a member agent inside a team pauses, the pause propagates to the team run and surfaces in Slack. Workflow step and executor pauses surface the same way.
+
+| Pattern  | Cookbook |
+|----------|----------|
+| Agent confirmation | [hitl_confirmation.py](https://github.com/agno-agi/agno/blob/main/cookbook/05_agent_os/interfaces/slack/hitl_confirmation.py) |
+| User input | [hitl_user_input.py](https://github.com/agno-agi/agno/blob/main/cookbook/05_agent_os/interfaces/slack/hitl_user_input.py) |
+| External execution | [hitl_external_execution.py](https://github.com/agno-agi/agno/blob/main/cookbook/05_agent_os/interfaces/slack/hitl_external_execution.py) |
+| Structured feedback | [hitl_user_feedback.py](https://github.com/agno-agi/agno/blob/main/cookbook/05_agent_os/interfaces/slack/hitl_user_feedback.py) |
+| Team confirmation | [team_hitl_confirmation.py](https://github.com/agno-agi/agno/blob/main/cookbook/05_agent_os/interfaces/slack/team_hitl_confirmation.py) |
+
+## Next Steps
+
+| Task | Guide |
+|------|-------|
+| Understand pause types | [HITL overview](/hitl/overview) |
+| Set up the Slack interface | [Slack introduction](/agent-os/interfaces/slack/introduction) |
+| Manage approvals in AgentOS | [Approvals overview](/agent-os/approvals/overview) |

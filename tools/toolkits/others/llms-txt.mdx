@@ -1,0 +1,69 @@
+---
+title: LLMs.txt
+description: "LLMsTxtTools lets an agent discover and read documentation from an llms.txt index, optionally loading it into Knowledge."
+---
+
+`LLMsTxtTools` reads [llms.txt](https://llmstxt.org) files. The format is a standardized way for websites to publish an LLM-friendly documentation index. The toolkit operates in two modes depending on whether you pass a `Knowledge` instance.
+
+## Agentic Mode
+
+Without `knowledge`, the agent reads the index and decides which pages to fetch.
+
+```python cookbook/91_tools/llms_txt_tools.py
+from agno.agent import Agent
+from agno.models.openai import OpenAIResponses
+from agno.tools.llms_txt import LLMsTxtTools
+
+agent = Agent(
+    model=OpenAIResponses(id="gpt-5.4"),
+    tools=[LLMsTxtTools()],
+    instructions=[
+        "First use get_llms_txt_index to see what pages are available.",
+        "Then use read_llms_txt_url to fetch only the pages relevant to the question.",
+    ],
+    markdown=True,
+)
+
+agent.print_response(
+    "Using the llms.txt at https://docs.agno.com/llms.txt, "
+    "find and read the documentation about how to create an agent with tools",
+    stream=True,
+)
+```
+
+## Knowledge Mode
+
+Pass a `Knowledge` instance and the toolkit exposes `read_llms_txt_and_load_knowledge`, which ingests the indexed pages into your knowledge base for retrieval.
+
+```python cookbook/91_tools/llms_txt_tools_knowledge.py
+from agno.knowledge.knowledge import Knowledge
+from agno.tools.llms_txt import LLMsTxtTools
+
+tools = LLMsTxtTools(knowledge=knowledge)
+```
+
+## Toolkit Params
+
+| Parameter       | Type                  | Default | Description                                                            |
+| --------------- | --------------------- | ------- | ---------------------------------------------------------------------- |
+| `knowledge`     | `Optional[Knowledge]` | `None`  | When set, switches to Knowledge mode (load pages instead of returning).|
+| `max_urls`      | `int`                 | `20`    | Maximum number of pages to read from an index.                         |
+| `timeout`       | `int`                 | `60`    | HTTP timeout in seconds.                                               |
+| `skip_optional` | `bool`                | `False` | Skip pages listed under the index's optional section.                  |
+| `allowed_hosts` | `Optional[List[str]]` | `None`  | SSRF guard. Only fetch from these hosts. `None` allows any host.       |
+
+## Toolkit Functions
+
+| Function                            | Mode      | Description                                          |
+| ----------------------------------- | --------- | ---------------------------------------------------- |
+| `get_llms_txt_index`                | Agentic   | Fetch and parse an llms.txt index.                   |
+| `read_llms_txt_url`                 | Agentic   | Read a single page referenced by the index.          |
+| `read_llms_txt_and_load_knowledge`  | Knowledge | Read indexed pages and load them into Knowledge.     |
+
+All functions have sync and async variants.
+
+## Developer Resources
+
+- [Tools source](https://github.com/agno-agi/agno/blob/main/libs/agno/agno/tools/llms_txt.py)
+- [Agentic mode example](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/llms_txt_tools.py)
+- [Knowledge mode example](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/llms_txt_tools_knowledge.py)

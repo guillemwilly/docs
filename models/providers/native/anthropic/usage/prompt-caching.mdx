@@ -43,6 +43,66 @@ agent = Agent(
 )
 ```
 
+## Multi-block caching with per-block TTL
+
+Split the system prompt into independently-cacheable blocks with `system_prompt_blocks`. Each `SystemPromptBlock` controls its own `cache` flag and `ttl`. This lets you cache static instructions while leaving dynamic per-request content uncached.
+
+```python cookbook/11_models/anthropic/prompt_caching_multi_block.py
+from datetime import datetime
+from agno.agent import Agent
+from agno.models.anthropic import Claude, SystemPromptBlock
+
+blocks = [
+    # Static instructions, cached for 1 hour
+    SystemPromptBlock(
+        text="You are a senior software architect. Give concise, opinionated advice.",
+        cache=True,
+        ttl="1h",
+    ),
+    # Dynamic per-request context, never cached
+    SystemPromptBlock(
+        text=f"Current time: {datetime.now().isoformat()}",
+        cache=False,
+    ),
+]
+
+agent = Agent(
+    model=Claude(
+        id="claude-sonnet-4-5-20250929",
+        cache_system_prompt=True,
+        extended_cache_time=True,
+        system_prompt_blocks=blocks,
+    ),
+    markdown=True,
+)
+```
+
+Blocks are appended after the agent-built system message in the Anthropic `system` array. `system_prompt_blocks` may also be a zero-arg callable that returns the list, evaluated on every request, which is how you inject dynamic content into a cached prompt without reinstantiating the model.
+
+| `SystemPromptBlock` field | Type | Default | Description |
+|---------------------------|------|---------|-------------|
+| `text` | `str` | required | The block content. |
+| `cache` | `bool` | `True` | Add `cache_control` to this block. Independent of `cache_system_prompt`. |
+| `ttl` | `Optional["5m" \| "1h"]` | `None` | Per-block TTL. Overrides the model-level `extended_cache_time` for this block. |
+
+<Warning>
+Anthropic requires any `1h` cached block to appear before any `5m` block in the request. Since the agent-built block comes first and inherits the model-level TTL, set `extended_cache_time=True` whenever any `SystemPromptBlock` uses `ttl="1h"`. Agno validates this ordering at assembly time and raises a clear error if it is violated.
+</Warning>
+
+## Tool caching
+
+Set `cache_tools=True` to cache tool definitions. Anthropic caches all tools as a prefix when `cache_control` is on the last tool.
+
+```python
+agent = Agent(
+    model=Claude(
+        id="claude-sonnet-4-5-20250929",
+        cache_tools=True,
+    ),
+    tools=[...],
+)
+```
+
 ## Working example
 
 ```python cookbook/11_models/anthropic/prompt_caching_extended.py

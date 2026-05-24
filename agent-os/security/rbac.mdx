@@ -414,6 +414,41 @@ export JWT_VERIFICATION_KEY="your-public-key"
 export JWT_JWKS_FILE="/path/to/jwks.json"
 ```
 
+## Per-User Data Isolation
+
+RBAC controls which operations a caller can perform. Per-user data isolation controls which rows a caller can see and write. Opt in with `user_isolation=True`:
+
+```python
+from agno.os import AgentOS
+from agno.os.config import AuthorizationConfig
+
+agent_os = AgentOS(
+    id="my-agent-os",
+    agents=[agent],
+    authorization=True,
+    authorization_config=AuthorizationConfig(
+        verification_keys=["your-jwt-verification-key"],
+        algorithm="RS256",
+        user_isolation=True,
+    ),
+)
+```
+
+When enabled, AgentOS uses the JWT `sub` claim as the `user_id` for every non-admin caller:
+
+| Operation | Behavior with `user_isolation=True` |
+|-----------|-------------------------------------|
+| Reads (sessions, memory, traces) | Scoped to the caller's `user_id`. Other users' rows are not returned. |
+| Writes (sessions, memories, traces) | `user_id` is coerced to the caller's `sub`. A caller cannot persist rows attributed to another user. |
+| Cancel / resume / continue routes | Require `session_id` and verify the caller owns the run. |
+| WebSocket reconnect | Requires `session_id` (and `workflow_id`) for non-admins. |
+
+A caller holding `admin_scope` (default `agent_os:admin`) bypasses isolation and sees all data. Set a custom override with `admin_scope="ops:admin"`.
+
+<Note>
+Isolation is off by default. JWT/RBAC still apply when `user_isolation=False`, but routes operate on the unscoped database and add no per-user ownership gates on top of RBAC. Per-user isolation requires a database that records `user_id` (PostgreSQL recommended for production).
+</Note>
+
 ## Excluded Routes
 
 These routes are excluded from RBAC checks by default:
@@ -443,6 +478,13 @@ These routes are excluded from RBAC checks by default:
     href="/agent-os/usage/rbac/per-agent-permissions"
   >
     Grant specific permissions to specific agents
+  </Card>
+  <Card
+    title="Per-User Data Isolation"
+    icon="users"
+    href="https://github.com/agno-agi/agno/blob/main/cookbook/05_agent_os/rbac/symmetric/user_isolation.py"
+  >
+    Scope sessions, memory, and traces per user with user_isolation=True
   </Card>
 </CardGroup>
 

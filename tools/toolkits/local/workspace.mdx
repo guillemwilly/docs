@@ -1,0 +1,96 @@
+---
+title: Workspace
+description: "Workspace gives an agent read/write/edit/search/shell access to a directory, with destructive operations gated behind human confirmation by default."
+---
+
+`Workspace` is a local-machine toolkit scoped to a single `root` directory. Reads (`read`, `list`, `search`) run silently; destructive operations (`write`, `edit`, `move`, `delete`, `shell`) require human confirmation by default, which AgentOS renders as approval prompts in the run timeline.
+
+## Example
+
+```python cookbook/91_tools/workspace_tools/basic_usage.py
+from agno.agent import Agent
+from agno.models.openai import OpenAIResponses
+from agno.tools.workspace import Workspace
+
+agent = Agent(
+    model=OpenAIResponses(id="gpt-5.4"),
+    tools=[
+        Workspace(
+            "/path/to/project",
+            allowed=["read", "list", "search"],
+            confirm=["write", "edit", "move", "delete", "shell"],
+        )
+    ],
+    markdown=True,
+)
+
+agent.print_response("Read README.md, then write a 2-line summary to NOTES.md.")
+```
+
+## Permission Model
+
+`allowed` and `confirm` are mutually exclusive partitions of short aliases:
+
+| In list      | Behavior                                                            |
+| ------------ | ------------------------------------------------------------------- |
+| `allowed`    | Runs silently.                                                      |
+| `confirm`    | Requires user approval via [HITL](/hitl/overview) pause/resume.     |
+| neither      | Not registered with the toolkit. The LLM never sees it.             |
+| both         | Raises `ValueError`.                                                |
+
+When both lists are `None`, reads auto-pass and writes require confirmation (the safe default). When only one is set, the other defaults to `[]`. Use `Workspace.ALL_TOOLS` to register every tool.
+
+| Alias    | Registered tool   | What it does                              |
+| -------- | ----------------- | ----------------------------------------- |
+| `read`   | `read_file`       | Read a file (line-numbered).              |
+| `list`   | `list_files`      | List a directory (recursive option).      |
+| `search` | `search_content`  | Recursive content grep.                   |
+| `write`  | `write_file`      | Create or overwrite a file (atomic).      |
+| `edit`   | `edit_file`       | Replace a substring (with `replace_all`). |
+| `move`   | `move_file`       | Move or rename a file.                    |
+| `delete` | `delete_file`     | Delete a file.                            |
+| `shell`  | `run_command`     | Run a shell command in `root`.            |
+
+<Warning>
+This is a path-scoping boundary, not a process sandbox. Paths resolving outside `root` are rejected, but the agent can still read environment variables and make network calls via shell. For untrusted code execution, run the agent inside a real sandbox (container, VM, or [Daytona](/tools/toolkits/others/daytona)).
+</Warning>
+
+## Toolkit Params
+
+| Parameter                   | Type                    | Default      | Description                                                                 |
+| --------------------------- | ----------------------- | ------------ | --------------------------------------------------------------------------- |
+| `root`                      | `Optional[str\|Path]`   | `cwd`        | Directory all operations are scoped to.                                     |
+| `allowed`                   | `Optional[List[str]]`   | `None`       | Aliases that run silently.                                                  |
+| `confirm`                   | `Optional[List[str]]`   | `None`       | Aliases that require confirmation.                                          |
+| `require_read_before_write` | `bool`                  | `False`      | Block writes/edits/move/delete on existing files until read this session.   |
+| `max_file_lines`            | `int`                   | `100000`     | Maximum lines `read_file` will load.                                        |
+| `max_file_length`           | `int`                   | `10000000`   | Maximum file size (bytes) `read_file` will load.                            |
+| `exclude_patterns`          | `Optional[List[str]]`   | noise dirs   | Patterns skipped by `list_files`/`search_content`. Pass `[]` to disable.    |
+
+`list_files` and `search_content` skip common noise directories (`.venv`, `.git`, `__pycache__`, `node_modules`, etc.) by default.
+
+## Confirmation Flow
+
+With aliases in `confirm`, the run pauses when the agent calls a gated tool. Resolve the requirement and continue the run:
+
+```python
+run_response = agent.run("Delete the old logs in /tmp/project")
+
+while run_response.is_paused:
+    for requirement in run_response.active_requirements:
+        if requirement.needs_confirmation:
+            requirement.confirm()  # or requirement.reject()
+    run_response = agent.continue_run(
+        run_id=run_response.run_id,
+        requirements=run_response.requirements,
+    )
+```
+
+See [Workspace with confirmation](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/workspace_tools/workspace_tools_with_confirmation.py) for the full pause/resume example, and [User Confirmation](/hitl/user-confirmation) for the HITL pattern.
+
+## Developer Resources
+
+- [Tools source](https://github.com/agno-agi/agno/blob/main/libs/agno/agno/tools/workspace.py)
+- [Basic usage](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/workspace_tools/basic_usage.py)
+- [With confirmation](https://github.com/agno-agi/agno/blob/main/cookbook/91_tools/workspace_tools/workspace_tools_with_confirmation.py)
+- [WorkspaceContextProvider](/context-providers/providers/workspace) wraps this toolkit read-only as a context provider

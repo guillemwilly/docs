@@ -1999,7 +1999,8 @@
                       "context-providers/providers/filesystem",
                       "context-providers/providers/web",
                       "context-providers/providers/mcp",
-                      "context-providers/providers/wiki"
+                      "context-providers/providers/wiki",
+                      "context-providers/providers/workspace"
                     ]
                   },
                   "context-providers/custom-providers"
@@ -2168,12 +2169,14 @@
                         "group": "Local",
                         "pages": [
                           "tools/toolkits/local/calculator",
+                          "tools/toolkits/local/coding",
                           "tools/toolkits/local/docker",
                           "tools/toolkits/local/file",
                           "tools/toolkits/local/local-file-system",
                           "tools/toolkits/local/python",
                           "tools/toolkits/local/shell",
-                          "tools/toolkits/local/sleep"
+                          "tools/toolkits/local/sleep",
+                          "tools/toolkits/local/workspace"
                         ]
                       },
                       {
@@ -2221,6 +2224,7 @@
                           "tools/toolkits/others/giphy",
                           "tools/toolkits/others/github",
                           "tools/toolkits/others/gitlab",
+                          "tools/toolkits/others/google-drive",
                           "tools/toolkits/others/google-maps",
                           "tools/toolkits/others/googlecalendar",
                           "tools/toolkits/others/google-sheets",
@@ -2228,6 +2232,7 @@
                           "tools/toolkits/others/jira",
                           "tools/toolkits/others/knowledge",
                           "tools/toolkits/others/linear",
+                          "tools/toolkits/others/llms-txt",
                           "tools/toolkits/others/lumalabs",
                           "tools/toolkits/others/mem0",
                           "tools/toolkits/others/mlx-transcribe",
@@ -2248,6 +2253,7 @@
                           "tools/toolkits/others/todoist",
                           "tools/toolkits/others/trello",
                           "tools/toolkits/others/user-control-flow",
+                          "tools/toolkits/others/user-feedback",
                           "tools/toolkits/others/visualization",
                           "tools/toolkits/others/web-browser",
                           "tools/toolkits/others/webtools",
@@ -4530,6 +4536,7 @@
                     "group": "Slack",
                     "pages": [
                       "agent-os/interfaces/slack/introduction",
+                      "agent-os/interfaces/slack/hitl",
                       "agent-os/interfaces/slack/reference"
                     ]
                   },
