@@ -1,59 +1,76 @@
 ---
 title: "Deploy AgentOS"
 sidebarTitle: "Introduction"
-description: "Templates and infrastructure for running AgentOS in your cloud."
+description: "Deploy your agent platform to your cloud."
+mode: "wide"
 ---
 
-An agent in a notebook is an experiment — to make it a product, you need to deploy it where your users are. These templates handle the infrastructure so you can focus on building agents. For runtime features, see [AgentOS](/agent-os/introduction).
+We provide pre-built templates for deploying an agent platform to your cloud.
 
-## Templates
+Agent platform templates take care of:
 
-Templates handle the infrastructure. You build the agents. Pick a platform, deploy, and connect to the control plane.
+1. **Codebase setup.** Everything wired up, ready to build on.
+2. **Infrastructure setup.** Containers, database, and networking wired up.
+3. **Coding agent setup.** Coding agents manage code, logs, and infrastructure.
 
-Each template deploys the same core stack:
+Each template comes with:
 
-- **AgentOS server** — Runs agents, handles API requests (container in your cloud)
-- **PostgreSQL** — Stores sessions, memory, traces (your database)
-- **pgvector** — Stores knowledge for RAG (PostgreSQL extension)
-- **Webhook endpoints** — Receives events from Slack/Telegram/WhatsApp
+- **AgentOS server:** Runs agents and handles API requests. Runs as a container in your cloud.
+- **PostgreSQL database:** Stores sessions, memory, and traces. Runs in your cloud.
+- **Webhook endpoints:** Receive events from Slack, Telegram, and WhatsApp.
 
-Same stack. Three ways to run it.
+Templates are the recommended path for building agent platforms. They package the system so it is easy to start, easy to maintain, and a joy to build on.
 
-| Platform | Best For | You Manage | Cost |
-|----------|----------|------------|------|
-| [Docker](/deploy/templates/docker/deploy) | Local dev, self-hosted | Everything | Free |
-| [Railway](/deploy/templates/railway/deploy) | Fast cloud deployment | Just code | ~$20/mo |
-| [AWS](/deploy/templates/aws/deploy) | Enterprise, full control | Infrastructure-as-code | ~$75/mo |
-
-Want a head start? Check out [pre-built apps](/deploy/templates) like Dash, Scout, and Coda with self-learning and context retrieval already wired up.
-
-<Tip>
-Your data stays in your infrastructure. The control plane connects directly from your browser.
-</Tip>
-
-## After Deployment
-
-**That's it — your agent platform is running.**
+## Get started
 
 <Steps>
-  <Step title="Verify">
-    [Check your deployment](/deploy/verify) is healthy.
+  <Step title="Choose a template">
+    Choose between a **blank template** and a **solution template**.
+
+    <Tabs>
+      <Tab title="Blank Template">
+        Deploy a clean installation of AgentOS to your infrastructure.
+
+        <CardGroup cols={3}>
+          <Card title="Docker" icon="docker" href="/deploy/templates/docker/deploy">
+            Run AgentOS using Docker.
+          </Card>
+          <Card title="Railway" icon="train" href="/deploy/templates/railway/deploy">
+            Run AgentOS on Railway.
+          </Card>
+          <Card title="AWS" icon="aws" href="/deploy/templates/aws/deploy">
+            Run AgentOS on AWS ECS.
+          </Card>
+        </CardGroup>
+      </Tab>
+      <Tab title="Solution Template">
+        Production-ready codebases with agents already set up.
+
+        <CardGroup cols={3}>
+          <Card title="Dash" icon="chart-mixed" href="/deploy/templates/dash/overview">
+            Self-learning data agent.
+          </Card>
+          <Card title="Scout" icon="radar" href="/deploy/templates/scout/overview">
+            Company intelligence agent.
+          </Card>
+          <Card title="Coda" icon="code" href="/deploy/templates/coda/overview">
+            Code companion that lives on Slack.
+          </Card>
+        </CardGroup>
+      </Tab>
+    </Tabs>
+
+    [Browse all templates →](/deploy/templates)
+
   </Step>
-  <Step title="Connect">
-    Open [os.agno.com](https://os.agno.com) — one UI for your agentic software. Chat with agents, trace runs, manage knowledge, and approve sensitive actions.
+  <Step title="Connect to AgentOS UI">
+
+  Open [os.agno.com](https://os.agno.com). Chat with agents, trace runs, manage knowledge, and approve sensitive actions.
+
   </Step>
-  <Step title="Secure">
-    Configure [authentication and RBAC](/agent-os/security/overview) for production.
+  <Step title="Secure your AgentOS">
+
+  Configure [authentication and RBAC](/agent-os/security/overview) for production.
+
   </Step>
 </Steps>
-
-## Next Steps
-
-<CardGroup cols={2}>
-  <Card title="Connect Interfaces" icon="plug" href="/deploy/interfaces">
-    Add Slack, Telegram, or WhatsApp.
-  </Card>
-  <Card title="AgentOS Features" icon="sparkles" href="/agent-os/overview">
-    Sessions, memory, scheduling, and more.
-  </Card>
-</CardGroup>
