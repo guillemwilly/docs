@@ -3,7 +3,7 @@ title: Introduction
 description: "Build agents, teams, and workflows in pure python."
 ---
 
-Agno is a python SDK for building multi-agent systems. It gives you three primitives (agents, teams and workflows) and a large set of capabilities you attach to them (storage, memory, knowledge, learnings, compression, and more).
+Agno is a python SDK for building multi-agent systems. It gives you three primitives (agents, teams and workflows) and a large set of capabilities you attach to them.
 
 <CodeGroup>
 
@@ -111,7 +111,6 @@ workflow.print_response("Analyze NVIDIA for investment.")
 | [Skills](/skills/overview) | Composable abilities you attach to agents and teams |
 | [Multimodal](/multimodal/overview) | Image, audio, and video input and output |
 | [Structured I/O](/input-output/overview) | Type-safe input and output with Pydantic schemas |
-| [Reasoning](/reasoning/overview) | Built-in chain-of-thought and reasoning agents |
 
 ### Memory and context
 
@@ -146,18 +145,17 @@ workflow.print_response("Analyze NVIDIA for investment.")
 
 ## From SDK to platform
 
-The SDK runs in a Python process - a script, a notebook, a job. When you're ready to go live, wrap your agents in **AgentOS** and you get an HTTP API, persistence, auth, tracing, scheduling, and interfaces.
+Agents built using the SDK need to run in a python process: a script, a notebook, a job.
+
+When you're ready to go live, wrap your agents in **AgentOS** and you get an API server, persistence, auth, tracing, scheduling, and interfaces.
 
 ## Where to start
 
-<CardGroup cols={3}>
-  <Card title="Setup" icon="rocket" iconType="duotone" href="/sdk/setup">
-    Install Agno and get your first agent running.
+<CardGroup cols={2}>
+  <Card title="Install & Setup" icon="rocket" iconType="duotone" href="/sdk/setup">
+    Install Agno and run your first agent.
   </Card>
-  <Card title="Run on AgentOS" icon="server" iconType="duotone" href="/features/runtime">
-    Take your agent live as a secure, scalable service.
-  </Card>
-  <Card title="Examples" icon="book" iconType="duotone" href="/examples/overview">
-    Worked patterns for the most common use cases.
+  <Card title="Run on AgentOS" icon="server" iconType="duotone" href="/agent-os/introduction">
+    Run your agent as a service.
   </Card>
 </CardGroup>
