@@ -1,9 +1,9 @@
 ---
 title: Agent Observability
-description: "OpenTelemetry tracing, run history, and audit logs in your own database."
+description: "Store Traces, run history, and audit logs in your database."
 ---
 
-When an agent answers wrong, you need to know why. Which tool it called, what it passed in, what the model actually saw. AgentOS captures all of it through OpenTelemetry-compatible tracing, persisted in your `db`.
+AgentOS comes with a built-in tracing provider that captures every trace in your `db`. Every run produces a trace tree: spans for the LLM call, each tool, hook, retrieval, and team delegation. Stored in `agno_traces` and `agno_spans` in the same `db` you use for sessions.
 
 ```python
 from agno.os import AgentOS
@@ -14,14 +14,6 @@ agent_os = AgentOS(
     tracing=True,
 )
 ```
-
-Every run produces a trace tree: spans for the LLM call, each tool, hook, retrieval, and team delegation. Stored in `agno_traces` and `agno_spans` in the same `db` you use for sessions.
-
-## Own your traces
-
-Traces are your training data. Every model call, every tool result, every retrieval, every step of every run — that's the corpus you'd use to fine-tune, evaluate, or build your next agent on. Send it to a third-party observability platform as the only store and you've handed over the most valuable data your product generates.
-
-AgentOS writes traces to your database by default. You own the schema, the retention, the access patterns. You can still ship a copy to Langfuse or Arize for their dashboards (we even make that easy, see below), but your primary store is yours.
 
 ## What gets captured
 
@@ -34,19 +26,17 @@ AgentOS writes traces to your database by default. You own the schema, the reten
 | **Retrieval** | Query, vector store, k, returned docs, scores |
 | **Team delegation** | Member name, mode, sub-run trace |
 
-Traces follow OpenTelemetry semantic conventions where they exist. The data model is open, so you can query it directly:
+Traces follow OpenTelemetry semantic conventions and you can query them directly:
 
 ```sql
--- Top-10 slowest tools last hour
+-- Top-10 slowest span types by average duration
 SELECT
-    span_name,
-    AVG(end_time - start_time) AS avg_duration,
+    name,
+    AVG(duration_ms) AS avg_ms,
     COUNT(*) AS calls
 FROM agno_spans
-WHERE span_name LIKE 'tool.%'
-  AND start_time > NOW() - INTERVAL '1 hour'
-GROUP BY span_name
-ORDER BY avg_duration DESC
+GROUP BY name
+ORDER BY avg_ms DESC
 LIMIT 10;
 ```
 
@@ -76,7 +66,7 @@ See [Multi-DB tracing](/agent-os/tracing/usage/tracing-with-multi-db-scenario) f
 
 ## External providers
 
-Send traces to Langfuse, Langsmith, Arize, or any OpenTelemetry endpoint by adding an exporter. AgentOS still writes to your database first; the exporter is a copy, not a redirect. The full list lives in the [Observability section](/observability/agentops): [Langfuse](/observability/langfuse), [Langsmith](/observability/langsmith), [Arize](/observability/arize), [Langtrace](/observability/langtrace), [Logfire](/observability/logfire), [MLflow](/observability/mlflow), [Maxim](/observability/maxim).
+Send traces to Langfuse, Langsmith, Arize, or any OpenTelemetry endpoint by adding an exporter. Checkout the [Observability section](/observability/agentops): [Langfuse](/observability/langfuse), [Langsmith](/observability/langsmith), [Arize](/observability/arize), [Langtrace](/observability/langtrace), [Logfire](/observability/logfire), [MLflow](/observability/mlflow), [Maxim](/observability/maxim).
 
 ## Run history
 
@@ -91,54 +81,3 @@ LIMIT 100;
 ```
 
 Same shape works for teams (`agno_team_sessions`) and workflows (`agno_workflow_sessions`).
-
-## Traces are not audit logs
-
-Traces tell you *what happened*. Audit logs tell you *what was approved*. They have different retention, different access patterns, and different consumers — and conflating them gets expensive (keeping every trace forever) or risky (deleting audit data your compliance team needs).
-
-| | Traces | Audit logs |
-|---|--------|------------|
-| **What they capture** | Every step of every run | Approved actions and who approved them |
-| **Purpose** | Debugging, optimization, training data | Accountability, compliance |
-| **Retention** | 30-120 days typical | Lifetime of the product |
-| **Storage** | `agno_traces`, `agno_spans` | `agno_approvals` plus your own audit table |
-
-For approved actions, see [Human Approval](/features/human-approval). For custom audit shapes, use post-hooks (below).
-
-## Audit logs via post-hooks
-
-When you need an audit trail with custom shape (regulatory compliance, internal SOX-style logging), add a post-hook that writes to your own audit table:
-
-```python
-from agno.hooks import hook
-
-@hook(run_in_background=True)
-def audit_log(run_output, agent):
-    write_audit_event(
-        timestamp=run_output.created_at,
-        agent_id=agent.id,
-        user_id=run_output.user_id,
-        action="agent_run",
-        prompt=run_output.input,
-        response=run_output.content,
-        tools=[t.name for t in run_output.tool_calls],
-    )
-
-agent = Agent(..., post_hooks=[audit_log])
-```
-
-`run_in_background=True` keeps the audit write off the response path. See [Hooks](/features/human-approval#post-hooks-output) for the full pattern.
-
-## What to watch in production
-
-| Signal | Where |
-|--------|-------|
-| Run latency | `agno_spans` `end_time - start_time` per run |
-| Token spend by model | `agno_sessions` `total_tokens` grouped by `model` |
-| Tool failure rate | `agno_spans` where `status='error'` and `span_name LIKE 'tool.%'` |
-| User-level activity | `agno_sessions` group by `user_id`, `created_at::date` |
-| HITL queue depth | `agno_approvals` where `status='pending'` |
-
-## Next
-
-[Security & Auth →](/features/security-and-auth)
