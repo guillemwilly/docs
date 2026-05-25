@@ -1,9 +1,9 @@
 ---
 title: Security & Auth
-description: "Build a layered security model: authenticate every request, use RBAC for roles, isolate data and acess between users, and use sandboxes for tools."
+description: "Build a layered security model: authenticate every request, use RBAC for roles, and isolate data and access between users."
 ---
 
-Securing an agent is a game of layers. Each layer stops a different class of attack, from unauthenticated requests at the edge down to protected tool calls at the agent level.
+Securing an agent is a game of layers. Each layer stops a different class of attack, from unauthenticated requests at the edge down to cross-user data access deep in the stack.
 
 | Layer | What it stops | Mechanism |
 |-------|---------------|-----------|
@@ -11,10 +11,8 @@ Securing an agent is a game of layers. Each layer stops a different class of att
 | **Authorization** | Authenticated but out-of-scope requests | RBAC scopes on every endpoint |
 | **Request isolation** | Concurrent requests reading each other's data | Fresh, isolated object per request |
 | **User isolation** | Cross-user data leakage on shared endpoints | Opt-in using `AuthorizationConfig(user_isolation=True)` |
-| **Human approval** | Protected actions running unsupervised | `requires_confirmation`, `@approval` (see [Human Approval](/features/human-approval)) |
 
-AgentOS gives you good defaults at every layer.
-
+AgentOS give you good defaults at every layer
 <Note>
 
 Network-layer controls (rate limiting, WAF, IP allowlists, mTLS) live at your reverse proxy or API gateway layer.
@@ -35,16 +33,33 @@ agent_os = AgentOS(
 )
 ```
 
-When `authorization=True`, every endpoint requires a valid JWT except a small set of public routes: `/`, `/health`, `/info`, `/docs`, `/openapi.json`
+When `authorization=True`, every endpoint requires a valid JWT except a small set of public routes: `/`, `/health`, `/info`, `/docs`, `/redoc`, `/openapi.json`, `/docs/oauth2-redirect`
 
 ### Get a JWT_VERIFICATION_KEY
 
-1. Open [os.agno.com](https://os.agno.com) → **Add OS** → **Live** → paste your URL.
-2. Go to **Settings** → **Generate key pair**.
-3. Copy the public key. Paste into your env (`JWT_VERIFICATION_KEY`).
-4. Deploy AgentOS with `authorization=True` and `JWT_VERIFICATION_KEY` set.
+<Steps>
+  <Step title="Toggle JWT authorization">
+    Open [os.agno.com](https://os.agno.com) → **Add OS** → **Live** → paste your URL. Enable JWT authorization when connecting a new AgentOS, or later from the OS Settings page.
+  </Step>
 
-The control plane keeps the private key. Your service only ever sees the public key. JWTs are signed by the control plane and verified by your service.
+  <Step title="Copy the public key">
+    Copy the public key for your AgentOS from the modal.
+  </Step>
+
+  <Step title="Set the verification key">
+    Set the `JWT_VERIFICATION_KEY` environment variable to your public key in your `.env` file or export it directly in your terminal:
+    ```bash
+    export JWT_VERIFICATION_KEY="your-public-key"
+    ```
+
+    Or, if you manage keys via a JWKS file, point AgentOS at it instead:
+    ```bash
+    export JWT_JWKS_FILE="/path/to/jwks.json"
+    ```
+  </Step>
+</Steps>
+
+The control plane keeps the private key. Your service only ever sees the public key. JWTs are signed by the control plane and verified by your service. See [Generate a Verification Key](/agent-os/security/rbac#generate-a-verification-key) for the full walkthrough.
 
 ### Custom JWT configuration
 
@@ -61,17 +76,18 @@ agent_os = AgentOS(
     authorization_config=AuthorizationConfig(
         verification_keys=["public-key-1", "public-key-2"],   # rotation
         algorithm="RS256",
-        audience="agno-os",
         verify_audience=True,
-        admin_scope="agent_os:admin",
-        user_isolation=True,                                  # see below
+        audience="my-agent-os",   # must match the token's `aud`; defaults to the AgentOS id
+        user_isolation=True,      # see below
     ),
 )
 ```
 
-`verification_keys` is a list, so you can rotate keys without downtime. Old tokens validate against the old key, new tokens against the new. Drop the old key once tokens have expired.
+`verification_keys` is a list, so you can rotate keys without downtime. Old tokens validate against the old key, and new tokens against the new. Drop the old key once tokens have expired.
 
-JWT claim names (`scopes`, `sub`) are configured on the JWT middleware itself, not on `AuthorizationConfig`. The defaults — `scopes` for the scopes claim, `sub` for the user id claim — match the tokens minted by the control plane.
+With `verify_audience=True`, AgentOS rejects tokens whose `aud` claim doesn't match the expected audience. That expected value defaults to the AgentOS `id`; set `audience` to override it when your provider mints a different value.
+
+JWT claim names (`scopes`, `sub`) are configured on the JWT middleware itself, not on `AuthorizationConfig`. The defaults (`scopes` for the scopes claim, `sub` for the user id claim) match the tokens minted by the control plane.
 
 ## Authorization (RBAC scopes)
 
@@ -81,18 +97,14 @@ Every JWT carries a `scopes` claim. Endpoints are gated on scopes.
 |-------|--------|
 | `agents:read` | List agents and read their config |
 | `agents:<id>:run` | Run a specific agent |
-| `agents:*:run` | Run any agent |
-| `teams:<id>:run` | Run a specific team |
-| `teams:*:run` | Run any team |
-| `workflows:<id>:run` | Run a specific workflow |
-| `workflows:*:run` | Run any workflow |
+| `agents:*:run` | Run any agent (same pattern for teams, workflows) |
 | `agent_os:admin` | Full access including session, memory, and trace queries |
 
-A typical end-user gets `agents:my-agent:run`. An internal service gets `agent_os:admin`. The control plane mints both with appropriate scopes. See [RBAC](/agent-os/security/rbac) for the full setup.
+The control plane mints each token with the appropriate scopes. Scopes are bundled into roles and assigned to users in the control plane: AgentOS ships three default roles (owner, admin, member), and custom roles are available on Enterprise. See the [RBAC scope reference](/agent-os/security/rbac#scope-reference) for the full scope list, [Default Roles](/agent-os/security/rbac#default-roles) for what each grants, and [Custom Roles](/agent-os/security/rbac#custom-roles-and-scopes) to compose your own.
 
 ## Request isolation
 
-Every request gets a fresh copy of the agent, team, or workflow it's hitting. AgentOS calls `deep_copy()` on the registered component per request, so mutable state — session-scoped variables, tool execution context, run metadata — never bleeds between concurrent calls.
+Every request gets a fresh copy of the agent, team, or workflow it's hitting. AgentOS calls `deep_copy()` on the registered component per request, so mutable state (session-scoped variables, tool execution context, run metadata) never bleeds between concurrent calls.
 
 Heavy resources (the DB connection, the model client, MCP tool handles) are shared by reference; only the mutable per-run state is isolated. You get cheap concurrency without the footgun of two requests racing on the same in-memory agent instance.
 
@@ -100,7 +112,7 @@ This is on by default for every run endpoint. There's nothing to configure.
 
 ## User isolation
 
-Per-user data isolation is **opt-in**. JWT and RBAC stay in force without it, but routes operate on the unscoped DB — a caller with `agents:my-agent:run` could read another user's sessions if they know the IDs. For multi-tenant deployments, turn it on:
+Per-user data isolation is **opt-in**. JWT and RBAC stay in force without it, but routes operate on the unscoped DB. A caller with `agents:my-agent:run` could read another user's sessions if they know the IDs. For multi-tenant deployments, turn it on:
 
 ```python
 from agno.os.config import AuthorizationConfig
@@ -121,24 +133,20 @@ With `user_isolation=True`, every non-admin caller gets:
 | Guarantee | How |
 |-----------|-----|
 | **No cross-user reads** | The JWT `sub` is threaded as `user_id` on every user-scoped read (sessions, memory, traces). Callers only see their own rows. |
-| **No cross-user writes** | `user_id` is coerced on every write — a non-admin can't persist a session, memory, or trace attributed to another user. |
+| **No cross-user writes** | `user_id` is coerced on every write, so a non-admin can't persist a session, memory, or trace attributed to another user. |
 | **Run ownership** | Cancel, resume, and continue routes require `session_id` and verify the run belongs to the caller's session. |
-| **WebSocket reconnect** | Reconnecting to a workflow run requires `workflow_id` and an ownership check. |
+| **WebSocket reconnect** | Reconnecting to a workflow run requires `session_id` and `workflow_id`, then verifies the caller owns the run. |
 
-Admin callers (whoever holds the configured `admin_scope`, defaulting to `agent_os:admin`) bypass all of the above and see the full unscoped view — service accounts, internal tooling, the control plane.
+Admin callers (whoever holds the configured `admin_scope`, defaulting to `agent_os:admin`) bypass all of the above and see the full unscoped view: service accounts, internal tooling, the control plane.
 
-Adding a new router endpoint that touches user-owned data? It must call `get_scoped_user_id(request)` (or one of its siblings in `agno.os.middleware.user_scope`) and thread the resulting `user_id` into every DB read/write. Missing that call silently bypasses isolation with no runtime error.
-
-## Human approval
-
-The last layer. Some actions should never run unsupervised — refunds, deletes, prod deploys, anything irreversible. AgentOS pauses the run, surfaces the pending approval, resumes when a human signs off. Two patterns: `requires_confirmation` for the user asking the agent, `@approval` for a designated admin with policy authority. Full details on the [Human Approval](/features/human-approval) page.
+Per-user isolation requires a database that records `user_id` (PostgreSQL recommended for production).
 
 ## Defaults
 
 | Concern | Default behavior |
 |---------|------------------|
 | Authentication | `authorization=False`. Opt in with `authorization=True` and `JWT_VERIFICATION_KEY` for production. |
-| Request isolation | On — every run endpoint deep-copies the component. |
+| Request isolation | On. Every run endpoint deep-copies the component. |
 | User isolation | **Off**. Opt in via `AuthorizationConfig(user_isolation=True)` for multi-tenant. |
-| Trace tampering | Traces are append-only; no API to mutate past spans. |
-| Schedule abuse | Scheduler write endpoints require the `schedules:write` scope. |
+
+See the [AuthorizationConfig reference](/reference/agent-os/authorization-config) for all configuration options and their defaults.
