@@ -21,7 +21,7 @@ from agno.os.middleware.jwt import TokenSource
 | `secret_key` | `Optional[str]` | `None` | **(Deprecated)** Use `verification_keys` instead. |
 | `algorithm` | `str` | `"RS256"` | JWT algorithm (RS256, HS256, ES256, etc.) |
 | `validate` | `bool` | `True` | Whether to validate JWT tokens |
-| `authorization` | `Optional[bool]` | `None` | Enable RBAC scope checking |
+| `authorization` | `Optional[bool]` | `None` | Enable RBAC scope checking. If left `None` and `scope_mappings` is provided, RBAC is auto-enabled. |
 | `token_source` | `TokenSource` | `TokenSource.HEADER` | Where to extract JWT token from |
 | `token_header_key` | `str` | `"Authorization"` | Header key for Authorization |
 | `cookie_name` | `str` | `"access_token"` | Cookie name for JWT token |
@@ -29,13 +29,14 @@ from agno.os.middleware.jwt import TokenSource
 | `user_id_claim` | `str` | `"sub"` | JWT claim name for user ID |
 | `session_id_claim` | `str` | `"session_id"` | JWT claim name for session ID |
 | `audience_claim` | `str` | `"aud"` | JWT claim name for audience/OS ID |
-| `audience` | `Optional[Union[str, Iterable[str]]]` | `None` | Expected audience claim to validate against the token's audience claim. Defaults to the AgentOS ID. |
+| `audience` | `Optional[Union[str, Iterable[str]]]` | `None` | Expected audience(s) to validate the token's `aud` claim against. Accepts a string or a list of strings; the token matches if its audience matches any of them. Defaults to the AgentOS ID. |
 | `verify_audience` | `bool` | `False` | Verify `aud` claim matches AgentOS ID |
 | `dependencies_claims` | `Optional[List[str]]` | `None` | Claims to extract for `dependencies` parameter |
 | `session_state_claims` | `Optional[List[str]]` | `None` | Claims to extract for `session_state` parameter |
 | `scope_mappings` | `Optional[Dict[str, List[str]]]` | `None` | Custom route-to-scope mappings (additive to defaults) |
-| `excluded_route_paths` | `Optional[List[str]]` | See below | Routes to skip JWT/RBAC checks |
+| `excluded_route_paths` | `Optional[List[str]]` | See below | Routes to skip JWT/RBAC checks. Replaces the defaults, not additive. |
 | `admin_scope` | `Optional[str]` | `"agent_os:admin"` | Scope that grants full admin access |
+| `user_isolation` | `bool` | `False` | Opt in to per-user data isolation. When `True`, route handlers scope the database per request and enforce session/run ownership for non-admin callers. When `False`, JWT and RBAC still apply but ownership gates stay dormant. |
 
 ## TokenSource Enum
 
@@ -51,6 +52,7 @@ from agno.os.middleware.jwt import TokenSource
 [
     "/",
     "/health",
+    "/info",
     "/docs",
     "/redoc",
     "/openapi.json",

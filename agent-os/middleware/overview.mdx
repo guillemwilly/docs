@@ -9,12 +9,12 @@ keywords: [middleware, fastapi middleware, agentos middleware, jwt middleware, c
     <Tooltip tip="Introduced in v2.1.0" cta="View release notes" href="https://github.com/agno-agi/agno/releases/tag/v2.1.0">v2.1.0</Tooltip>
 </Badge>
 
-AgentOS is built on FastAPI, allowing you to add any [FastAPI/Starlette compatible middleware](https://fastapi.tiangolo.com/tutorial/middleware/) for authentication, logging, monitoring, and security. Agno provides built-in JWT middleware for authentication, and you can create custom middleware for rate limiting, request logging, and security headers.
+AgentOS is built on FastAPI, so you can add any [FastAPI/Starlette-compatible middleware](https://fastapi.tiangolo.com/tutorial/middleware/) for authentication, logging, monitoring, and security.
 
-Additionally, Agno provides some built-in middleware for common use cases, including authentication.
+Agno ships a built-in JWT middleware for authentication. You can write your own custom middleware for rate limiting, request logging, and security headers.
 
 See the following guides:
-<CardGroup cols={3}>
+<CardGroup cols={2}>
   <Card
     title="Custom Middleware"
     icon="code"
@@ -28,13 +28,6 @@ See the following guides:
     href="/agent-os/middleware/jwt"
   >
     Built-in JWT authentication with automatic parameter injection and claims extraction.
-  </Card>
-  <Card
-    title="RBAC"
-    icon="lock"
-    href="/agent-os/security/rbac"
-  >
-    Use the built-in JWT middleware with Role-based access control and fine-grained permission scopes.
   </Card>
 </CardGroup>
 

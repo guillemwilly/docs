@@ -19,6 +19,7 @@ from agno.os.config import AuthorizationConfig
 | `jwks_file` | `Optional[str]` | `None` | Path to a static JWKS (JSON Web Key Set) file containing public keys. Keys are matched by `kid` (key ID) from the JWT header. Alternative to `verification_keys` for RSA key management. |
 | `algorithm` | `Optional[str]` | `RS256` | JWT algorithm for token verification. Common options: `RS256` (asymmetric), `HS256` (symmetric). |
 | `verify_audience` | `Optional[bool]` | `False` | Whether to verify the audience claim of the JWT token. This should not be enabled for AgentOS Control Plane traffic. |
+| `user_isolation` | `bool` | `False` | Opt in to per-user data isolation. When `True`, routes scope sessions, memory, and traces to the caller's `user_id` (from the JWT `sub` claim) and enforce run ownership for non-admin callers. Requires a database that records `user_id`. |
 
 ## Usage
 

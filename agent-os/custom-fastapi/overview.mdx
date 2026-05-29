@@ -171,6 +171,30 @@ if __name__ == "__main__":
     agent_os.serve(app="custom_fastapi_app:app", reload=True)
 ```
 
+Run it end to end:
+
+<Steps>
+  <Snippet file="create-venv-step.mdx" />
+
+  <Step title="Set environment variables">
+    ```bash
+    export ANTHROPIC_API_KEY=your_anthropic_api_key
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    uv pip install -U agno anthropic fastapi uvicorn sqlalchemy
+    ```
+  </Step>
+
+  <Step title="Run the example">
+    ```bash
+    python custom_fastapi_app.py
+    ```
+  </Step>
+</Steps>
+
 
 ## Middleware and Dependencies
 
@@ -234,5 +258,4 @@ for route in routes:
 ## Developer Resources
 
 - [AgentOS Reference](/reference/agent-os/agent-os)
-- [Full Example](/agent-os/usage/custom-fastapi)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
