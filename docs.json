@@ -7340,6 +7340,7 @@
                       "examples/integrations/observability/langsmith-via-openinference",
                       "examples/integrations/observability/langtrace-op",
                       "examples/integrations/observability/langwatch-op",
+                      "examples/integrations/observability/latitude-via-openinference",
                       "examples/integrations/observability/logfire-via-openinference",
                       "examples/integrations/observability/maxim-ops",
                       "examples/integrations/observability/opik-via-openinference",
