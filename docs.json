@@ -4334,6 +4334,7 @@
                   "observability/langsmith",
                   "observability/langtrace",
                   "observability/langwatch",
+                  "observability/latitude",
                   "observability/maxim",
                   "observability/mlflow",
                   "observability/openlit",
