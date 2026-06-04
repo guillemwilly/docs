@@ -1,0 +1,97 @@
+---
+title: Setup
+sidebarTitle: Setup
+description: Create a Telegram bot with BotFather and configure webhooks for local and production deployments.
+keywords: [telegram, setup, botfather, webhook, configuration, ngrok]
+---
+
+<Note>
+Install the Telegram dependencies: `uv pip install 'agno[telegram]'`
+</Note>
+
+## Local Development
+
+<Steps>
+
+<Step title="Prerequisites">
+Ensure you have the following:
+- A Telegram account
+- ngrok (for development)
+- Python 3.9+
+</Step>
+
+<Step title="Create a Telegram Bot">
+1. Open Telegram and message [@BotFather](https://t.me/BotFather)
+2. Send `/newbot` and follow the prompts to choose a display name and username (username must end in `bot`, e.g. `my_agno_bot`)
+3. Copy the bot token (looks like `123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11`)
+</Step>
+
+<Step title="Set Environment Variables">
+```bash
+export TELEGRAM_TOKEN="your-bot-token-from-botfather"
+export APP_ENV="development"  # Bypasses webhook secret validation for local testing
+```
+</Step>
+
+<Step title="Start a Tunnel with ngrok">
+Telegram needs a public HTTPS URL to deliver webhook events:
+```bash
+ngrok http 7777
+```
+Copy the `https://` forwarding URL provided by ngrok and set it as an environment variable:
+```bash
+export NGROK_URL=https://your-subdomain.ngrok-free.app
+```
+</Step>
+
+<Step title="Run the App">
+```bash
+python telegram_bot.py
+```
+The server starts on `http://localhost:7777`.
+</Step>
+
+<Step title="Register the Webhook">
+Tell Telegram to send updates to your tunnel URL:
+```bash
+curl "https://api.telegram.org/bot${TELEGRAM_TOKEN}/setWebhook?url=${NGROK_URL}/telegram/webhook"
+```
+You should see `{"ok":true,"result":true,"description":"Webhook was set"}`.
+
+Verify anytime with:
+```bash
+curl "https://api.telegram.org/bot${TELEGRAM_TOKEN}/getWebhookInfo"
+```
+</Step>
+
+</Steps>
+
+## Production Deployment
+
+In production, webhook secret validation is enforced. Telegram sends the secret in the `X-Telegram-Bot-Api-Secret-Token` header, and the interface rejects requests with an invalid or missing token with a `403`.
+
+<Steps>
+
+<Step title="Set the Webhook Secret">
+Generate a secret and set it as an environment variable:
+```bash
+export TELEGRAM_WEBHOOK_SECRET_TOKEN="your-random-secret-string"
+```
+</Step>
+
+<Step title="Register the Webhook with the Secret">
+Pass the `secret_token` parameter when registering your webhook:
+```bash
+curl "https://api.telegram.org/bot${TELEGRAM_TOKEN}/setWebhook?url=https://your-domain.com/telegram/webhook&secret_token=${TELEGRAM_WEBHOOK_SECRET_TOKEN}"
+```
+</Step>
+
+<Step title="Remove APP_ENV=development">
+Do **not** set `APP_ENV=development` in production. Without it, webhook secret validation is active.
+</Step>
+
+</Steps>
+
+<Warning>
+ngrok is for local development only. For production, see the [deployment templates](/deploy/templates).
+</Warning>

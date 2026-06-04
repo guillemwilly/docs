@@ -1,0 +1,118 @@
+---
+title: Setup
+sidebarTitle: Setup
+description: Create a Slack App, configure OAuth scopes, and set up event subscriptions for Slack bots.
+keywords: [slack, setup, oauth, events, configuration, streaming]
+---
+
+<Note>
+Install the Slack dependencies: `uv pip install 'agno[slack]'`
+</Note>
+
+<Steps>
+
+<Step title="Create a Slack App">
+1. Go to [api.slack.com/apps](https://api.slack.com/apps) and click **Create New App**
+2. Choose **From scratch**, give it a name, and select your workspace
+3. On the **Basic Information** page, copy the **Signing Secret**
+</Step>
+
+<Step title="Enable Agents & AI Apps">
+This is required for streaming task cards and suggested prompts.
+
+1. In the sidebar, click **Agents & AI Apps**
+2. Toggle **Agent or Assistant** to **On**
+3. Under **Suggested Prompts**, select **Dynamic**
+4. Click **Save**
+
+<Note>
+Enabling this automatically adds the `assistant:write` scope.
+</Note>
+</Step>
+
+<Step title="Add OAuth Scopes">
+1. In the sidebar, click **OAuth & Permissions**
+2. Under **Scopes > Bot Token Scopes**, add:
+
+| Scope | Purpose |
+| --- | --- |
+| `app_mentions:read` | Receive @mention events |
+| `assistant:write` | Streaming (task cards, suggested prompts) |
+| `chat:write` | Send messages and stream responses |
+| `im:history` | Read DM history for thread context |
+| `files:read` | Download files users send to the bot |
+| `files:write` | Upload response files (images, docs) |
+
+<Tip>
+These are the minimum scopes for streaming. Add `channels:history`, `groups:history`, `users:read`, or `search:read` if your agent uses `SlackTools` for channel history, user lookup, or message search.
+</Tip>
+
+3. Click **Install to Workspace** and authorize the app
+4. Copy the **Bot User OAuth Token** (`xoxb-...`)
+</Step>
+
+<Step title="Set Environment Variables">
+```bash
+export SLACK_TOKEN="xoxb-your-bot-user-token"
+export SLACK_SIGNING_SECRET="your-signing-secret"
+```
+
+Find these in your Slack App settings:
+- **Bot User OAuth Token**: OAuth & Permissions
+- **Signing Secret**: Basic Information > App Credentials
+</Step>
+
+<Step title="Subscribe to Events">
+1. In the sidebar, click **Event Subscriptions**
+2. Toggle **Enable Events** to **On**
+3. Set **Request URL** to your tunnel URL:
+   ```
+   https://<your-tunnel>/slack/events
+   ```
+   Your app must be running for Slack to verify the URL.
+
+4. Under **Subscribe to bot events**, add:
+
+| Event | Purpose |
+| --- | --- |
+| `app_mention` | Respond to @mentions in channels |
+| `message.im` | Respond to direct messages |
+| `assistant_thread_started` | Set suggested prompts on new threads |
+
+<Tip>
+Add `message.channels` and `message.groups` if you set `reply_to_mentions_only=False` and want the bot to respond to all channel messages.
+</Tip>
+
+5. Click **Save Changes**
+6. Go to **Install App** and click **Reinstall to Workspace**
+</Step>
+
+<Step title="Enable App Home">
+1. In the sidebar, click **App Home**
+2. Under **Show Tabs**, enable **Messages Tab**
+3. Check **Allow users to send Slash commands and messages from the messages tab**
+</Step>
+
+<Step title="Start a Tunnel">
+Slack needs a public HTTPS URL to deliver events:
+
+```bash
+ngrok http 7777
+```
+
+Copy the `https://` forwarding URL and paste it into the Event Subscriptions Request URL (Step 5).
+</Step>
+
+<Step title="Run the App">
+```bash
+python slack_bot.py
+```
+
+DM the bot or @mention it in a channel to test.
+</Step>
+
+</Steps>
+
+<Warning>
+ngrok is for local development only. For production, see the [deployment templates](/deploy/templates).
+</Warning>

@@ -1,0 +1,113 @@
+---
+title: Setup
+sidebarTitle: Setup
+description: Configure Meta Developer account, WhatsApp Business API, and webhooks for WhatsApp bots.
+keywords: [whatsapp, setup, meta, webhook, configuration, access token]
+---
+
+<Note>
+Install the WhatsApp dependencies: `uv pip install 'agno[whatsapp]'`
+</Note>
+
+<Steps>
+
+<Step title="Prerequisites">
+Ensure you have the following:
+- A [Meta Developer Account](https://developers.facebook.com/)
+- A Meta Business Account (created at [Meta Business Manager](https://business.facebook.com/))
+- A valid Facebook account
+- ngrok (for development)
+- Python 3.9+
+</Step>
+
+<Step title="Create a Meta App">
+1. Go to [Meta for Developers](https://developers.facebook.com/) and verify your account.
+2. Create a new app at the [Apps Dashboard](https://developers.facebook.com/apps/).
+3. Under "Use Case", select **Other**.
+4. Choose **Business** as the app type.
+5. Provide:
+    - App name
+    - Contact email
+6. Click "Create App".
+7. In the app dashboard, find **WhatsApp** in the product list and click **Set up** to add it.
+</Step>
+
+<Step title="Set Up a Meta Business Account">
+1. Navigate to [Meta Business Manager](https://business.facebook.com/).
+2. Create a new business account or use an existing one.
+3. Verify your business email.
+4. In your Meta App, go to **App Settings > Basic** and click "Start Verification" under Business Verification. Complete this for production access.
+5. Associate the app with your business account.
+</Step>
+
+<Step title="Configure WhatsApp Business API">
+1. In your app dashboard, go to **WhatsApp > API Setup**.
+2. Generate a **Temporary Access Token**. This token expires in ~24 hours and is suitable for development only.
+3. Copy your **Phone Number ID**, shown below the test phone number.
+4. Add a test recipient under the **To** field (your personal number for testing).
+
+For production, create a permanent token:
+1. Go to [Meta Business Manager](https://business.facebook.com/) > **Business Settings > System Users**.
+2. Click **Add** and create a new admin-level system user.
+3. Click on the system user, then **Assign Assets**.
+4. Assign your app with **Full control**.
+5. Assign your WhatsApp Business Account with **Full control**.
+6. Click **Generate Token** and select `whatsapp_business_messaging` and `whatsapp_business_management` permissions.
+7. Copy and store the token securely. This token does not expire unless revoked.
+</Step>
+
+<Step title="Set Up Environment Variables">
+Create a `.env` file or export these variables:
+```bash
+export WHATSAPP_ACCESS_TOKEN="your_access_token"
+export WHATSAPP_PHONE_NUMBER_ID="your_phone_number_id"
+export WHATSAPP_VERIFY_TOKEN="your_chosen_verify_token"  # Any string you create
+```
+
+Find these values in your Meta App:
+- **Access Token**: WhatsApp > API Setup (temporary) or System User token (permanent)
+- **Phone Number ID**: WhatsApp > API Setup, below the test phone number
+- **Verify Token**: A string you choose. Must match in both your app and Meta's webhook config.
+</Step>
+
+<Step title="Set Up Webhook with ngrok">
+1. Run ngrok to expose your local server, ensuring the port matches your app (7777):
+   ```bash
+   ngrok http 7777
+   ```
+2. Copy the `https://` URL provided by ngrok.
+3. In your Meta App, go to **WhatsApp > Configuration** and click "Edit" on the Webhook section.
+4. Configure the webhook:
+    - **Callback URL**: `https://<your-ngrok-url>/whatsapp/webhook`
+    - **Verify Token**: The same value as your `WHATSAPP_VERIFY_TOKEN`
+5. Click "Verify and save". Your Agno app must be running locally for verification to succeed.
+6. After verification, click "Manage" next to Webhook fields. Subscribe to the **messages** field under `whatsapp_business_account`.
+</Step>
+
+<Step title="Configure Signature Validation">
+For **development**, skip signature validation:
+```bash
+export WHATSAPP_SKIP_SIGNATURE_VALIDATION="true"
+```
+
+For **production**, set your App Secret to enable webhook signature validation:
+```bash
+export WHATSAPP_APP_SECRET="your_meta_app_secret"
+```
+Find the App Secret at **App Settings > Basic** in your Meta App dashboard.
+</Step>
+
+<Step title="Test Your Bot">
+1. Start your app: `python whatsapp_bot.py`
+2. Ensure ngrok is running and the webhook is verified.
+3. Open WhatsApp and send a message to the test phone number.
+4. The bot should respond in the same chat.
+5. Send `/new` to start a fresh session (requires `db` on the agent).
+6. Send an image or document to test media handling.
+</Step>
+
+</Steps>
+
+<Warning>
+ngrok is for local development only. For production, see the [deployment templates](/deploy/templates).
+</Warning>
